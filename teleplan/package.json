@@ -1,0 +1,12 @@
+{
+  "name": "sky-claims-teleplan",
+  "version": "1.0.0",
+  "description": "Sky Claims Teleplan module",
+  "main": "index.js",
+  "scripts": {
+    "conformance": "node conformance-harness.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

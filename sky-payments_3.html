@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sky Claims — BC MSP Billing</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,300;1,9..144,400&family=Plus+Jakarta+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --sky:#1e96e8;--sky-lt:#e8f4fd;--sky-dk:#1479c4;--sky-b:#bae0ff;
+  --sage:#3d8e5c;--sage-lt:#eef7f2;--sage-b:#b3ddc5;
+  --amber:#c97c00;--amber-lt:#fffbf0;--amber-b:#fde9b0;
+  --coral:#e35c45;--coral-lt:#fff2f0;--coral-b:#fec4bb;
+  --bg:#f4f7fb;--wh:#fff;
+  --n50:#f8fafc;--n100:#f1f5f9;--n200:#e4eaf2;--n300:#cdd5e0;
+  --n400:#9aaabb;--n500:#6b7f94;--n600:#4a5e72;--n900:#0f1e2e;
+  --bd:#e4eaf2;--bd2:#cdd5e0;
+  --t1:#0f1e2e;--t2:#4a5e72;--t3:#6b7f94;--t4:#9aaabb;
+  --r:10px;--rlg:14px;--rxl:20px;
+  --sh:0 1px 4px rgba(15,30,46,.07),0 4px 16px rgba(15,30,46,.05);
+  --ff:'Fraunces',Georgia,serif;
+  --fb:'Plus Jakarta Sans',system-ui,sans-serif;
+  --fm:'JetBrains Mono',monospace;
+}
+html{font-size:16px;-webkit-font-smoothing:antialiased}
+body{font-family:var(--fb);background:var(--bg);color:var(--t1);min-height:100vh}
+button,input,select,textarea{font-family:var(--fb)}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:var(--n300);border-radius:3px}
+#app{display:flex;min-height:100vh}
+.sidebar{width:252px;background:var(--wh);border-right:1px solid var(--bd);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100;transition:transform .28s ease;overflow:hidden}
+.main{flex:1;margin-left:252px;display:flex;flex-direction:column;min-height:100vh}
+.topbar{height:64px;background:var(--wh);border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 28px;gap:16px;position:sticky;top:0;z-index:50}
+.page{padding:28px;max-width:1200px}
+.sb-logo{padding:20px 20px 16px;border-bottom:1px solid var(--bd)}
+.sb-mark{display:flex;align-items:center;gap:11px}
+.sb-icon{width:42px;height:42px;border-radius:11px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(15,30,46,.06),0 6px 18px -4px rgba(30,150,232,.22);flex-shrink:0;position:relative;overflow:hidden}
+.sb-icon img{width:260%;height:260%;position:absolute;top:-30%;left:-80%;max-width:none;display:block;pointer-events:none}
+.sb-name{font-family:var(--ff);font-size:1.18rem;font-weight:400;color:var(--t1);line-height:1.1}
+.sb-tag{font-size:.62rem;color:var(--t3);letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
+.sb-nav{flex:1;padding:12px 10px;overflow-y:auto}
+.nav-grp{font-size:.61rem;font-weight:600;color:var(--t4);letter-spacing:.1em;text-transform:uppercase;padding:10px 8px 3px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:var(--r);cursor:pointer;color:var(--t2);font-size:.86rem;font-weight:500;margin-bottom:1px;transition:background .1s,color .1s;position:relative;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:var(--n50);color:var(--t1)}
+.nav-item.active{background:var(--sky-lt);color:var(--sky-dk)}
+.nav-item.active::before{content:'';position:absolute;left:-10px;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--sky);border-radius:0 3px 3px 0}
+.sb-foot{padding:12px;border-top:1px solid var(--bd)}
+.prac-card{display:flex;align-items:center;gap:9px;padding:10px;border-radius:var(--r);background:var(--n50);border:1px solid var(--bd)}
+.prac-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#38a8f5,#1479c4);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:600;color:#fff;flex-shrink:0}
+.prac-name{font-size:.82rem;font-weight:600;color:var(--t1)}
+.prac-meta{font-size:.68rem;color:var(--t3);font-family:var(--fm)}
+.tp-chip{display:flex;align-items:center;gap:6px;margin-top:8px;padding:7px 10px;border-radius:var(--r);background:var(--sage-lt);border:1px solid var(--sage-b);font-size:.73rem;font-weight:500;color:var(--sage)}
+.tpdot{width:6px;height:6px;border-radius:50%;background:var(--sage);flex-shrink:0;animation:blink 2s ease-in-out infinite}
+.tb-title{font-family:var(--ff);font-size:1.28rem;font-style:italic;font-weight:400;flex:1}
+.tb-sub{font-size:.75rem;color:var(--t3)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--r);font-size:.84rem;font-weight:500;cursor:pointer;border:none;transition:all .12s;white-space:nowrap;line-height:1}
+.btn-p{background:var(--sky);color:#fff;box-shadow:0 2px 8px rgba(30,150,232,.25)}
+.btn-p:hover{background:var(--sky-dk)}
+.btn-s{background:var(--wh);color:var(--t2);border:1.5px solid var(--bd2)}
+.btn-s:hover{background:var(--n50);color:var(--t1)}
+.btn-g{background:transparent;color:var(--t3);border:1px solid var(--bd)}
+.btn-g:hover{background:var(--n50);color:var(--t1)}
+.btn-d{background:var(--coral-lt);color:var(--coral);border:1px solid var(--coral-b)}
+.btn-sm{padding:5px 12px;font-size:.79rem}
+.btn-xs{padding:4px 9px;font-size:.74rem}
+.card{background:var(--wh);border:1px solid var(--bd);border-radius:var(--rlg);box-shadow:var(--sh)}
+.cp{padding:22px}
+.ch{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;gap:12px}
+.ct{font-size:.92rem;font-weight:600;color:var(--t1)}
+.cs{font-size:.75rem;color:var(--t3);margin-top:2px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.stat{background:var(--wh);border:1px solid var(--bd);border-radius:var(--rlg);padding:18px;box-shadow:var(--sh)}
+.stico{width:34px;height:34px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+.stlbl{font-size:.71rem;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.stval{font-family:var(--ff);font-size:1.9rem;font-weight:300;color:var(--t1);line-height:1;margin-bottom:6px}
+.pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:.69rem;font-weight:600}
+.pl-up{background:var(--sage-lt);color:var(--sage)}
+.pl-neu{background:var(--n100);color:var(--t3)}
+.bars{display:flex;align-items:flex-end;gap:3px;height:38px;margin-top:10px}
+.bar{flex:1;border-radius:3px 3px 0 0;min-width:3px}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.84rem}
+thead tr{background:var(--n50)}
+th{padding:9px 13px;text-align:left;font-size:.68rem;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--bd);white-space:nowrap}
+td{padding:12px 13px;border-bottom:1px solid var(--bd);vertical-align:middle;color:var(--t1)}
+tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--sky-lt)}
+.mono{font-family:var(--fm);font-size:.79rem}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:.7rem;font-weight:600}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.b-paid{background:var(--sage-lt);color:var(--sage)}.b-paid::before{background:var(--sage)}
+.b-submitted{background:var(--sky-lt);color:var(--sky-dk)}.b-submitted::before{background:var(--sky)}
+.b-pending{background:var(--amber-lt);color:var(--amber)}.b-pending::before{background:var(--amber)}
+.b-rejected{background:var(--coral-lt);color:var(--coral)}.b-rejected::before{background:var(--coral)}
+.b-active{background:var(--sage-lt);color:var(--sage)}.b-active::before{background:var(--sage)}
+.alrt{display:flex;gap:9px;padding:11px 14px;border-radius:var(--r);font-size:.82rem;margin-bottom:12px;line-height:1.5}
+.al-info{background:var(--sky-lt);border:1px solid var(--sky-b);color:var(--sky-dk)}
+.al-ok{background:var(--sage-lt);border:1px solid var(--sage-b);color:var(--sage)}
+.al-warn{background:var(--amber-lt);border:1px solid var(--amber-b);color:var(--amber)}
+.al-err{background:var(--coral-lt);border:1px solid var(--coral-b);color:var(--coral)}
+.fg{display:grid;gap:13px}
+.fg2{grid-template-columns:1fr 1fr}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:.75rem;font-weight:600;color:var(--t2)}
+.field input,.field select,.field textarea{background:var(--wh);border:1.5px solid var(--bd2);border-radius:var(--r);padding:9px 12px;color:var(--t1);font-size:.875rem;transition:border .15s,box-shadow .15s;width:100%}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--sky);box-shadow:0 0 0 3px rgba(30,150,232,.13)}
+.field select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath fill='%236b7f94' d='M5 7L0 0h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;padding-right:30px;cursor:pointer}
+.field textarea{resize:vertical;min-height:68px}
+.hint{font-size:.7rem;color:var(--t4);margin-top:1px}
+.ferr{font-size:.7rem;color:var(--coral);margin-top:1px}
+.sr{position:relative}
+.sr input{width:100%;background:var(--wh);border:1.5px solid var(--bd);border-radius:var(--r);padding:8px 12px 8px 34px;font-size:.85rem;color:var(--t1)}
+.sr input:focus{outline:none;border-color:var(--sky)}
+.sr-ico{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--t4);pointer-events:none;line-height:0}
+.tabs{display:flex;border-bottom:2px solid var(--bd);margin-bottom:20px;overflow-x:auto}
+.tab{padding:8px 16px;font-size:.84rem;font-weight:500;color:var(--t3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;border-top:none;border-left:none;border-right:none;background:none;font-family:var(--fb)}
+.tab:hover{color:var(--t1)}
+.tab.active{color:var(--sky-dk);border-bottom:2px solid var(--sky);margin-bottom:-2px}
+.ov{position:fixed;inset:0;background:rgba(15,30,46,.45);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px;backdrop-filter:blur(3px)}
+.modal{background:var(--wh);border:1px solid var(--bd);border-radius:var(--rxl);width:100%;max-width:580px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(15,30,46,.18);animation:fu .18s ease}
+.mhdr{padding:24px 26px 0;display:flex;justify-content:space-between;align-items:flex-start}
+.mtitle{font-family:var(--ff);font-size:1.4rem;font-style:italic;font-weight:400;color:var(--t1)}
+.msub{font-size:.77rem;color:var(--t3);margin-top:3px}
+.mcls{background:none;border:none;cursor:pointer;color:var(--t3);padding:4px;border-radius:6px;line-height:0}
+.mcls:hover{background:var(--n100);color:var(--t1)}
+.mbody{padding:22px 26px}
+.mfoot{padding:0 26px 22px;display:flex;justify-content:flex-end;gap:10px}
+.steps{display:flex;align-items:center;margin-bottom:24px}
+.snode{width:27px;height:27px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.73rem;font-weight:700;flex-shrink:0}
+.s-done{background:var(--sky);color:#fff}
+.s-act{background:var(--sky);color:#fff;box-shadow:0 0 0 4px rgba(30,150,232,.18)}
+.s-pend{background:var(--n100);color:var(--t4);border:1.5px solid var(--bd2)}
+.sline{flex:1;height:1.5px;background:var(--bd);margin:0 5px}
+.sline.done{background:var(--sky)}
+.slbl{font-size:.64rem;color:var(--t3);text-align:center;margin-top:3px;white-space:nowrap}
+.div{height:1px;background:var(--bd);margin:14px 0}
+.cov-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:9px}
+.cov-item{background:var(--n50);border:1px solid var(--bd);border-radius:var(--r);padding:10px}
+.cov-lbl{font-size:.67rem;color:var(--t4);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.cov-val{font-size:.9rem;font-weight:600;color:var(--t1);margin-top:3px}
+.phn-res{background:var(--sky-lt);border:1.5px solid var(--sky-b);border-radius:var(--r);padding:13px;margin-top:8px}
+.sum-box{background:var(--n50);border:1px solid var(--bd);border-radius:var(--r);padding:15px}
+.srow{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bd);font-size:.83rem}
+.srow:last-child{border-bottom:none}
+.audit-row{display:flex;gap:11px;padding:10px 0;border-bottom:1px solid var(--bd)}
+.audit-row:last-child{border-bottom:none}
+.audit-ic{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.prog{height:5px;background:var(--n100);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;border-radius:3px;background:var(--sky)}
+.comp-row{display:flex;gap:11px;padding:9px 0;border-bottom:1px solid var(--bd)}
+.comp-row:last-child{border-bottom:none}
+.comp-ic{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.backdrop{display:none;position:fixed;inset:0;background:rgba(15,30,46,.35);z-index:99}
+.backdrop.on{display:block}
+@keyframes fu{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.page-in{animation:fu .2s ease}
+@media(max-width:1050px){.stats{grid-template-columns:repeat(2,1fr)}.fg2{grid-template-columns:1fr}}
+@media(max-width:768px){.main{margin-left:0}.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.ham{display:flex!important}.page{padding:16px}.stats{grid-template-columns:1fr 1fr;gap:10px}.topbar{padding:0 16px}.hm{display:none!important}th,td{padding:8px 8px}}
+@media(max-width:460px){.stats{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="backdrop" id="bd" onclick="closeSb()"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-logo">
+      <div class="sb-mark">
+        <div class="sb-icon"><img src="logo.png" alt="Sky Claims logo"/></div>
+        <div>
+          <div class="sb-name">Sky Claims</div>
+          <div class="sb-tag">BC MSP Billing</div>
+        </div>
+      </div>
+    </div>
+    <nav class="sb-nav">
+      <div class="nav-grp">Overview</div>
+      <button class="nav-item active" id="nav-dashboard" onclick="goTo('dashboard')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Dashboard
+      </button>
+      <div class="nav-grp">Billing</div>
+      <button class="nav-item" id="nav-claims" onclick="goTo('claims')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Claims
+      </button>
+      <button class="nav-item" id="nav-patients" onclick="goTo('patients')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Patients
+      </button>
+      <button class="nav-item" id="nav-remittance" onclick="goTo('remittance')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        Remittance
+      </button>
+      <div class="nav-grp">Administration</div>
+      <button class="nav-item" id="nav-audit" onclick="goTo('audit')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Audit log
+      </button>
+      <button class="nav-item" id="nav-settings" onclick="goTo('settings')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Settings
+      </button>
+    </nav>
+    <div class="sb-foot">
+      <div class="prac-card">
+        <div class="prac-av">KP</div>
+        <div>
+          <div class="prac-name">Dr. Kiran Patel</div>
+          <div class="prac-meta">MSP 12847 · T1847</div>
+        </div>
+      </div>
+      <div class="tp-chip"><div class="tpdot"></div>Teleplan connected · TLS 1.3</div>
+    </div>
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <button class="btn btn-g btn-sm ham" id="ham" style="display:none;padding:6px" onclick="openSb()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div style="flex:1">
+        <div class="tb-title" id="tbt">Overview</div>
+        <div class="tb-sub" id="tbs">Your practice at a glance</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="tp-chip hm" style="margin:0;padding:5px 11px;border-radius:20px"><div class="tpdot"></div>Teleplan</div>
+        <button class="btn btn-p" onclick="openClaim()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New claim
+        </button>
+      </div>
+    </header>
+    <main class="page" id="pc"></main>
+  </div>
+</div>
+<div class="ov" id="claim-modal" style="display:none">
+  <div class="modal">
+    <div class="mhdr">
+      <div><div class="mtitle">New claim</div><div class="msub">Submit to MSP Teleplan</div></div>
+      <button class="mcls" onclick="closeClaim()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="mbody" id="mb"></div>
+    <div class="mfoot" id="mf"></div>
+  </div>
+</div>
+<div class="ov" id="detail-modal" style="display:none">
+  <div class="modal">
+    <div class="mhdr">
+      <div><div class="mtitle" id="dmt"></div><div class="msub" id="dms"></div></div>
+      <button class="mcls" onclick="closeDetail()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="mbody" id="dmb"></div>
+    <div class="mfoot" id="dmf"></div>
+  </div>
+</div>
+<script>
+var FC=[
+  {code:"00100",desc:"Office visit - brief",fee:32.69,type:"GP"},
+  {code:"00101",desc:"Office visit - intermediate",fee:65.73,type:"GP"},
+  {code:"00102",desc:"Office visit - extended",fee:98.54,type:"GP"},
+  {code:"00110",desc:"Home visit",fee:87.42,type:"GP"},
+  {code:"00115",desc:"Hospital visit",fee:54.21,type:"GP"},
+  {code:"00120",desc:"Emergency visit - minor",fee:76.33,type:"GP"},
+  {code:"00130",desc:"Prenatal visit",fee:43.18,type:"GP"},
+  {code:"00140",desc:"Preventive care visit",fee:55.00,type:"GP"},
+  {code:"14070",desc:"Pap smear",fee:28.95,type:"GP"},
+  {code:"03150",desc:"ECG - 12 lead",fee:37.20,type:"GP"},
+  {code:"00590",desc:"Telephone consultation",fee:22.50,type:"GP"},
+  {code:"98010",desc:"LFP direct care - 15 min",fee:45.50,type:"LFP"},
+  {code:"98020",desc:"LFP direct care - 30 min",fee:91.00,type:"LFP"},
+  {code:"98030",desc:"LFP direct care - 60 min",fee:182.00,type:"LFP"},
+  {code:"19272",desc:"Soft tissue injury assessment",fee:89.50,type:"ICBC"},
+  {code:"18270",desc:"WCB initial assessment",fee:95.00,type:"WCB"},
+  {code:"18272",desc:"WCB progress report",fee:65.00,type:"WCB"}
+];
+var ICD=[
+  {code:"401",desc:"Essential hypertension"},{code:"250",desc:"Diabetes mellitus"},
+  {code:"493",desc:"Asthma"},{code:"724",desc:"Back pain"},
+  {code:"460",desc:"Acute nasopharyngitis"},{code:"462",desc:"Acute pharyngitis"},
+  {code:"311",desc:"Depressive disorder NEC"},{code:"300",desc:"Anxiety states"},
+  {code:"714",desc:"Rheumatoid arthritis"},{code:"486",desc:"Pneumonia"},
+  {code:"V70",desc:"General medical examination"},{code:"V72",desc:"Special investigations"}
+];
+var PATS=[
+  {phn:"9876543210",name:"Margaret Chen",dob:"1968-03-15",gender:"F"},
+  {phn:"9234567890",name:"James Okafor",dob:"1975-11-02",gender:"M"},
+  {phn:"9345678901",name:"Priya Sharma",dob:"1990-07-22",gender:"F"},
+  {phn:"9456789012",name:"Robert Tremblay",dob:"1958-01-30",gender:"M"},
+  {phn:"9567890123",name:"Aisha Nguyen",dob:"2001-05-14",gender:"F"}
+];
+var CLAIMS=[
+  {id:"SKY-2026-0041",phn:"9876543210",patient:"Margaret Chen",date:"2026-04-09",code:"00101",desc:"Office visit - intermediate",fee:65.73,status:"paid",icd:"401",submitted:"2026-04-09",paid:"2026-04-15"},
+  {id:"SKY-2026-0040",phn:"9234567890",patient:"James Okafor",date:"2026-04-08",code:"00102",desc:"Office visit - extended",fee:98.54,status:"submitted",icd:"250",submitted:"2026-04-08"},
+  {id:"SKY-2026-0039",phn:"9345678901",patient:"Priya Sharma",date:"2026-04-07",code:"98020",desc:"LFP direct care - 30 min",fee:91.00,status:"rejected",icd:"311",submitted:"2026-04-07",rejCode:"BE018",rejDesc:"Service not covered under listed payment model"},
+  {id:"SKY-2026-0038",phn:"9456789012",patient:"Robert Tremblay",date:"2026-04-05",code:"00100",desc:"Office visit - brief",fee:32.69,status:"paid",icd:"V70",submitted:"2026-04-05",paid:"2026-04-15"},
+  {id:"SKY-2026-0037",phn:"9567890123",patient:"Aisha Nguyen",date:"2026-04-04",code:"14070",desc:"Pap smear",fee:28.95,status:"paid",icd:"V72",submitted:"2026-04-04",paid:"2026-03-31"},
+  {id:"SKY-2026-0036",phn:"9876543210",patient:"Margaret Chen",date:"2026-04-03",code:"03150",desc:"ECG - 12 lead",fee:37.20,status:"paid",icd:"401",submitted:"2026-04-03",paid:"2026-03-31"},
+  {id:"SKY-2026-0035",phn:"9234567890",patient:"James Okafor",date:"2026-04-01",code:"00590",desc:"Telephone consultation",fee:22.50,status:"pending",icd:"250"},
+  {id:"SKY-2026-0034",phn:"9345678901",patient:"Priya Sharma",date:"2026-03-28",code:"19272",desc:"Soft tissue injury assessment",fee:89.50,status:"paid",icd:"724",submitted:"2026-03-28",paid:"2026-03-31"}
+];
+var REMS=[
+  {id:"REM-2026-04-15",date:"Apr 15, 2026",amount:3847.22,claims:28,rej:2},
+  {id:"REM-2026-03-31",date:"Mar 31, 2026",amount:4102.55,claims:32,rej:1},
+  {id:"REM-2026-03-15",date:"Mar 15, 2026",amount:3654.80,claims:25,rej:3},
+  {id:"REM-2026-02-28",date:"Feb 28, 2026",amount:4289.40,claims:34,rej:0}
+];
+var curPage='dashboard',claimTab='all',claimQ='',selPat=null,selRem=null,settTab='practice';
+var cStep=0,cPat=null,cForm={};
+function g(id){return document.getElementById(id);}
+function fmt(n){return n.toLocaleString('en-CA',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function today(){return new Date().toISOString().slice(0,10);}
+function badge(s){var m={paid:'Paid',submitted:'Submitted',pending:'Pending',rejected:'Rejected',active:'Active',draft:'Draft'};return '<span class="badge b-'+s+'">'+(m[s]||s)+'</span>';}
+function alrt(t,msg){return '<div class="alrt al-'+t+'">'+msg+'</div>';}
+function bars(data,col){var mx=Math.max.apply(null,data);return '<div class="bars">'+data.map(function(v,i){return '<div class="bar" style="height:'+Math.round((v/mx)*100)+'%;background:'+(i===data.length-1?col:col+'40')+'"></div>';}).join('')+'</div>';}
+function chk(ok){return ok?'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--sage)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>':'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';}
+var PAGE_META={dashboard:['Overview','Your practice at a glance'],claims:['Claims','Submit and track MSP billing'],patients:['Patients','MSP-enrolled patient records'],remittance:['Remittance','Payment statements from HIBC'],audit:['Audit log','Immutable record of all actions'],settings:['Settings','Configure Sky Claims']};
+function goTo(p){
+  curPage=p;
+  document.querySelectorAll('.nav-item').forEach(function(el){el.classList.remove('active');});
+  var ni=g('nav-'+p);if(ni)ni.classList.add('active');
+  var meta=PAGE_META[p]||['',''];
+  g('tbt').textContent=meta[0];g('tbs').textContent=meta[1];
+  var pc=g('pc');pc.className='page page-in';
+  var fns={dashboard:rDash,claims:rClaims,patients:rPats,remittance:rRem,audit:rAudit,settings:rSettings};
+  pc.innerHTML=fns[p]?fns[p]():'';
+  closeSb();
+}
+function openSb(){g('sidebar').classList.add('open');g('bd').classList.add('on');}
+function closeSb(){g('sidebar').classList.remove('open');g('bd').classList.remove('on');}
+
+function rDash(){
+  var paid=CLAIMS.filter(function(c){return c.status==='paid';}).reduce(function(a,c){return a+c.fee;},0);
+  var pend=CLAIMS.filter(function(c){return c.status==='pending'||c.status==='submitted';}).reduce(function(a,c){return a+c.fee;},0);
+  var rej=Math.round((CLAIMS.filter(function(c){return c.status==='rejected';}).length/CLAIMS.length)*100);
+  var rows=CLAIMS.slice(0,6).map(function(c){return '<tr><td><span class="mono" style="color:var(--sky-dk)">'+c.id+'</span></td><td style="font-weight:500">'+c.patient+'</td><td class="hm"><span class="mono" style="background:var(--n100);padding:2px 6px;border-radius:4px;font-size:.76rem">'+c.code+'</span></td><td><span class="mono" style="font-weight:600">$'+fmt(c.fee)+'</span></td><td>'+badge(c.status)+'</td><td class="hm" style="color:var(--t3);font-size:.78rem">'+c.date+'</td></tr>';}).join('');
+  return '<div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:22px"><div><div style="font-family:var(--ff);font-size:1.6rem;font-style:italic;font-weight:300;line-height:1.1">Good morning, Dr. Patel</div><div style="font-size:.82rem;color:var(--t3);margin-top:4px">Sunday, April 12, 2026 &nbsp;·&nbsp; Next MSP payment April 30</div></div><button class="btn btn-p" onclick="openClaim()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New claim</button></div>'
+  +'<div class="stats">'
+  +'<div class="stat"><div class="stico" style="background:var(--sky-lt)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--sky)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div><div class="stlbl">Billed this month</div><div class="stval">$'+Math.round(paid).toLocaleString()+'</div><span class="pill pl-up">&#8593; 12% vs last month</span>'+bars([2400,3100,2800,3600,3200,4100,Math.round(paid)],'#1e96e8')+'</div>'
+  +'<div class="stat"><div class="stico" style="background:var(--amber-lt)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div class="stlbl">Pending payment</div><div class="stval">$'+Math.round(pend).toLocaleString()+'</div><span class="pill pl-neu">'+CLAIMS.filter(function(c){return c.status==='pending'||c.status==='submitted';}).length+' claims queued</span>'+bars([450,380,510,420,480,360,Math.round(pend)],'#c97c00')+'</div>'
+  +'<div class="stat"><div class="stico" style="background:var(--sage-lt)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--sage)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div><div class="stlbl">Claims submitted</div><div class="stval">'+CLAIMS.length+'</div><span class="pill pl-up">&#8593; 8% this month</span>'+bars([18,24,20,28,25,32,CLAIMS.length],'#3d8e5c')+'</div>'
+  +'<div class="stat"><div class="stico" style="background:var(--coral-lt)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--coral)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div class="stlbl">Rejection rate</div><div class="stval">'+rej+'%</div><span class="pill pl-up">&#8595; 2% from last month</span>'+bars([12,18,14,16,11,14,rej],'#e35c45')+'</div>'
+  +'</div>'
+  +'<div style="display:grid;grid-template-columns:1fr 300px;gap:16px;align-items:start">'
+  +'<div class="card cp"><div class="ch"><div><div class="ct">Recent claims</div><div class="cs">Latest billing activity</div></div><button class="btn btn-p btn-sm" onclick="openClaim()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New claim</button></div>'
+  +'<div class="tw"><table><thead><tr><th>ID</th><th>Patient</th><th class="hm">Code</th><th>Amount</th><th>Status</th><th class="hm">Date</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>'
+  +'<div style="display:flex;flex-direction:column;gap:14px">'
+  +'<div class="card cp"><div style="display:flex;align-items:center;gap:7px;margin-bottom:12px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--sky)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg><div class="ct">Teleplan</div></div><div style="display:flex;align-items:center;gap:7px;padding:8px 12px;background:var(--sage-lt);border:1px solid var(--sage-b);border-radius:var(--r);margin-bottom:12px"><div class="tpdot"></div><span style="font-size:.82rem;font-weight:600;color:var(--sage)">Connected</span><span class="mono" style="margin-left:auto;font-size:.72rem;color:var(--sage)">T1847</span></div><div style="font-size:.78rem;color:var(--t2);display:flex;flex-direction:column;gap:5px"><div style="display:flex;justify-content:space-between"><span>Password expires</span><span style="color:var(--amber);font-weight:600">12 days</span></div><div style="display:flex;justify-content:space-between"><span>Last sync</span><span class="mono" style="font-size:.72rem">Today 09:14</span></div><div style="display:flex;justify-content:space-between"><span>Protocol</span><span class="mono" style="font-size:.72rem">TLS 1.3</span></div></div></div>'
+  +'<div class="card cp"><div style="font-size:.8rem;font-weight:600;color:var(--t2);margin-bottom:8px">Next MSP payment</div><div style="font-family:var(--ff);font-size:1.4rem;font-style:italic;font-weight:300;color:var(--sky-dk);margin-bottom:2px">April 30, 2026</div><div style="font-size:.76rem;color:var(--t3);margin-bottom:10px">Semi-monthly cycle via EFT</div><div style="font-size:.84rem;margin-bottom:7px">Estimated <strong>$2,847.40</strong></div><div class="prog"><div class="prog-fill" style="width:65%"></div></div><div style="font-size:.7rem;color:var(--t4);margin-top:4px">Claim close-off: April 24</div></div>'
+  +'<div class="card cp"><div style="font-size:.88rem;font-weight:600;margin-bottom:10px">Compliance</div>'
+  +['PIPA BC compliant','TLS 1.3 active','90-day window','Teleplan certified','Password current'].map(function(l){return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--bd)"><div style="width:17px;height:17px;border-radius:50%;background:var(--sage-lt);display:flex;align-items:center;justify-content:center;flex-shrink:0">'+chk(true)+'</div><span style="font-size:.79rem;color:var(--t2)">'+l+'</span></div>';}).join('')
+  +'</div></div></div>';
+}
+
+function rClaims(){
+  var fl=CLAIMS.filter(function(c){return(claimTab==='all'||c.status===claimTab)&&(!claimQ||c.patient.toLowerCase().indexOf(claimQ.toLowerCase())>-1||c.id.indexOf(claimQ)>-1||c.code.indexOf(claimQ)>-1);});
+  var rows=fl.map(function(c){return '<tr><td><span class="mono" style="color:var(--sky-dk)">'+c.id+'</span></td><td style="font-weight:500">'+c.patient+'</td><td class="hm"><span class="mono" style="background:var(--n100);padding:2px 6px;border-radius:4px;font-size:.76rem">'+c.code+'</span></td><td class="hm" style="color:var(--t3);font-size:.78rem">'+c.icd+'</td><td><span class="mono" style="font-weight:600">$'+fmt(c.fee)+'</span></td><td>'+badge(c.status)+'</td><td class="hm" style="color:var(--t3);font-size:.78rem">'+c.date+'</td><td><button class="btn btn-g btn-xs" onclick="viewClaim(\''+c.id+'\')">View</button></td></tr>';}).join('');
+  return '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:12px;flex-wrap:wrap">'
+  +'<div class="sr" style="width:280px"><span class="sr-ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><input placeholder="Search claims..." value="'+claimQ+'" oninput="claimQ=this.value;goTo(\'claims\')" style="width:100%"></div>'
+  +'<button class="btn btn-p" onclick="openClaim()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New claim</button></div>'
+  +'<div class="card cp"><div class="tabs">'+['all','pending','submitted','paid','rejected'].map(function(t){return '<button class="tab'+(claimTab===t?' active':'')+'" onclick="claimTab=\''+t+'\';goTo(\'claims\')">'+(t[0].toUpperCase()+t.slice(1))+'</button>';}).join('')+'</div>'
+  +'<div class="tw"><table><thead><tr><th>Claim ID</th><th>Patient</th><th class="hm">Code</th><th class="hm">Diagnosis</th><th>Amount</th><th>Status</th><th class="hm">Date</th><th></th></tr></thead>'
+  +'<tbody>'+(rows||'<tr><td colspan="8" style="text-align:center;padding:36px;color:var(--t3)">No claims match your filter</td></tr>')+'</tbody></table></div></div>';
+}
+function viewClaim(id){
+  var c=null;for(var i=0;i<CLAIMS.length;i++){if(CLAIMS[i].id===id){c=CLAIMS[i];break;}}
+  if(!c)return;
+  g('dmt').textContent=c.id;g('dms').textContent=c.patient+' · '+c.date;
+  var pairs=[['Patient',c.patient],['PHN',c.phn],['Date',c.date],['Fee code',c.code],['Description',c.desc],['ICD-9',c.icd],['Amount','$'+fmt(c.fee)],['Status',c.status.toUpperCase()]];
+  if(c.submitted)pairs.push(['Submitted',c.submitted]);
+  if(c.paid)pairs.push(['Payment received',c.paid]);
+  if(c.rejCode)pairs.push(['Refusal code',c.rejCode],['Reason',c.rejDesc]);
+  g('dmb').innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px">'+pairs.map(function(p){return '<div style="background:var(--n50);border:1px solid var(--bd);border-radius:var(--r);padding:9px 11px"><div style="font-size:.67rem;color:var(--t4);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:2px">'+p[0]+'</div><div class="mono" style="font-size:.82rem;color:'+(p[0].indexOf('Refusal')>-1||p[0]==='Reason'?'var(--coral)':'var(--t1)')+'">'+p[1]+'</div></div>';}).join('')+'</div>'
+  +(c.rejCode?alrt('err','<strong>Refusal '+c.rejCode+':</strong> '+c.rejDesc+'. Review the MSC payment schedule and resubmit with the correct code.'):'')
+  +'<div class="div"></div><div style="font-size:.7rem;color:var(--t4);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:8px">Audit trail</div>'
+  +[{a:'Claim created',t:c.date+' 10:22',actor:'Dr. K. Patel'},c.submitted&&{a:'Submitted to Teleplan',t:c.submitted+' 10:23',actor:'System - TLS 1.3'},c.paid&&{a:'Payment received',t:c.paid,actor:'MSP / HIBC'},c.rejCode&&{a:'Refusal received',t:c.submitted+' 23:41',actor:'MSP / HIBC'}].filter(Boolean).map(function(e){return '<div class="audit-row"><div class="audit-ic" style="background:var(--sky-lt)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--sky)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div><div><div style="font-size:.83rem">'+e.a+'</div><div style="font-size:.71rem;color:var(--t4)">'+e.actor+' <span class="mono">'+e.t+'</span></div></div></div>';}).join('');
+  g('dmf').innerHTML=(c.status==='rejected'?'<button class="btn btn-p btn-sm">Resubmit</button>':'')+'<button class="btn btn-s" onclick="closeDetail()">Close</button>';
+  g('detail-modal').style.display='flex';
+}
+function closeDetail(){g('detail-modal').style.display='none';}
+
+function rPats(){
+  var fl=PATS.filter(function(p){return p.name.toLowerCase().indexOf(patSearch().toLowerCase())>-1||p.phn.indexOf(patSearch())>-1;});
+  var rows=fl.map(function(p){return '<tr style="cursor:pointer;background:'+(selPat&&selPat.phn===p.phn?'var(--sky-lt)':'')+'" onclick="selectPat(\''+p.phn+'\')"><td style="font-weight:600">'+p.name+'</td><td><span class="mono">'+p.phn+'</span></td><td class="hm" style="color:var(--t3)">'+p.dob+'</td><td class="hm" style="color:var(--t3)">'+(p.gender==='F'?'Female':'Male')+'</td><td>'+badge('active')+'</td><td style="color:var(--t3);font-weight:500">'+CLAIMS.filter(function(c){return c.phn===p.phn;}).length+'</td></tr>';}).join('');
+  var side=selPat?rPatDetail():'';
+  return '<div style="display:grid;grid-template-columns:'+(selPat?'1fr 330px':'1fr')+';gap:16px;align-items:start">'
+  +'<div><div class="sr" style="max-width:300px;margin-bottom:14px"><span class="sr-ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><input id="pat-search" placeholder="Search by name or PHN..." oninput="updatePatSearch(this.value)" style="width:100%"></div>'
+  +'<div class="card cp"><div class="tw"><table><thead><tr><th>Patient name</th><th>PHN</th><th class="hm">Date of birth</th><th class="hm">Gender</th><th>MSP coverage</th><th>Claims</th></tr></thead><tbody>'+rows+'</tbody></table></div></div></div>'
+  +side+'</div>';
+}
+var _patSearch='';
+function patSearch(){return _patSearch;}
+function updatePatSearch(v){_patSearch=v;goTo('patients');}
+function rPatDetail(){
+  var p=selPat;
+  var ptCl=CLAIMS.filter(function(c){return c.phn===p.phn;});
+  var total=ptCl.reduce(function(a,c){return a+c.fee;},0);
+  return '<div style="display:flex;flex-direction:column;gap:13px">'
+  +'<div class="card cp"><div style="display:flex;justify-content:space-between;margin-bottom:13px"><div><div style="font-family:var(--ff);font-size:1.15rem;font-style:italic;font-weight:400">'+p.name+'</div><div class="mono" style="font-size:.73rem;color:var(--t3);margin-top:2px">PHN '+p.phn+'</div></div><button class="btn btn-g btn-xs" onclick="selPat=null;goTo(\'patients\')">&#10005;</button></div>'
+  +'<div class="div" style="margin:0 0 11px"></div><div class="cov-grid">'
+  +[['Date of birth',p.dob],['Gender',p.gender==='F'?'Female':'Male'],['MSP coverage','Active'],['Total billed','$'+fmt(total)]].map(function(kv){return '<div class="cov-item"><div class="cov-lbl">'+kv[0]+'</div><div class="cov-val">'+kv[1]+'</div></div>';}).join('')
+  +'</div></div>'
+  +'<div class="card cp"><div class="ct" style="margin-bottom:12px">Claim history</div>'
+  +(ptCl.length?ptCl.map(function(c){return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd)"><div><div class="mono" style="font-size:.73rem;color:var(--sky-dk)">'+c.id+'</div><div style="font-size:.81rem;color:var(--t2);margin-top:1px">'+c.desc+'</div><div style="font-size:.71rem;color:var(--t4)">'+c.date+'</div></div><div style="text-align:right;flex-shrink:0;margin-left:10px"><div class="mono" style="font-weight:600;margin-bottom:3px">$'+fmt(c.fee)+'</div>'+badge(c.status)+'</div></div>';}).join(''):'<div style="color:var(--t3);font-size:.83rem">No claims on file</div>')
+  +'</div></div>';
+}
+function selectPat(phn){selPat=null;for(var i=0;i<PATS.length;i++){if(PATS[i].phn===phn){selPat=PATS[i];break;}}goTo('patients');}
+
+function rRem(){
+  var rows=REMS.map(function(r){return '<tr style="cursor:pointer;background:'+(selRem&&selRem.id===r.id?'var(--sky-lt)':'')+'" onclick="selRem=getRem(\''+r.id+'\');goTo(\'remittance\')"><td><span class="mono" style="color:var(--sky-dk);font-size:.75rem">'+r.id+'</span></td><td style="font-weight:500">'+r.date+'</td><td style="color:var(--t3)">'+r.claims+'</td><td style="color:'+(r.rej>0?'var(--coral)':'var(--t4)')+';font-weight:'+(r.rej>0?600:400)+'">'+r.rej+'</td><td><span class="mono" style="font-weight:700;color:var(--sage)">$'+fmt(r.amount)+'</span></td><td><button class="btn btn-g btn-xs">Export</button></td></tr>';}).join('');
+  var side=selRem?'<div style="display:flex;flex-direction:column;gap:13px"><div class="card cp"><div style="display:flex;justify-content:space-between;margin-bottom:11px"><div class="ct">'+selRem.id+'</div><button class="btn btn-g btn-xs" onclick="selRem=null;goTo(\'remittance\')">&#10005;</button></div><div style="font-family:var(--ff);font-size:1.8rem;font-style:italic;font-weight:300;color:var(--sage);margin-bottom:2px">$'+fmt(selRem.amount)+'</div><div style="font-size:.77rem;color:var(--t3);margin-bottom:13px">'+selRem.date+'</div><div class="div" style="margin:0 0 11px"></div>'+[['Claims approved',selRem.claims-selRem.rej],['Rejected',selRem.rej],['Rejection rate',Math.round((selRem.rej/selRem.claims)*100)+'%']].map(function(kv){return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bd);font-size:.83rem"><span style="color:var(--t2)">'+kv[0]+'</span><span class="mono" style="font-weight:600">'+kv[1]+'</span></div>';}).join('')+'<button class="btn btn-p" style="width:100%;justify-content:center;margin-top:13px">Download statement</button></div>'
+  +'<div class="card cp"><div class="ct" style="margin-bottom:11px">Payment calendar</div>'+[{l:'Next payment',d:'April 30, 2026',v:'~$2,847',hi:true},{l:'Close-off deadline',d:'April 24, 2026',v:'Submit by'},{l:'Previous received',d:'April 15, 2026',v:'$3,847.22'}].map(function(x){return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--bd)"><div><div style="font-size:.82rem;font-weight:'+(x.hi?600:400)+'">'+x.l+'</div><div style="font-size:.72rem;color:var(--t3)">'+x.d+'</div></div><div class="mono" style="font-size:.76rem;color:'+(x.hi?'var(--sky-dk)':'var(--t3)')+';font-weight:'+(x.hi?600:400)+'">'+x.v+'</div></div>';}).join('')+'</div></div>'
+  :'<div class="card cp" style="text-align:center;padding:36px 20px"><div style="color:var(--t4);font-size:.83rem">Select a statement to view details</div></div>';
+  return alrt('al-info','Remittance statements download automatically from Teleplan twice monthly. Records retained 7 years per PIPA BC.')
+  +'<div style="display:grid;grid-template-columns:1fr 290px;gap:16px;align-items:start;margin-top:4px">'
+  +'<div class="card cp"><div class="ct" style="margin-bottom:15px">Payment statements</div><div class="tw"><table><thead><tr><th>Statement</th><th>Date</th><th>Claims</th><th>Rejected</th><th>Payment</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>'+side+'</div>';
+}
+function getRem(id){for(var i=0;i<REMS.length;i++){if(REMS[i].id===id)return REMS[i];}return null;}
+
+function rAudit(){
+  var entries=[
+    {a:'Claim SKY-2026-0041 submitted to Teleplan',actor:'Dr. K. Patel',t:'2026-04-09 10:23:14',d:'Fee 00101 - PHN 9876543210 - $65.73',col:'var(--sky-lt)',ic:'var(--sky)'},
+    {a:'PHN 9876543210 eligibility verified',actor:'Dr. K. Patel',t:'2026-04-09 10:22:51',d:'MSP active - Margaret Chen',col:'var(--sage-lt)',ic:'var(--sage)'},
+    {a:'Teleplan password rotated (42-day cycle)',actor:'System',t:'2026-04-01 00:00:02',d:'Automated - next due May 13, 2026',col:'var(--amber-lt)',ic:'var(--amber)'},
+    {a:'Remittance REM-2026-03-31 downloaded',actor:'System',t:'2026-03-31 14:02:18',d:'$4,102.55 - 32 claims',col:'var(--sky-lt)',ic:'var(--sky)'},
+    {a:'Claim SKY-2026-0039 rejected by Teleplan',actor:'MSP / HIBC',t:'2026-04-07 23:41:09',d:'Refusal code BE018 - payment model mismatch',col:'var(--coral-lt)',ic:'var(--coral)'},
+    {a:'Practice settings updated',actor:'Dr. K. Patel',t:'2026-04-05 11:14:33',d:'Payment method changed to EFT',col:'var(--n100)',ic:'var(--t3)'},
+    {a:'Login from new device',actor:'Dr. K. Patel',t:'2026-04-04 08:55:12',d:'Safari / iOS - Surrey, BC',col:'var(--amber-lt)',ic:'var(--amber)'},
+    {a:'Claim SKY-2026-0038 submitted to Teleplan',actor:'Dr. K. Patel',t:'2026-04-05 14:03:22',d:'Fee 00100 - $32.69',col:'var(--sky-lt)',ic:'var(--sky)'}
+  ];
+  return alrt('al-info','This immutable audit log records every user and system action. Records are retained for 7 years per PIPA BC requirements.')
+  +'<div class="card cp" style="margin-top:4px"><div class="ch"><div><div class="ct">Audit log</div><div class="cs">All user and system activity</div></div><button class="btn btn-s btn-sm">Export CSV</button></div>'
+  +entries.map(function(e){return '<div class="audit-row"><div class="audit-ic" style="background:'+e.col+'"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="'+e.ic+'" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div><div style="flex:1"><div style="font-size:.83rem">'+e.a+'</div><div class="mono" style="font-size:.71rem;color:var(--t3);margin-top:1px">'+e.d+'</div><div style="font-size:.71rem;color:var(--t4)">'+e.actor+' <span class="mono">'+e.t+'</span></div></div></div>';}).join('')+'</div>';
+}
+
+function rSettings(){
+  var tabs=['practice','teleplan','billing','security','compliance'];
+  var contents={
+    practice:'<div class="card cp"><div class="ct" style="margin-bottom:15px">Practice information</div><div class="fg fg2"><div class="field"><label>Practitioner name</label><input value="Dr. Kiran Patel"/></div><div class="field"><label>MSP billing number</label><input value="12847" class="mono"/></div><div class="field"><label>Specialty</label><select><option>General Practice</option><option>Internal Medicine</option><option>Pediatrics</option></select></div><div class="field"><label>Data Centre #</label><input value="T1847" class="mono"/></div><div class="field"><label>Practice name</label><input value="Surrey Medical Centre"/></div><div class="field"><label>MSP facility number</label><input value="F20483" class="mono"/></div><div class="field" style="grid-column:1/-1"><label>Practice address</label><input value="12345 King George Blvd, Surrey, BC V3W 4Y3"/></div></div><div style="margin-top:14px"><button class="btn btn-p" onclick="showSaved()">Save changes</button></div></div>',
+    teleplan:'<div style="display:flex;flex-direction:column;gap:13px"><div class="card cp"><div style="display:flex;align-items:center;gap:8px;margin-bottom:13px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--sky)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg><div class="ct">Teleplan connection</div></div><div style="display:flex;align-items:center;gap:7px;padding:9px 13px;background:var(--sage-lt);border:1px solid var(--sage-b);border-radius:var(--r);margin-bottom:13px"><div class="tpdot"></div><span style="font-size:.83rem;font-weight:600;color:var(--sage)">Connected - teleplan.hnet.bc.ca</span></div><div class="fg fg2"><div class="field"><label>Data Centre ID</label><input value="T1847" class="mono" readonly style="opacity:.65"/></div><div class="field"><label>Payee number</label><input value="12847" class="mono"/></div><div class="field"><label>Teleplan password</label><input type="password" value="secret"/><div class="hint">Expires in 12 days - required rotation every 42 days</div></div><div class="field"><label>Encryption</label><input value="TLS 1.3 (meets min TLS 1.2)" readonly style="opacity:.65"/></div></div><div style="margin-top:13px;display:flex;gap:9px;flex-wrap:wrap"><button class="btn btn-p" onclick="showSaved()">Save &amp; test connection</button><button class="btn btn-s">Rotate password now</button></div></div><div class="card cp"><div class="ct" style="margin-bottom:12px">Submission preferences</div><div class="fg fg2"><div class="field"><label>Submission mode</label><select><option>Manual review (recommended)</option><option>Auto-submit on save</option><option>Daily batch</option></select><div class="hint">Manual review recommended for audit compliance</div></div><div class="field"><label>90-day expiry warning</label><select><option>7 days before</option><option selected>14 days before</option><option>30 days before</option></select></div></div></div></div>',
+    billing:'<div class="card cp"><div class="ct" style="margin-bottom:15px">Billing preferences</div><div class="fg fg2"><div class="field"><label>Default claim type</label><select><option>MSP Fee-for-service</option><option>LFP</option></select></div><div class="field"><label>Payment method</label><select><option>Electronic funds transfer (EFT)</option><option>Cheque</option></select></div><div class="field"><label>Bank institution</label><input value="TD Canada Trust"/></div><div class="field"><label>Account (encrypted)</label><input type="password" value="secret"/></div></div>'+alrt('al-info','Banking credentials are encrypted at rest (AES-256) and hosted in Canada (AWS ca-central-1).')+'<button class="btn btn-p" onclick="showSaved()">Save changes</button></div>',
+    security:'<div class="card cp"><div style="display:flex;align-items:center;gap:8px;margin-bottom:14px"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--sky)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><div class="ct">Security settings</div></div><div class="fg fg2"><div class="field"><label>Two-factor authentication</label><select><option>Authenticator app (TOTP) - recommended</option><option>SMS (less secure)</option></select></div><div class="field"><label>Session timeout</label><select><option>15 minutes</option><option selected>30 minutes</option><option>60 minutes</option></select></div></div><div class="div"></div><div class="ct" style="margin-bottom:10px">Recent login activity</div>'+[{d:'Chrome / macOS',l:'Surrey, BC',t:'Today 09:12',cur:true},{d:'Safari / iOS',l:'Surrey, BC',t:'Yesterday 18:30'},{d:'Chrome / macOS',l:'Surrey, BC',t:'Apr 8, 2026 11:04'}].map(function(s){return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd);font-size:.82rem"><div><div style="font-weight:500">'+s.d+(s.cur?' <span class="badge b-active" style="font-size:.65rem">Current</span>':'')+'</div><div style="font-size:.71rem;color:var(--t4);margin-top:1px">'+s.l+' &middot; '+s.t+'</div></div>'+(s.cur?'':'<button class="btn btn-d btn-xs">Revoke</button>')+'</div>';}).join('')+'</div>',
+    compliance:'<div style="display:flex;flex-direction:column;gap:13px"><div class="card cp"><div style="display:flex;align-items:center;gap:8px;margin-bottom:13px"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--sky)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><div class="ct">Compliance checklist</div></div>'+[{l:'PIPA BC (Personal Information Protection Act)',ok:true,d:'Privacy policy active - PHI hosted in Canada (ca-central-1)'},{l:'PIPEDA - Federal privacy legislation',ok:true,d:'Consent flows active - breach notification procedures ready'},{l:'MSP Teleplan vendor agreement',ok:true,d:'Receipt Agreement signed - Data Centre T1847 active'},{l:'TLS 1.2+ on all connections',ok:true,d:'TLS 1.3 active - exceeds minimum requirement'},{l:'42-day password rotation',ok:true,d:'Next rotation: May 13, 2026 (12 days remaining)'},{l:'90-day claim submission window',ok:true,d:'Automated alerts at 14-day threshold'},{l:'7-year data retention',ok:true,d:'Claims, remittances and audit logs retained'},{l:'Errors & Omissions insurance',ok:true,d:'Coverage active to December 2026'},{l:'MSVA membership',ok:false,d:'Recommended - join the Medical Software Vendors Association of BC'}].map(function(item){return '<div class="comp-row"><div class="comp-ic" style="background:'+(item.ok?'var(--sage-lt)':'var(--amber-lt)')+'">'+chk(item.ok)+'</div><div><div style="font-size:.85rem;font-weight:500">'+item.l+'</div><div style="font-size:.73rem;color:var(--t3);margin-top:1px">'+item.d+'</div></div></div>';}).join('')+'</div><div class="card cp"><div class="ct" style="margin-bottom:8px">Your data, your rights</div><div style="font-size:.83rem;color:var(--t2);margin-bottom:12px">Sky Claims believes in full data portability. Export a complete copy at any time - no lock-in.</div><div style="display:flex;gap:9px;flex-wrap:wrap"><button class="btn btn-s btn-sm">Claims (CSV)</button><button class="btn btn-s btn-sm">Audit log (CSV)</button><button class="btn btn-s btn-sm">Patient records</button></div></div></div>'
+  };
+  return '<div class="tabs">'+tabs.map(function(t){return '<button class="tab'+(settTab===t?' active':'')+'" onclick="settTab=\''+t+'\';goTo(\'settings\')">'+(t[0].toUpperCase()+t.slice(1))+'</button>';}).join('')+'</div><div id="saved-banner" style="display:none">'+alrt('al-ok','Settings saved successfully.')+'</div>'+(contents[settTab]||'');
+}
+function showSaved(){var b=g('saved-banner');if(b){b.style.display='block';setTimeout(function(){b.style.display='none';},2500);}}
+
+function stepsHtml(){
+  var names=['Patient','Service','Review','Submit'];
+  return '<div class="steps">'+names.map(function(s,i){return '<div style="display:flex;flex-direction:column;align-items:center;gap:3px"><div class="snode '+(i<cStep?'s-done':i===cStep?'s-act':'s-pend')+'">'+(i<cStep?'&#10003;':(i+1))+'</div><div class="slbl">'+s+'</div></div>'+(i<names.length-1?'<div class="sline'+(i<cStep?' done':'')+'"></div>':'');}).join('')+'</div>';
+}
+function openClaim(){
+  cStep=0;cPat=null;cForm={date:today(),fee:'',diag:'',type:'MSP',fac:'',ref:''};
+  renderStep();g('claim-modal').style.display='flex';
+}
+function closeClaim(){g('claim-modal').style.display='none';}
+function renderStep(){
+  var selFee=null;for(var i=0;i<FC.length;i++){if(FC[i].code===cForm.fee){selFee=FC[i];break;}}
+  var selDiag=null;for(var i=0;i<ICD.length;i++){if(ICD[i].code===cForm.diag){selDiag=ICD[i];break;}}
+  var body='',foot='';
+  if(cStep===0){
+    body=stepsHtml()+alrt('al-info',"Enter the patient's PHN to verify MSP eligibility before billing.")
+    +'<div class="field" style="margin-bottom:10px"><label>Personal Health Number (PHN)</label><div style="display:flex;gap:8px"><input id="phn-in" placeholder="e.g. 9876543210" style="flex:1" onkeydown="if(event.key===\'Enter\')verifyPHN()"/><button class="btn btn-p" onclick="verifyPHN()">Verify</button></div></div><div id="phr"></div>';
+    foot='<button class="btn btn-s" onclick="closeClaim()">Cancel</button><button class="btn btn-p" onclick="nextStep()">Continue</button>';
+  } else if(cStep===1){
+    var fOpts=FC.filter(function(fc){return fc.type==='GP'||fc.type===cForm.type;}).map(function(fc){return '<option value="'+fc.code+'"'+(cForm.fee===fc.code?' selected':'')+'>'+fc.code+' - '+fc.desc+' ($'+fc.fee.toFixed(2)+')</option>';}).join('');
+    var dOpts=ICD.map(function(d){return '<option value="'+d.code+'"'+(cForm.diag===d.code?' selected':'')+'>'+d.code+' - '+d.desc+'</option>';}).join('');
+    body=stepsHtml()+'<div class="fg fg2">'
+    +'<div class="field"><label>Claim type</label><select id="f-type" onchange="cForm.type=this.value;renderStep()"><option value="MSP"'+(cForm.type==='MSP'?' selected':'')+'>MSP - Fee-for-service</option><option value="LFP"'+(cForm.type==='LFP'?' selected':'')+'>LFP - Longitudinal Family Physician</option><option value="ICBC"'+(cForm.type==='ICBC'?' selected':'')+'>ICBC</option><option value="WCB"'+(cForm.type==='WCB'?' selected':'')+'>WorkSafeBC / WCB</option><option value="OOP"'+(cForm.type==='OOP'?' selected':'')+'>Out-of-province / Reciprocal</option></select></div>'
+    +'<div class="field"><label>Service date</label><input type="date" id="f-date" value="'+cForm.date+'" max="'+today()+'" onchange="cForm.date=this.value"/><div class="hint">Must be within 90 days of today</div></div>'
+    +'<div class="field"><label>MSC fee code</label><select id="f-fee" onchange="cForm.fee=this.value;renderStep()"><option value="">- Select fee code -</option>'+fOpts+'</select><div id="fee-err" class="ferr" style="display:none">Required</div></div>'
+    +'<div class="field"><label>ICD-9 diagnostic code</label><select id="f-diag" onchange="cForm.diag=this.value"><option value="">- Select code -</option>'+dOpts+'</select><div id="diag-err" class="ferr" style="display:none">Required</div></div>'
+    +'<div class="field"><label>Facility number (if applicable)</label><input id="f-fac" value="'+cForm.fac+'" placeholder="e.g. F12345" onchange="cForm.fac=this.value"/><div class="hint">Required for LFP clinic-based services</div></div>'
+    +'<div class="field"><label>Referral MSP# (optional)</label><input id="f-ref" value="'+cForm.ref+'" placeholder="e.g. 12345" onchange="cForm.ref=this.value"/></div>'
+    +(selFee?'<div style="grid-column:1/-1">'+alrt('al-info','<strong>'+selFee.code+'</strong> - '+selFee.desc+' &nbsp;MSC fee: <strong>$'+selFee.fee.toFixed(2)+'</strong>')+'</div>':'')
+    +'</div>';
+    foot='<button class="btn btn-g" onclick="cStep=0;renderStep()">Back</button><button class="btn btn-p" onclick="nextStep()">Continue</button>';
+  } else if(cStep===2){
+    var pairs=[['Patient',cPat?cPat.name:''],['PHN',cPat?cPat.phn:''],['Type',cForm.type],['Date',cForm.date],['Fee code',cForm.fee+(selFee?' - '+selFee.desc:'')],['Diagnostic',cForm.diag+(selDiag?' - '+selDiag.desc:'')],['Amount','$'+(selFee?selFee.fee.toFixed(2):'0.00')]];
+    if(cForm.fac)pairs.push(['Facility',cForm.fac]);
+    if(cForm.ref)pairs.push(['Referral',cForm.ref]);
+    body=stepsHtml()+'<div class="sum-box" style="margin-bottom:12px"><div style="font-size:.68rem;color:var(--t4);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:10px">Claim preview</div>'+pairs.map(function(p){return '<div class="srow"><span style="color:var(--t2)">'+p[0]+'</span><span class="mono">'+p[1]+'</span></div>';}).join('')+'</div>'+alrt('al-ok','Pre-submission validation passed - ready to transmit via TLS 1.3');
+    foot='<button class="btn btn-g" onclick="cStep=1;renderStep()">Back</button><button class="btn btn-p" onclick="cStep=3;renderStep()">Continue</button>';
+  } else if(cStep===3){
+    body=stepsHtml()+'<div style="text-align:center;padding:18px 0"><div style="font-family:var(--ff);font-size:1.18rem;font-style:italic;margin-bottom:6px">Ready to submit</div><div style="color:var(--t3);font-size:.84rem;margin-bottom:20px">Claim will be encrypted and transmitted to MSP Teleplan immediately.</div><button class="btn btn-p" style="padding:10px 28px;font-size:.92rem" onclick="submitClaim()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Submit to Teleplan</button></div>';
+    foot='<button class="btn btn-g" onclick="cStep=2;renderStep()">Back</button><button class="btn btn-s" onclick="closeClaim()">Cancel</button>';
+  }
+  g('mb').innerHTML=body;g('mf').innerHTML=foot;
+  if(cPat&&cStep===0)showPHNResult();
+}
+function verifyPHN(){
+  var q=g('phn-in').value.replace(/\s/g,'');
+  cPat=null;for(var i=0;i<PATS.length;i++){if(PATS[i].phn===q){cPat=PATS[i];break;}}
+  showPHNResult();
+}
+function showPHNResult(){
+  var el=g('phr');if(!el)return;
+  if(cPat){el.innerHTML='<div class="phn-res"><div style="display:flex;align-items:center;gap:6px;margin-bottom:5px"><div style="width:17px;height:17px;border-radius:50%;background:var(--sage-lt);display:flex;align-items:center;justify-content:center">'+chk(true)+'</div><span style="font-size:.74rem;color:var(--sage);font-weight:600">MSP eligible</span></div><div style="font-weight:600">'+cPat.name+'</div><div style="font-size:.76rem;color:var(--t2);margin-top:2px">DOB: '+cPat.dob+' &middot; '+(cPat.gender==='F'?'Female':'Male')+' &middot; PHN: '+cPat.phn+'</div></div>';}
+  else{el.innerHTML=alrt('al-err','No active MSP patient found for this PHN');}
+}
+function nextStep(){
+  if(cStep===0){if(!cPat){var r=g('phr');if(r)r.innerHTML=alrt('al-err','Please verify a patient PHN first');return;}cStep=1;}
+  else if(cStep===1){
+    cForm.fee=(g('f-fee')||{value:cForm.fee}).value||cForm.fee;
+    cForm.diag=(g('f-diag')||{value:cForm.diag}).value||cForm.diag;
+    cForm.date=(g('f-date')||{value:cForm.date}).value||cForm.date;
+    cForm.fac=(g('f-fac')||{value:cForm.fac}).value||cForm.fac;
+    cForm.ref=(g('f-ref')||{value:cForm.ref}).value||cForm.ref;
+    var ok=true;
+    if(!cForm.fee){var e=g('fee-err');if(e)e.style.display='block';ok=false;}
+    if(!cForm.diag){var e=g('diag-err');if(e)e.style.display='block';ok=false;}
+    if(!ok)return;
+    cStep=2;
+  }
+  renderStep();
+}
+function submitClaim(){
+  g('mb').innerHTML='<div style="text-align:center;padding:20px 0"><div style="width:44px;height:44px;border-radius:50%;border:3px solid var(--sky-lt);border-top:3px solid var(--sky);margin:0 auto 14px;animation:spin .9s linear infinite"></div><div style="color:var(--t3)">Transmitting to Teleplan...</div></div>';
+  g('mf').innerHTML='';
+  setTimeout(function(){
+    var selFee=null;for(var i=0;i<FC.length;i++){if(FC[i].code===cForm.fee){selFee=FC[i];break;}}
+    var newId='SKY-2026-'+String(Math.floor(Math.random()*9000)+1000);
+    CLAIMS.unshift({id:newId,phn:cPat.phn,patient:cPat.name,date:cForm.date,code:cForm.fee,desc:selFee?selFee.desc:'',fee:selFee?selFee.fee:0,status:'submitted',icd:cForm.diag,submitted:cForm.date});
+    g('mb').innerHTML='<div style="text-align:center;padding:20px 0"><div style="width:54px;height:54px;border-radius:50%;background:var(--sage-lt);border:2px solid var(--sage-b);display:flex;align-items:center;justify-content:center;margin:0 auto 14px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--sage)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><div style="font-family:var(--ff);font-size:1.35rem;font-style:italic;margin-bottom:6px">Claim transmitted</div><div style="color:var(--t3);font-size:.83rem;margin-bottom:12px">Sent to Teleplan at '+new Date().toLocaleTimeString()+'</div><div class="mono" style="display:inline-block;background:var(--sky-lt);border:1px solid var(--sky-b);color:var(--sky-dk);padding:5px 16px;border-radius:20px;font-size:.81rem">'+newId+'</div></div>';
+    g('mf').innerHTML='<button class="btn btn-p" onclick="closeClaim();goTo(\'claims\')">View claims</button>';
+  },1800);
+}
+goTo('dashboard');
+</script>
+</body>
+</html>

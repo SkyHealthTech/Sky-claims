@@ -1,0 +1,2255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sky Claims — BC MSP Billing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  /* Brand */
+  --sky:#2563eb;          /* primary electric blue */
+  --sky-dk:#1d4ed8;
+  --sky-lt:#eff5ff;
+  --sky-b:#bfd7ff;
+  --cyan:#06b6d4;
+  --grad-1:linear-gradient(135deg,#3b82f6 0%,#60a5fa 100%);
+  --grad-2:linear-gradient(135deg,#6366f1 0%,#3b82f6 100%);
+  --grad-soft:linear-gradient(180deg,#ffffff 0%,#f7faff 60%,#f0f4fb 100%);
+
+  /* Semantic */
+  --ok:#059669;--ok-lt:#ecfdf5;--ok-b:#a7f3d0;
+  --warn:#d97706;--warn-lt:#fffbeb;--warn-b:#fde68a;
+  --bad:#e11d48;--bad-lt:#fff1f3;--bad-b:#fecdd3;
+  --violet:#7c3aed;--violet-lt:#f5f3ff;--violet-b:#ddd6fe;
+
+  /* Neutrals */
+  --bg:#f4f7fc;
+  --wh:#fff;
+  --n50:#f8fafc;--n100:#f1f5f9;--n200:#e2e8f0;--n300:#cbd5e1;
+  --n400:#94a3b8;--n500:#64748b;--n600:#475569;--n700:#334155;--n900:#0f172a;
+  --bd:#e6ecf5;--bd2:#cdd8e8;
+
+  /* Text */
+  --t1:#0f172a;--t2:#334155;--t3:#64748b;--t4:#94a3b8;
+
+  /* Geometry */
+  --r:10px;--rlg:16px;--rxl:24px;
+  --sh-sm:0 1px 2px rgba(15,23,42,.04);
+  --sh:0 1px 2px rgba(15,23,42,.05),0 4px 16px -6px rgba(15,23,42,.06);
+  --sh-lg:0 2px 8px rgba(15,23,42,.06),0 16px 32px -12px rgba(15,23,42,.09);
+  --sh-glow:0 4px 14px -4px rgba(59,130,246,.18);
+
+  --ff:'Plus Jakarta Sans',system-ui,-apple-system,sans-serif;
+  --fb:'Plus Jakarta Sans',system-ui,-apple-system,sans-serif;
+  --fm:'Geist Mono',ui-monospace,monospace;
+
+  /* Lilac accent — soft purple used on icons and select highlights */
+  --lilac:#8b5cf6;
+  --lilac-dk:#6d28d9;
+  --lilac-deepest:#3a2754;
+  --lilac-lt:#f5eef9;
+  --lilac-soft:#ece0f7;
+  --lilac-b:#ddc8f0;
+}
+html{font-size:16px;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+body{font-family:var(--fb);background:var(--bg);color:var(--t1);min-height:100vh;font-feature-settings:'ss01'}
+.tnum,.mono,.stval,.kcard-amt,.ch-stat-val,.risk-value,.bss-val,.hero-t{font-variant-numeric:tabular-nums}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(1200px 600px at -10% -10%,rgba(37,99,235,.06),transparent 60%),radial-gradient(900px 500px at 110% 110%,rgba(6,182,212,.05),transparent 60%);pointer-events:none;z-index:0}
+button,input,select,textarea{font-family:var(--fb)}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-thumb{background:var(--n300);border-radius:6px}
+::-webkit-scrollbar-thumb:hover{background:var(--n400)}
+
+#app{display:flex;min-height:100vh;position:relative;z-index:1}
+
+/* Sidebar */
+.sidebar{width:248px;background:rgba(255,255,255,.85);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-right:1px solid var(--bd);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100;transition:transform .28s cubic-bezier(.2,.8,.2,1);overflow:hidden}
+.main{flex:1;margin-left:248px;display:flex;flex-direction:column;min-height:100vh}
+
+.sb-logo{padding:22px 20px 18px}
+.sb-mark{display:flex;align-items:center;gap:12px}
+.sb-icon{width:40px;height:40px;border-radius:12px;background:var(--grad-1);display:flex;align-items:center;justify-content:center;box-shadow:var(--sh-glow);flex-shrink:0}
+.sb-name{font-family:var(--ff);font-size:1.2rem;font-weight:700;color:var(--t1);line-height:1;letter-spacing:-.02em}
+.sb-tag{font-size:.62rem;color:var(--t4);letter-spacing:.14em;text-transform:uppercase;margin-top:4px;font-weight:600}
+
+.sb-nav{flex:1;padding:8px 12px;overflow-y:auto}
+.nav-grp{font-size:.6rem;font-weight:700;color:var(--t4);letter-spacing:.14em;text-transform:uppercase;padding:14px 10px 6px}
+.nav-item{display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:10px;cursor:pointer;color:var(--t2);font-size:.875rem;font-weight:500;margin-bottom:2px;transition:background .15s,color .15s,transform .15s;position:relative;border:none;background:none;width:100%;text-align:left}
+.nav-item svg{flex-shrink:0;opacity:.7;transition:opacity .15s}
+.nav-item:hover{background:var(--n50);color:var(--t1)}
+.nav-item:hover svg{opacity:1}
+.nav-item.active{background:var(--sky-lt);color:var(--sky-dk);font-weight:600}
+.nav-item.active svg{opacity:1;color:var(--sky)}
+.nav-item.active::before{content:'';position:absolute;left:-12px;top:50%;transform:translateY(-50%);width:3px;height:20px;background:var(--lilac);border-radius:0 3px 3px 0}
+.nav-count{margin-left:auto;font-size:.68rem;font-weight:700;background:var(--n100);color:var(--t3);padding:2px 7px;border-radius:8px;font-family:var(--fm)}
+.nav-item.active .nav-count{background:rgba(37,99,235,.14);color:var(--sky-dk)}
+
+.sb-foot{padding:12px;border-top:1px solid var(--bd)}
+.prac-card{display:flex;align-items:center;gap:10px;padding:11px;border-radius:12px;background:linear-gradient(180deg,var(--n50),var(--wh));border:1px solid var(--bd)}
+.prac-av{width:36px;height:36px;border-radius:10px;background:var(--grad-1);display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:600;color:#fff;flex-shrink:0;box-shadow:var(--sh-sm)}
+.prac-name{font-size:.83rem;font-weight:600;color:var(--t1);line-height:1.2}
+.prac-meta{font-size:.68rem;color:var(--t3);font-family:var(--fm);margin-top:2px}
+.tp-chip{display:flex;align-items:center;gap:7px;margin-top:10px;padding:8px 11px;border-radius:10px;background:var(--ok-lt);border:1px solid var(--ok-b);font-size:.72rem;font-weight:600;color:var(--ok)}
+.tpdot{width:6px;height:6px;border-radius:50%;background:var(--ok);flex-shrink:0;animation:pulse 2.4s ease-in-out infinite;box-shadow:0 0 0 0 rgba(5,150,105,.5)}
+
+/* Topbar */
+.topbar{height:68px;background:rgba(255,255,255,.78);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 28px;gap:16px;position:sticky;top:0;z-index:50}
+.tb-title{font-family:var(--ff);font-size:1.35rem;font-weight:700;flex:1;letter-spacing:-.02em;line-height:1}
+.tb-sub{font-size:.74rem;color:var(--t3);margin-top:3px;font-weight:500}
+.tb-search{flex:0 0 280px;position:relative}
+.tb-search input{width:100%;background:var(--wh);border:1px solid var(--bd);border-radius:10px;padding:8px 12px 8px 36px;font-size:.84rem;color:var(--t1);transition:all .15s}
+.tb-search input:focus{outline:none;border-color:var(--sky);box-shadow:0 0 0 4px rgba(37,99,235,.12)}
+.tb-search .sr-ico{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--t4);pointer-events:none;line-height:0}
+.tb-kbd{position:absolute;right:9px;top:50%;transform:translateY(-50%);font-family:var(--fm);font-size:.66rem;color:var(--t4);background:var(--n100);padding:2px 6px;border-radius:5px;border:1px solid var(--bd)}
+
+/* Page */
+.page{padding:28px 32px;max-width:1320px}
+.page-in{animation:fadeUp .3s cubic-bezier(.2,.8,.2,1)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(5,150,105,.5)}50%{box-shadow:0 0 0 5px rgba(5,150,105,0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px) scale(.99)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:10px;font-size:.84rem;font-weight:600;cursor:pointer;border:none;transition:all .15s;white-space:nowrap;line-height:1;letter-spacing:-.005em}
+.btn-p{background:var(--grad-1);color:#fff;box-shadow:var(--sh-glow)}
+.btn-p:hover{transform:translateY(-1px);box-shadow:0 6px 18px -4px rgba(59,130,246,.28)}
+.btn-p:active{transform:translateY(0)}
+.btn-s{background:var(--wh);color:var(--t2);border:1px solid var(--bd2);box-shadow:var(--sh-sm)}
+.btn-s:hover{background:var(--n50);color:var(--t1);border-color:var(--n300)}
+.btn-g{background:transparent;color:var(--t3);border:1px solid var(--bd)}
+.btn-g:hover{background:var(--n50);color:var(--t1);border-color:var(--bd2)}
+.btn-d{background:var(--bad-lt);color:var(--bad);border:1px solid var(--bad-b)}
+.btn-d:hover{background:#ffe4e9}
+.btn-sm{padding:6px 12px;font-size:.78rem}
+.btn-xs{padding:5px 10px;font-size:.74rem}
+.btn-ico{padding:8px;border-radius:9px}
+
+/* Cards */
+.card{background:var(--wh);border:1px solid var(--bd);border-radius:var(--rlg);box-shadow:var(--sh);transition:box-shadow .2s,transform .2s}
+.card-hov{cursor:pointer}
+.card-hov:hover{box-shadow:var(--sh-lg);transform:translateY(-1px)}
+.cp{padding:22px}
+.ch{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;gap:12px}
+.ct{font-size:.94rem;font-weight:600;color:var(--t1);letter-spacing:-.01em}
+.cs{font-size:.76rem;color:var(--t3);margin-top:3px;font-weight:500}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.stat{background:var(--wh);border:1px solid var(--bd);border-radius:var(--rlg);padding:20px;box-shadow:var(--sh);position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s}
+.stat:hover{transform:translateY(-1px);box-shadow:var(--sh-lg)}
+@keyframes rej-flash{0%,100%{box-shadow:var(--sh),0 0 0 0 rgba(225,29,72,0)}50%{box-shadow:var(--sh),0 0 0 4px rgba(225,29,72,.18)}}
+.stat.stat-hot{animation:rej-flash 2.2s ease-in-out infinite}
+.stat.stat-hot:hover{animation:none}
+.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent,var(--grad-1))}
+.stico{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.stlbl{font-size:.7rem;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px}
+.stval{font-family:var(--ff);font-size:1.85rem;font-weight:400;color:var(--sky-dk);line-height:1;margin-bottom:8px;letter-spacing:-.02em}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:.7rem;font-weight:700}
+.pl-up{background:var(--ok-lt);color:var(--ok)}
+.pl-dn{background:var(--bad-lt);color:var(--bad)}
+.pl-neu{background:var(--n100);color:var(--t3)}
+.bars{display:flex;align-items:flex-end;gap:3px;height:42px;margin-top:12px}
+.bar{flex:1;border-radius:3px 3px 0 0;min-width:3px;transition:opacity .2s}
+
+/* Table */
+.tw{overflow-x:auto;border-radius:12px}
+table{width:100%;border-collapse:collapse;font-size:.86rem}
+thead tr{background:var(--n50)}
+th{padding:11px 14px;text-align:left;font-size:.68rem;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;border-bottom:1px solid var(--bd);white-space:nowrap}
+td{padding:14px;border-bottom:1px solid var(--bd);vertical-align:middle;color:var(--t1)}
+tr:last-child td{border-bottom:none}
+tbody tr{transition:background .12s}
+tbody tr:hover td{background:var(--sky-lt)}
+.mono{font-family:var(--fm);font-size:.79rem}
+
+/* Avatar */
+.av{width:30px;height:30px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:600;color:#fff;flex-shrink:0;letter-spacing:-.01em}
+.av-1{background:#6d4ba0}
+.av-2{background:#8b6db8}
+.av-3{background:#a690cf}
+.av-4{background:#7d5db5}
+.av-5{background:#5a3d8e}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:.71rem;font-weight:700;letter-spacing:-.005em}
+.badge::before{content:'';width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.b-paid{background:var(--ok-lt);color:var(--ok)}.b-paid::before{background:var(--ok)}
+.b-submitted{background:var(--sky-lt);color:var(--sky-dk)}.b-submitted::before{background:var(--sky)}
+.b-pending{background:var(--warn-lt);color:var(--warn)}.b-pending::before{background:var(--warn)}
+.b-rejected{background:var(--bad-lt);color:var(--bad)}.b-rejected::before{background:var(--bad)}
+.b-active{background:var(--ok-lt);color:var(--ok)}.b-active::before{background:var(--ok)}
+.b-draft{background:var(--n100);color:var(--t3)}.b-draft::before{background:var(--t4)}
+
+/* Code chips */
+.code-chip{font-family:var(--fm);background:var(--n100);color:var(--t2);padding:3px 8px;border-radius:6px;font-size:.74rem;font-weight:500}
+.icd-chip{font-family:var(--fm);background:var(--violet-lt);color:var(--violet);padding:3px 8px;border-radius:6px;font-size:.74rem;font-weight:500;border:1px solid var(--violet-b)}
+
+/* Alerts */
+.alrt{display:flex;gap:10px;padding:12px 15px;border-radius:11px;font-size:.82rem;margin-bottom:13px;line-height:1.5;align-items:flex-start}
+.alrt-ico{flex-shrink:0;margin-top:1px}
+.al-info{background:var(--sky-lt);border:1px solid var(--sky-b);color:var(--sky-dk)}
+.al-ok{background:var(--ok-lt);border:1px solid var(--ok-b);color:var(--ok)}
+.al-warn{background:var(--warn-lt);border:1px solid var(--warn-b);color:var(--warn)}
+.al-err{background:var(--bad-lt);border:1px solid var(--bad-b);color:var(--bad)}
+
+/* Forms */
+.fg{display:grid;gap:14px}
+.fg2{grid-template-columns:1fr 1fr}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:.76rem;font-weight:600;color:var(--t2)}
+.field input,.field select,.field textarea{background:var(--wh);border:1.5px solid var(--bd2);border-radius:10px;padding:10px 13px;color:var(--t1);font-size:.875rem;transition:border .15s,box-shadow .15s;width:100%;font-weight:500}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--sky);box-shadow:0 0 0 4px rgba(37,99,235,.12)}
+.field select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath fill='%2364748b' d='M5 7L0 0h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;cursor:pointer}
+.field textarea{resize:vertical;min-height:72px}
+.hint{font-size:.7rem;color:var(--t4);margin-top:2px}
+.ferr{font-size:.7rem;color:var(--bad);margin-top:2px;font-weight:500}
+
+.sr{position:relative}
+.sr input{width:100%;background:var(--wh);border:1px solid var(--bd2);border-radius:10px;padding:9px 13px 9px 36px;font-size:.86rem;color:var(--t1);transition:all .15s}
+.sr input:focus{outline:none;border-color:var(--sky);box-shadow:0 0 0 4px rgba(37,99,235,.12)}
+.sr-ico{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--t4);pointer-events:none;line-height:0}
+
+/* Tabs (legacy) */
+.tabs{display:flex;border-bottom:2px solid var(--bd);margin-bottom:20px;overflow-x:auto;gap:4px}
+.tab{padding:9px 16px;font-size:.84rem;font-weight:600;color:var(--t3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;border-top:none;border-left:none;border-right:none;background:none;font-family:var(--fb);transition:color .15s}
+.tab:hover{color:var(--t1)}
+.tab.active{color:var(--sky-dk);border-bottom:2px solid var(--sky)}
+
+/* Status pills (claims filter) */
+.fpills{display:flex;gap:6px;flex-wrap:wrap;padding:4px;background:var(--n100);border-radius:12px;width:fit-content}
+.fpill{display:flex;align-items:center;gap:7px;padding:7px 13px;border-radius:9px;font-size:.8rem;font-weight:600;color:var(--t3);cursor:pointer;border:none;background:transparent;font-family:var(--fb);transition:all .15s;white-space:nowrap}
+.fpill:hover{color:var(--t1)}
+.fpill.active{background:var(--wh);color:var(--t1);box-shadow:var(--sh-sm)}
+.fpill-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.fpill-count{font-family:var(--fm);font-size:.7rem;font-weight:700;background:var(--n200);color:var(--t3);padding:1px 7px;border-radius:7px}
+.fpill.active .fpill-count{background:var(--sky-lt);color:var(--sky-dk)}
+
+/* View toggle */
+.vt{display:inline-flex;background:var(--n100);border-radius:10px;padding:3px}
+.vt button{padding:6px 10px;border-radius:7px;background:transparent;border:none;color:var(--t3);cursor:pointer;display:inline-flex;align-items:center;gap:5px;font-size:.78rem;font-weight:600;font-family:var(--fb);transition:all .15s}
+.vt button:hover{color:var(--t1)}
+.vt button.active{background:var(--wh);color:var(--t1);box-shadow:var(--sh-sm)}
+
+/* Kanban */
+.kb{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;align-items:start}
+.kcol{background:var(--n50);border:1px solid var(--bd);border-radius:14px;padding:14px;min-height:240px}
+.kcol-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding:0 4px}
+.kcol-t{display:flex;align-items:center;gap:8px;font-size:.78rem;font-weight:700;color:var(--t2);letter-spacing:-.005em}
+.kcol-tot{font-family:var(--fm);font-size:.72rem;color:var(--t4);font-weight:600}
+.kcol-body{display:flex;flex-direction:column;gap:9px}
+.kcard{background:var(--wh);border:1px solid var(--bd);border-radius:11px;padding:13px;cursor:pointer;transition:all .15s;position:relative}
+.kcard:hover{border-color:var(--sky);box-shadow:var(--sh)}
+.kcard-h{display:flex;justify-content:space-between;align-items:start;margin-bottom:10px;gap:8px}
+.kcard-id{font-family:var(--fm);font-size:.71rem;color:var(--sky-dk);font-weight:600}
+.kcard-amt{font-family:var(--ff);font-size:1.05rem;font-weight:400;color:var(--t1);letter-spacing:-.01em;line-height:1}
+.kcard-p{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.kcard-pn{font-size:.83rem;font-weight:600;color:var(--t1)}
+.kcard-pm{font-family:var(--fm);font-size:.7rem;color:var(--t4);margin-top:1px}
+.kcard-meta{display:flex;justify-content:space-between;align-items:center;font-size:.71rem;color:var(--t4);padding-top:9px;border-top:1px dashed var(--bd)}
+
+/* Modal */
+.ov{position:fixed;inset:0;background:rgba(15,23,42,.42);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.modal{background:var(--wh);border:1px solid var(--bd);border-radius:var(--rxl);width:100%;max-width:620px;max-height:92vh;overflow-y:auto;box-shadow:0 24px 80px rgba(15,23,42,.22);animation:fadeIn .22s cubic-bezier(.2,.8,.2,1)}
+.modal-wide{max-width:780px}
+.mhdr{padding:26px 28px 4px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.mtitle{font-family:var(--ff);font-size:1.45rem;font-weight:700;color:var(--t1);letter-spacing:-.02em;line-height:1.15}
+.msub{font-size:.78rem;color:var(--t3);margin-top:4px;font-weight:500}
+.mcls{background:var(--n100);border:none;cursor:pointer;color:var(--t2);padding:7px;border-radius:9px;line-height:0;transition:background .15s}
+.mcls:hover{background:var(--n200);color:var(--t1)}
+.mbody{padding:22px 28px}
+.mfoot{padding:0 28px 24px;display:flex;justify-content:flex-end;gap:10px}
+
+/* Stepper */
+.steps{display:flex;align-items:center;margin-bottom:24px}
+.snode{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.76rem;font-weight:700;flex-shrink:0;transition:all .2s}
+.s-done{background:var(--grad-1);color:#fff;box-shadow:0 4px 10px rgba(37,99,235,.32)}
+.s-act{background:var(--grad-1);color:#fff;box-shadow:0 0 0 5px rgba(37,99,235,.18),0 4px 10px rgba(37,99,235,.32)}
+.s-pend{background:var(--wh);color:var(--t4);border:1.5px solid var(--bd2)}
+.sline{flex:1;height:2px;background:var(--bd);margin:0 6px;border-radius:2px;position:relative;overflow:hidden}
+.sline.done{background:var(--grad-1)}
+.slbl{font-size:.65rem;color:var(--t3);text-align:center;margin-top:6px;white-space:nowrap;font-weight:600;letter-spacing:.02em}
+
+.div{height:1px;background:var(--bd);margin:16px 0}
+
+/* Coverage / KV grids */
+.cov-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.cov-item{background:var(--n50);border:1px solid var(--bd);border-radius:10px;padding:11px}
+.cov-lbl{font-size:.66rem;color:var(--t4);text-transform:uppercase;letter-spacing:.08em;font-weight:700}
+.cov-val{font-size:.92rem;font-weight:600;color:var(--t1);margin-top:4px;letter-spacing:-.005em}
+
+.phn-res{background:var(--ok-lt);border:1.5px solid var(--ok-b);border-radius:12px;padding:14px;margin-top:8px}
+.sum-box{background:var(--n50);border:1px solid var(--bd);border-radius:12px;padding:16px}
+.srow{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bd);font-size:.84rem}
+.srow:last-child{border-bottom:none}
+
+.audit-row{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--bd)}
+.audit-row:last-child{border-bottom:none}
+.audit-ic{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+.prog{height:6px;background:var(--n100);border-radius:4px;overflow:hidden}
+.prog-fill{height:100%;border-radius:4px;background:var(--grad-1)}
+
+.comp-row{display:flex;gap:11px;padding:10px 0;border-bottom:1px solid var(--bd)}
+.comp-row:last-child{border-bottom:none}
+.comp-ic{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+
+.backdrop{display:none;position:fixed;inset:0;background:rgba(15,23,42,.35);z-index:99}
+.backdrop.on{display:block}
+
+/* Hero greeting */
+.hero{position:relative;display:grid;grid-template-columns:1fr auto;align-items:center;gap:20px;margin-bottom:24px;padding:24px 28px;background:linear-gradient(135deg,#ffffff 0%,#f9f4fd 55%,#eff5ff 100%);border-radius:20px;border:1px solid var(--bd);overflow:hidden}
+.hero::before{content:'';position:absolute;top:-50px;right:-30px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(139,92,246,.10),transparent 70%);pointer-events:none}
+.hero::after{content:'';position:absolute;bottom:-60px;left:30%;width:240px;height:120px;border-radius:50%;background:radial-gradient(ellipse,rgba(37,99,235,.06),transparent 70%);pointer-events:none}
+.hero-l{display:flex;flex-direction:column;gap:6px;min-width:0;position:relative;z-index:1}
+.hero-date{font-size:.68rem;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px}
+.hero-t{font-family:var(--ff);font-size:1.65rem;font-weight:400;line-height:1.15;letter-spacing:-.02em;color:var(--sky-dk)}
+.hero-s{font-size:.84rem;color:var(--t2);margin-top:4px;font-weight:500;line-height:1.4}
+.hero-s strong{color:var(--t1);font-weight:700}
+.hero-tag{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:20px;background:var(--lilac-lt);color:var(--lilac-dk);font-size:.66rem;font-weight:700;letter-spacing:-.005em;margin-left:10px;border:1px solid var(--lilac-b);vertical-align:middle}
+.hero-actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.hero-illustration{flex-shrink:0;width:220px;height:140px;position:relative;z-index:1}
+.hero-illustration svg{width:100%;height:100%}
+@media(max-width:768px){
+  .hero{grid-template-columns:1fr;padding:20px 22px;gap:14px}
+  .hero-illustration{display:none}
+  .hero-t{font-size:1.55rem}
+}
+
+/* Claims hero (claims page) */
+.claims-hero{position:relative;background:var(--grad-2);border-radius:var(--rxl);padding:26px 28px;margin-bottom:24px;color:#fff;overflow:hidden;box-shadow:var(--sh-glow)}
+.claims-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(800px 400px at 100% 0%,rgba(255,255,255,.18),transparent 50%);pointer-events:none}
+.claims-hero::after{content:'';position:absolute;right:-40px;bottom:-40px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.1),transparent 70%);pointer-events:none}
+.ch-inner{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:18px}
+.ch-l{flex:1;min-width:260px}
+.ch-eyebrow{font-size:.7rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;opacity:.85;margin-bottom:6px}
+.ch-title{font-family:var(--ff);font-size:1.85rem;font-weight:700;letter-spacing:-.025em;line-height:1.1}
+.ch-sub{font-size:.88rem;opacity:.85;margin-top:8px;max-width:520px}
+.ch-stats{display:flex;gap:24px;flex-wrap:wrap}
+.ch-stat-lbl{font-size:.66rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;opacity:.7}
+.ch-stat-val{font-family:var(--ff);font-size:1.6rem;font-weight:400;letter-spacing:-.01em;margin-top:2px}
+.btn-on-hero{background:rgba(255,255,255,.95);color:var(--sky-dk);box-shadow:0 8px 24px -8px rgba(0,0,0,.3);font-weight:700}
+.btn-on-hero:hover{background:#fff;transform:translateY(-1px)}
+
+/* Toolbar (claims) */
+.tbar{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.tbar-l{display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex:1;min-width:260px}
+.tbar-r{display:flex;align-items:center;gap:8px}
+
+/* Quick action cards */
+.qa-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}
+.qa{background:var(--wh);border:1px solid var(--bd);border-radius:var(--rlg);padding:18px;cursor:pointer;transition:all .15s;display:flex;gap:12px;align-items:flex-start;box-shadow:var(--sh-sm)}
+.qa:hover{transform:translateY(-1px);border-color:var(--sky-b);box-shadow:var(--sh)}
+.qa-ic{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.qa-t{font-size:.88rem;font-weight:600;color:var(--t1);letter-spacing:-.005em}
+.qa-d{font-size:.75rem;color:var(--t3);margin-top:3px}
+
+/* Empty */
+.empty{text-align:center;padding:48px 22px;color:var(--t3)}
+.empty-ico{width:54px;height:54px;border-radius:50%;background:var(--n100);display:inline-flex;align-items:center;justify-content:center;margin-bottom:14px}
+
+/* Responsive */
+@media(max-width:1180px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .qa-grid{grid-template-columns:1fr 1fr}
+  .kb{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:768px){
+  .main{margin-left:0}
+  .sidebar{transform:translateX(-100%);width:280px}
+  .sidebar.open{transform:translateX(0)}
+  .ham{display:flex!important}
+  .page{padding:18px}
+  .stats{grid-template-columns:1fr 1fr;gap:10px}
+  .topbar{padding:0 18px}
+  .hm{display:none!important}
+  .tb-search{flex:1;min-width:0}
+  th,td{padding:9px 10px}
+  .qa-grid{grid-template-columns:1fr}
+  .kb{grid-template-columns:1fr}
+  .hero-t{font-size:1.7rem}
+  .ch-title{font-size:1.5rem}
+  .fg2{grid-template-columns:1fr}
+}
+@media(max-width:460px){
+  .stats{grid-template-columns:1fr}
+  .ch-stats{gap:14px}
+}
+
+/* ── Accessibility helpers ── */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.skip-link{position:absolute;left:-9999px;top:0;background:var(--sky-dk);color:#fff;padding:10px 16px;border-radius:0 0 10px 0;font-weight:700;font-size:.84rem;z-index:300;text-decoration:none}
+.skip-link:focus{left:0}
+*:focus-visible{outline:2px solid var(--sky);outline-offset:2px;border-radius:6px}
+button:focus-visible,a:focus-visible{outline:2px solid var(--sky);outline-offset:2px}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+  .tpdot{animation:none}
+}
+
+/* ── AI claim coder ── */
+.ai-card{background:linear-gradient(135deg,#f5f3ff 0%,#eff5ff 100%);border:1.5px solid var(--violet-b);border-radius:14px;padding:16px;margin-bottom:18px;position:relative;overflow:hidden}
+.ai-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--violet),var(--sky),var(--cyan))}
+.ai-hdr{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.ai-badge{display:inline-flex;align-items:center;gap:5px;background:var(--violet);color:#fff;padding:3px 9px;border-radius:20px;font-size:.66rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.ai-title{font-size:.86rem;font-weight:700;color:var(--t1);letter-spacing:-.005em}
+.ai-sub{font-size:.74rem;color:var(--t3);margin-top:1px}
+.ai-textarea{width:100%;background:var(--wh);border:1.5px solid var(--bd2);border-radius:10px;padding:11px 13px;font-size:.86rem;color:var(--t1);font-family:var(--fb);resize:vertical;min-height:78px;transition:border .15s,box-shadow .15s}
+.ai-textarea:focus{outline:none;border-color:var(--violet);box-shadow:0 0 0 4px rgba(124,58,237,.14)}
+.ai-actions{display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap}
+.btn-ai{background:linear-gradient(135deg,var(--violet) 0%,var(--sky) 100%);color:#fff;border:none;padding:8px 14px;border-radius:9px;font-size:.78rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;box-shadow:0 4px 14px -4px rgba(124,58,237,.5);transition:transform .15s,box-shadow .15s}
+.btn-ai:hover{transform:translateY(-1px);box-shadow:0 8px 22px -4px rgba(124,58,237,.55)}
+.ai-result{margin-top:12px;background:var(--wh);border:1.5px solid var(--violet-b);border-radius:11px;padding:13px;animation:fadeIn .25s cubic-bezier(.2,.8,.2,1)}
+.ai-result-row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:9px;flex-wrap:wrap}
+.ai-chips{display:flex;gap:6px;flex-wrap:wrap}
+.ai-conf{display:inline-flex;align-items:center;gap:5px;font-size:.72rem;font-weight:700;color:var(--ok);background:var(--ok-lt);padding:3px 9px;border-radius:20px}
+.ai-why{font-size:.78rem;color:var(--t2);line-height:1.5;background:var(--n50);padding:9px 11px;border-radius:8px;border-left:3px solid var(--violet);margin-top:8px}
+.ai-foot{display:flex;gap:8px;margin-top:11px;justify-content:flex-end}
+.ai-example{font-size:.7rem;color:var(--t4);font-style:italic;margin-top:6px;line-height:1.4}
+
+/* ── Risk meter (rejection probability) ── */
+.risk-card{background:var(--wh);border:1.5px solid var(--bd2);border-radius:12px;padding:14px;margin-bottom:13px}
+.risk-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;gap:8px}
+.risk-label{font-size:.74rem;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em}
+.risk-value{font-family:var(--ff);font-size:1.4rem;font-weight:400;letter-spacing:-.01em;line-height:1}
+.risk-bar{height:8px;background:var(--n100);border-radius:4px;overflow:hidden;position:relative}
+.risk-fill{height:100%;border-radius:4px;transition:width .35s cubic-bezier(.2,.8,.2,1)}
+.risk-r-low{background:linear-gradient(90deg,#10b981,#059669)}
+.risk-r-med{background:linear-gradient(90deg,#fbbf24,#d97706)}
+.risk-r-hi{background:linear-gradient(90deg,#f87171,#e11d48)}
+.risk-reason{font-size:.76rem;color:var(--t2);margin-top:9px;line-height:1.45}
+.risk-reason strong{color:var(--t1)}
+
+/* ── Keyboard shortcuts overlay ── */
+.kbd-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 28px;margin-top:6px}
+.kbd-grp-t{font-size:.7rem;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;grid-column:1/-1}
+.kbd-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--bd);font-size:.84rem;color:var(--t2)}
+.kbd-keys{display:flex;gap:4px;align-items:center}
+.kbd{font-family:var(--fm);font-size:.7rem;color:var(--t2);background:var(--n100);padding:3px 8px;border-radius:6px;border:1px solid var(--bd);font-weight:600;min-width:22px;text-align:center;line-height:1}
+.kbd-plus{font-size:.7rem;color:var(--t4);font-weight:600}
+.kbd-trigger{position:fixed;bottom:18px;right:18px;background:var(--wh);border:1px solid var(--bd2);box-shadow:var(--sh);width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--t3);font-family:var(--fm);font-size:.84rem;font-weight:700;z-index:90;transition:all .15s}
+.kbd-trigger:hover{color:var(--t1);border-color:var(--sky);transform:translateY(-1px)}
+@media (max-width:768px){.kbd-trigger{display:none}}
+
+/* ── Live status region ── */
+#live-status{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden}
+
+/* ── Profession picker cards (icon + name only) ── */
+.prof-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px}
+.prof-card{background:var(--wh);border:2px solid var(--bd);border-radius:14px;padding:24px 18px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:12px;min-height:140px;position:relative}
+.prof-card:hover{border-color:var(--sky-b);transform:translateY(-1px);box-shadow:var(--sh)}
+.prof-card.active{border-color:var(--sky);background:var(--sky-lt);cursor:default}
+.prof-card.active:hover{transform:none}
+.prof-card.pending{border-color:var(--violet);background:var(--violet-lt);box-shadow:0 0 0 4px rgba(124,58,237,.12)}
+.prof-card.pending:hover{transform:none}
+.prof-icon{width:52px;height:52px;border-radius:13px;background:var(--sky-lt);color:var(--sky);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s,color .15s}
+.prof-card.active .prof-icon{background:var(--sky);color:#fff}
+.prof-card.pending .prof-icon{background:var(--violet);color:#fff}
+.prof-name{font-family:var(--ff);font-size:1.25rem;font-weight:400;letter-spacing:-.01em;color:var(--t1)}
+.prof-pending-tag{position:absolute;top:-9px;right:-9px;background:var(--violet);color:#fff;font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:3px 9px;border-radius:14px;box-shadow:0 4px 10px -2px rgba(124,58,237,.5)}
+.prof-confirm{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:18px;padding:14px 18px;background:var(--violet-lt);border:1.5px solid var(--violet-b);border-radius:12px;animation:fadeIn .22s cubic-bezier(.2,.8,.2,1);flex-wrap:wrap}
+.prof-confirm-text{font-size:.86rem;color:var(--t1);line-height:1.5;flex:1;min-width:240px}
+.prof-confirm-text strong{color:var(--violet);font-weight:700}
+.prof-confirm-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+@media(max-width:980px){.prof-grid{grid-template-columns:1fr}.prof-confirm{flex-direction:column;align-items:stretch}.prof-confirm-actions{justify-content:flex-end}}
+
+/* ── Batch claim flow ── */
+.modal-xl{max-width:980px}
+.batch-summary{display:flex;align-items:center;gap:14px;padding:11px 14px;background:var(--sky-lt);border:1px solid var(--sky-b);border-radius:11px;margin-bottom:14px;flex-wrap:wrap}
+.batch-summary-stat{display:flex;flex-direction:column;gap:1px;padding-right:14px;border-right:1px solid var(--sky-b)}
+.batch-summary-stat:last-child{border-right:none;padding-right:0}
+.bss-lbl{font-size:.66rem;font-weight:700;color:var(--sky-dk);text-transform:uppercase;letter-spacing:.08em;opacity:.8}
+.bss-val{font-family:var(--ff);font-size:1.15rem;font-weight:400;color:var(--sky-dk);letter-spacing:-.01em;line-height:1.1}
+.bp-list{display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto;padding-right:4px;margin-bottom:14px}
+.bp-row{display:flex;align-items:center;gap:11px;padding:10px 12px;background:var(--wh);border:1px solid var(--bd);border-radius:11px;cursor:pointer;transition:all .12s}
+.bp-row:hover{border-color:var(--sky-b);background:var(--n50)}
+.bp-row.on{background:var(--sky-lt);border-color:var(--sky)}
+.bp-check{width:20px;height:20px;border-radius:6px;border:1.8px solid var(--bd2);display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--wh);transition:all .12s}
+.bp-row.on .bp-check{background:var(--sky);border-color:var(--sky)}
+.bp-row.on .bp-check svg{display:block}
+.bp-check svg{display:none}
+.bp-info{flex:1;min-width:0}
+.bp-name{font-size:.88rem;font-weight:600;color:var(--t1);letter-spacing:-.005em}
+.bp-meta{font-family:var(--fm);font-size:.7rem;color:var(--t3);margin-top:2px}
+.bp-tag{font-size:.66rem;font-weight:700;color:var(--t4);padding:3px 8px;border-radius:6px;background:var(--n100);text-transform:uppercase;letter-spacing:.06em}
+.bc-table{width:100%;border-collapse:collapse;font-size:.82rem}
+.bc-table thead tr{background:var(--n50)}
+.bc-table th{padding:9px 10px;text-align:left;font-size:.64rem;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.09em;border-bottom:1px solid var(--bd);white-space:nowrap}
+.bc-table td{padding:9px 10px;border-bottom:1px solid var(--bd);vertical-align:middle;color:var(--t1)}
+.bc-table tr:last-child td{border-bottom:none}
+.bc-table tr.bc-edited td{background:var(--violet-lt)}
+.bc-inline{background:var(--wh);border:1px solid var(--bd2);border-radius:7px;padding:5px 8px;font-size:.76rem;color:var(--t1);font-family:var(--fb);min-width:0;width:100%}
+.bc-inline:focus{outline:none;border-color:var(--sky);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+.bc-inline.mono{font-family:var(--fm)}
+.bc-rowact{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:7px;background:transparent;border:1px solid var(--bd);color:var(--t3);cursor:pointer;transition:all .12s;line-height:0}
+.bc-rowact:hover{background:var(--bad-lt);border-color:var(--bad-b);color:var(--bad)}
+.bc-edit-badge{display:inline-flex;align-items:center;gap:3px;font-size:.62rem;font-weight:700;color:var(--violet);background:var(--violet-lt);border:1px solid var(--violet-b);padding:2px 7px;border-radius:10px;text-transform:uppercase;letter-spacing:.04em}
+.bp-addbar{display:flex;gap:8px;margin-bottom:12px}
+.bp-empty{text-align:center;padding:32px 16px;background:var(--n50);border:1.5px dashed var(--bd2);border-radius:11px;color:var(--t3)}
+.bp-empty .empty-ico{margin-bottom:10px}
+.bsel-pills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.bsel-pill{display:inline-flex;align-items:center;gap:7px;padding:5px 11px 5px 6px;background:var(--sky-lt);border:1px solid var(--sky-b);border-radius:20px;font-size:.76rem;font-weight:600;color:var(--sky-dk)}
+.bsel-pill .av{width:22px;height:22px;font-size:.6rem;border-radius:7px}
+.bsel-pill-x{cursor:pointer;background:none;border:none;color:var(--sky-dk);opacity:.6;padding:0 0 0 3px;line-height:0;display:flex}
+.bsel-pill-x:hover{opacity:1}
+@media(max-width:768px){
+  .bc-table th:nth-child(4),.bc-table td:nth-child(4){display:none}
+  .batch-summary-stat{border-right:none;padding-right:0;border-bottom:1px solid var(--sky-b);padding-bottom:6px}
+}
+</style>
+</head>
+<body>
+<a href="#pc" class="skip-link">Skip to main content</a>
+<div id="live-status" role="status" aria-live="polite" aria-atomic="true"></div>
+<datalist id="fc-list"></datalist>
+<datalist id="icd-list"></datalist>
+<button class="kbd-trigger" onclick="showShortcuts()" aria-label="Show keyboard shortcuts" title="Keyboard shortcuts (press ?)">?</button>
+<div id="app">
+  <div class="backdrop" id="bd" onclick="closeSb()"></div>
+  <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
+    <div class="sb-logo">
+      <div class="sb-mark">
+        <div class="sb-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M3 17c3-4 6-4 9 0s6 0 9-4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M6 11c2-3 5-3 8 0s6 0 4-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".75"/>
+          </svg>
+        </div>
+        <div>
+          <div class="sb-name">Sky Claims</div>
+          <div class="sb-tag">BC MSP Billing</div>
+        </div>
+      </div>
+    </div>
+    <nav class="sb-nav">
+      <div class="nav-grp">Workspace</div>
+      <button class="nav-item active" id="nav-dashboard" onclick="goTo('dashboard')">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        Dashboard
+      </button>
+      <button class="nav-item" id="nav-claims" onclick="goTo('claims')">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 14l2 2 4-4"/></svg>
+        Claims
+        <span class="nav-count" id="nav-cnt-claims">8</span>
+      </button>
+      <button class="nav-item" id="nav-patients" onclick="goTo('patients')">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Patients
+        <span class="nav-count" id="nav-cnt-pats">5</span>
+      </button>
+      <button class="nav-item" id="nav-remittance" onclick="goTo('remittance')">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><circle cx="7" cy="14.5" r="1"/></svg>
+        Remittance
+      </button>
+      <div class="nav-grp">Administration</div>
+      <button class="nav-item" id="nav-audit" onclick="goTo('audit')">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/><path d="M9 11l3 3L22 4"/></svg>
+        Audit log
+      </button>
+      <button class="nav-item" id="nav-settings" onclick="goTo('settings')">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Settings
+      </button>
+    </nav>
+    <div class="sb-foot">
+      <div class="prac-card">
+        <div class="prac-av">KP</div>
+        <div style="min-width:0">
+          <div class="prac-name">Dr. Kiran Patel</div>
+          <div class="prac-meta">MSP 12847 · T1847</div>
+        </div>
+      </div>
+      <div class="tp-chip"><div class="tpdot"></div>Teleplan · TLS 1.3</div>
+    </div>
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <button class="btn btn-g btn-ico ham" id="ham" style="display:none" onclick="openSb()" aria-label="Open navigation menu" aria-controls="sidebar" aria-expanded="false">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div style="flex:1;min-width:0">
+        <div class="tb-title" id="tbt">Dashboard</div>
+        <div class="tb-sub" id="tbs">Your practice at a glance</div>
+      </div>
+      <div class="tb-search hm" role="search">
+        <label for="tb-search-input" class="sr-only">Search claims, patients, codes</label>
+        <span class="sr-ico" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+        <input id="tb-search-input" placeholder="Search claims, patients, codes..." aria-label="Search"/>
+        <span class="tb-kbd" aria-hidden="true">⌘K</span>
+      </div>
+      <button class="btn btn-s btn-sm hm" onclick="openBatch()" aria-label="Create a batch of claims" title="Create batch (press B)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        Batch
+      </button>
+      <button class="btn btn-p" onclick="openClaim()" aria-label="Create a new single claim" title="New claim (press N)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New claim
+      </button>
+    </header>
+    <main class="page" id="pc" tabindex="-1"></main>
+  </div>
+</div>
+<div class="ov" id="claim-modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="claim-modal-title" aria-hidden="true">
+  <div class="modal modal-wide">
+    <div class="mhdr">
+      <div><div class="mtitle" id="claim-modal-title">New claim</div><div class="msub">Submit directly to MSP Teleplan</div></div>
+      <button class="mcls" onclick="closeClaim()" aria-label="Close new claim dialog">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="mbody" id="mb"></div>
+    <div class="mfoot" id="mf"></div>
+  </div>
+</div>
+<div class="ov" id="detail-modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="dmt" aria-hidden="true">
+  <div class="modal modal-wide">
+    <div class="mhdr">
+      <div><div class="mtitle" id="dmt"></div><div class="msub" id="dms"></div></div>
+      <button class="mcls" onclick="closeDetail()" aria-label="Close claim detail dialog">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="mbody" id="dmb"></div>
+    <div class="mfoot" id="dmf"></div>
+  </div>
+</div>
+<div class="ov" id="kbd-modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="kbd-modal-title" aria-hidden="true">
+  <div class="modal">
+    <div class="mhdr">
+      <div><div class="mtitle" id="kbd-modal-title">Keyboard shortcuts</div><div class="msub">Power-user navigation</div></div>
+      <button class="mcls" onclick="closeShortcuts()" aria-label="Close keyboard shortcuts">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="mbody" id="kbd-body"></div>
+  </div>
+</div>
+<div class="ov" id="batch-modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="batch-modal-title" aria-hidden="true">
+  <div class="modal modal-xl">
+    <div class="mhdr">
+      <div><div class="mtitle" id="batch-modal-title">New batch</div><div class="msub">Bill multiple patients at once · uniform codes with per-row overrides</div></div>
+      <button class="mcls" onclick="closeBatch()" aria-label="Close batch dialog">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="mbody" id="bb"></div>
+    <div class="mfoot" id="bf"></div>
+  </div>
+</div>
+<script>
+var FC=[
+  {code:"00100",desc:"Office visit - brief",fee:32.69,type:"GP"},
+  {code:"00101",desc:"Office visit - intermediate",fee:65.73,type:"GP"},
+  {code:"00102",desc:"Office visit - extended",fee:98.54,type:"GP"},
+  {code:"00110",desc:"Home visit",fee:87.42,type:"GP"},
+  {code:"00115",desc:"Hospital visit",fee:54.21,type:"GP"},
+  {code:"00120",desc:"Emergency visit - minor",fee:76.33,type:"GP"},
+  {code:"00130",desc:"Prenatal visit",fee:43.18,type:"GP"},
+  {code:"00140",desc:"Preventive care visit",fee:55.00,type:"GP"},
+  {code:"14070",desc:"Pap smear",fee:28.95,type:"GP"},
+  {code:"03150",desc:"ECG - 12 lead",fee:37.20,type:"GP"},
+  {code:"00590",desc:"Telephone consultation",fee:22.50,type:"GP"},
+  {code:"98010",desc:"LFP direct care - 15 min",fee:45.50,type:"LFP"},
+  {code:"98020",desc:"LFP direct care - 30 min",fee:91.00,type:"LFP"},
+  {code:"98030",desc:"LFP direct care - 60 min",fee:182.00,type:"LFP"},
+  {code:"19272",desc:"Soft tissue injury assessment",fee:89.50,type:"ICBC"},
+  {code:"18270",desc:"WCB initial assessment",fee:95.00,type:"WCB"},
+  {code:"18272",desc:"WCB progress report",fee:65.00,type:"WCB"}
+];
+var ICD=[
+  {code:"401",desc:"Essential hypertension"},{code:"250",desc:"Diabetes mellitus"},
+  {code:"493",desc:"Asthma"},{code:"724",desc:"Back pain"},
+  {code:"460",desc:"Acute nasopharyngitis"},{code:"462",desc:"Acute pharyngitis"},
+  {code:"311",desc:"Depressive disorder NEC"},{code:"300",desc:"Anxiety states"},
+  {code:"714",desc:"Rheumatoid arthritis"},{code:"486",desc:"Pneumonia"},
+  {code:"V70",desc:"General medical examination"},{code:"V72",desc:"Special investigations"}
+];
+var PATS=[
+  {phn:"9876543210",name:"Margaret Chen",dob:"1968-03-15",gender:"F",av:1},
+  {phn:"9234567890",name:"James Okafor",dob:"1975-11-02",gender:"M",av:2},
+  {phn:"9345678901",name:"Priya Sharma",dob:"1990-07-22",gender:"F",av:3},
+  {phn:"9456789012",name:"Robert Tremblay",dob:"1958-01-30",gender:"M",av:4},
+  {phn:"9567890123",name:"Aisha Nguyen",dob:"2001-05-14",gender:"F",av:5}
+];
+var CLAIMS=[
+  {id:"SKY-2026-0041",phn:"9876543210",patient:"Margaret Chen",date:"2026-04-09",code:"00101",desc:"Office visit - intermediate",fee:65.73,status:"paid",icd:"401",submitted:"2026-04-09",paid:"2026-04-15"},
+  {id:"SKY-2026-0040",phn:"9234567890",patient:"James Okafor",date:"2026-04-08",code:"00102",desc:"Office visit - extended",fee:98.54,status:"submitted",icd:"250",submitted:"2026-04-08"},
+  {id:"SKY-2026-0039",phn:"9345678901",patient:"Priya Sharma",date:"2026-04-07",code:"98020",desc:"LFP direct care - 30 min",fee:91.00,status:"rejected",icd:"311",submitted:"2026-04-07",rejCode:"BE018",rejDesc:"Service not covered under listed payment model"},
+  {id:"SKY-2026-0038",phn:"9456789012",patient:"Robert Tremblay",date:"2026-04-05",code:"00100",desc:"Office visit - brief",fee:32.69,status:"paid",icd:"V70",submitted:"2026-04-05",paid:"2026-04-15"},
+  {id:"SKY-2026-0037",phn:"9567890123",patient:"Aisha Nguyen",date:"2026-04-04",code:"14070",desc:"Pap smear",fee:28.95,status:"paid",icd:"V72",submitted:"2026-04-04",paid:"2026-03-31"},
+  {id:"SKY-2026-0036",phn:"9876543210",patient:"Margaret Chen",date:"2026-04-03",code:"03150",desc:"ECG - 12 lead",fee:37.20,status:"paid",icd:"401",submitted:"2026-04-03",paid:"2026-03-31"},
+  {id:"SKY-2026-0035",phn:"9234567890",patient:"James Okafor",date:"2026-04-01",code:"00590",desc:"Telephone consultation",fee:22.50,status:"pending",icd:"250"},
+  {id:"SKY-2026-0034",phn:"9345678901",patient:"Priya Sharma",date:"2026-03-28",code:"19272",desc:"Soft tissue injury assessment",fee:89.50,status:"paid",icd:"724",submitted:"2026-03-28",paid:"2026-03-31"}
+];
+var REMS=[
+  {id:"REM-2026-04-15",date:"Apr 15, 2026",amount:3847.22,claims:28,rej:2},
+  {id:"REM-2026-03-31",date:"Mar 31, 2026",amount:4102.55,claims:32,rej:1},
+  {id:"REM-2026-03-15",date:"Mar 15, 2026",amount:3654.80,claims:25,rej:3},
+  {id:"REM-2026-02-28",date:"Feb 28, 2026",amount:4289.40,claims:34,rej:0}
+];
+var curPage='dashboard',claimTab='all',claimQ='',selPat=null,selRem=null,settTab='profession',claimView='table';
+var cStep=0,cPat=null,cForm={};
+function g(id){return document.getElementById(id);}
+function fmt(n){return n.toLocaleString('en-CA',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function today(){return new Date().toISOString().slice(0,10);}
+function initials(n){return n.split(' ').map(function(p){return p[0];}).slice(0,2).join('').toUpperCase();}
+function avClass(p){var pat=null;for(var i=0;i<PATS.length;i++){if(PATS[i].phn===p.phn){pat=PATS[i];break;}}return 'av-'+(pat?pat.av:1);}
+function patAv(name,phn,size){var s=size||30;var pat=null;for(var i=0;i<PATS.length;i++){if(PATS[i].phn===phn){pat=PATS[i];break;}}var cls='av-'+(pat?pat.av:1);return '<div class="av '+cls+'" style="width:'+s+'px;height:'+s+'px;font-size:'+(s*.36)+'px">'+initials(name)+'</div>';}
+function badge(s){var m={paid:'Paid',submitted:'Submitted',pending:'Pending',rejected:'Rejected',active:'Active',draft:'Draft'};return '<span class="badge b-'+s+'">'+(m[s]||s)+'</span>';}
+function alrt(t,msg){return '<div class="alrt al-'+t+'">'+msg+'</div>';}
+function bars(data,col){var mx=Math.max.apply(null,data);return '<div class="bars">'+data.map(function(v,i){return '<div class="bar" style="height:'+Math.round((v/mx)*100)+'%;background:'+(i===data.length-1?col:col+'44')+'"></div>';}).join('')+'</div>';}
+function chk(ok){return ok?'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>':'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';}
+
+var PAGE_META={
+  dashboard:['Dashboard','Your practice at a glance'],
+  claims:['Claims','Submit, track, and resolve MSP claims'],
+  patients:['Patients','MSP-enrolled patient records'],
+  remittance:['Remittance','Payment statements from HIBC'],
+  audit:['Audit log','Immutable record of all actions'],
+  settings:['Settings','Configure Sky Claims']
+};
+
+function goTo(p){
+  curPage=p;
+  document.querySelectorAll('.nav-item').forEach(function(el){el.classList.remove('active');});
+  var ni=g('nav-'+p);if(ni)ni.classList.add('active');
+  var meta=PAGE_META[p]||['',''];
+  g('tbt').textContent=meta[0];g('tbs').textContent=meta[1];
+  var pc=g('pc');pc.className='page page-in';
+  var fns={dashboard:rDash,claims:rClaims,patients:rPats,remittance:rRem,audit:rAudit,settings:rSettings};
+  pc.innerHTML=fns[p]?fns[p]():'';
+  // update sidebar counts
+  var pendingCount=CLAIMS.filter(function(c){return c.status==='pending'||c.status==='submitted'||c.status==='rejected';}).length;
+  var nc=g('nav-cnt-claims');if(nc)nc.textContent=pendingCount;
+  var np=g('nav-cnt-pats');if(np)np.textContent=PATS.length;
+  closeSb();
+}
+function openSb(){g('sidebar').classList.add('open');g('bd').classList.add('on');}
+function closeSb(){g('sidebar').classList.remove('open');g('bd').classList.remove('on');}
+
+/* ─── Dashboard ─────────────────────────────────────────── */
+function rDash(){
+  var paid=CLAIMS.filter(function(c){return c.status==='paid';}).reduce(function(a,c){return a+c.fee;},0);
+  var pend=CLAIMS.filter(function(c){return c.status==='pending'||c.status==='submitted';}).reduce(function(a,c){return a+c.fee;},0);
+  var pendCt=CLAIMS.filter(function(c){return c.status==='pending'||c.status==='submitted';}).length;
+  var rej=Math.round((CLAIMS.filter(function(c){return c.status==='rejected';}).length/CLAIMS.length)*100);
+
+  var rows=CLAIMS.slice(0,6).map(function(c){
+    return '<tr style="cursor:pointer" onclick="viewClaim(\''+c.id+'\')">'
+      +'<td><span class="mono" style="color:var(--sky-dk);font-weight:600">'+c.id+'</span></td>'
+      +'<td><div style="display:flex;align-items:center;gap:10px">'+patAv(c.patient,c.phn,28)+'<span style="font-weight:600">'+c.patient+'</span></div></td>'
+      +'<td class="hm"><span class="code-chip">'+c.code+'</span></td>'
+      +'<td><span class="mono" style="font-weight:700">$'+fmt(c.fee)+'</span></td>'
+      +'<td>'+badge(c.status)+'</td>'
+      +'<td class="hm" style="color:var(--t3);font-size:.79rem">'+c.date+'</td>'
+      +'</tr>';
+  }).join('');
+
+  var _now=new Date();
+  var _hr=_now.getHours();
+  var _greet=_hr<12?'Good morning':(_hr<17?'Good afternoon':'Good evening');
+  var _dateStr=_now.toLocaleDateString('en-CA',{weekday:'long',month:'long',day:'numeric'});
+  var _pracName=(PROFESSIONS&&PROFESSIONS[currentProfession])?PROFESSIONS[currentProfession].practitioner.split(',')[0]:'Dr. Kiran Patel';
+  var _monthBilled=Math.round(paid+pend).toLocaleString();
+  var _illustration='<svg viewBox="0 0 220 140" fill="none" aria-hidden="true">'
+    +'<ellipse cx="160" cy="70" rx="62" ry="50" fill="#eff5ff"/>'
+    +'<ellipse cx="185" cy="42" rx="30" ry="26" fill="#f5eef9"/>'
+    +'<g transform="rotate(-7 130 75)">'
+      +'<rect x="98" y="32" width="68" height="86" rx="9" fill="#fff" stroke="#cbd5e1" stroke-width="1.5"/>'
+      +'<rect x="124" y="27" width="20" height="10" rx="3" fill="#8b5cf6"/>'
+      +'<line x1="108" y1="56" x2="156" y2="56" stroke="#d8def0" stroke-width="2" stroke-linecap="round"/>'
+      +'<line x1="108" y1="70" x2="148" y2="70" stroke="#d8def0" stroke-width="2" stroke-linecap="round"/>'
+      +'<line x1="108" y1="84" x2="156" y2="84" stroke="#d8def0" stroke-width="2" stroke-linecap="round"/>'
+      +'<circle cx="140" cy="105" r="12" fill="#ecfdf5" stroke="#059669" stroke-width="1.8"/>'
+      +'<polyline points="134,105 139,110 146,99" stroke="#059669" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
+    +'</g>'
+    +'<path d="M30 36 Q30 22, 44 22 L56 22 Q70 22, 70 36 L70 70 Q70 92, 92 92" stroke="#2563eb" stroke-width="2.5" fill="none" stroke-linecap="round"/>'
+    +'<circle cx="92" cy="92" r="7" fill="#fff" stroke="#2563eb" stroke-width="2.3"/>'
+    +'<circle cx="22" cy="98" r="3" fill="#8b5cf6"/>'
+    +'<circle cx="40" cy="120" r="4" fill="#2563eb"/>'
+    +'<circle cx="205" cy="100" r="3.5" fill="#8b5cf6"/>'
+    +'<g transform="translate(195,30)" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round"><line x1="-4" y1="0" x2="4" y2="0"/><line x1="0" y1="-4" x2="0" y2="4"/></g>'
+    +'<g transform="translate(58,118)" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round"><line x1="-3" y1="0" x2="3" y2="0"/><line x1="0" y1="-3" x2="0" y2="3"/></g>'
+  +'</svg>';
+  return ''
+  +'<div class="hero">'
+    +'<div class="hero-l">'
+      +'<div class="hero-date">'+_dateStr+'</div>'
+      +'<div class="hero-t">'+_greet+', '+_pracName+'<span class="hero-tag">●  Live</span></div>'
+      +'<div class="hero-s">You\'ve billed <strong>$'+_monthBilled+'</strong> this month · Next MSP payment April 30</div>'
+      +'<div class="hero-actions">'
+        +'<button class="btn btn-p" onclick="openClaim()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New claim</button>'
+        +'<button class="btn btn-s btn-sm" onclick="openBatch()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Open a batch</button>'
+      +'</div>'
+    +'</div>'
+    +'<div class="hero-illustration">'+_illustration+'</div>'
+  +'</div>'
+
+  +'<div class="stats">'
+    +'<div class="stat" style="--accent:linear-gradient(90deg,#2563eb,#06b6d4)"><div class="stico" style="background:var(--sky-lt)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--sky)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div><div class="stlbl">Billed this month</div><div class="stval">$'+Math.round(paid).toLocaleString()+'</div><span class="pill pl-up">↑ 12% vs last month</span>'+bars([2400,3100,2800,3600,3200,4100,Math.round(paid)],'#2563eb')+'</div>'
+    +'<div class="stat" style="--accent:linear-gradient(90deg,#8b5cf6,#a78bfa)"><div class="stico" style="background:var(--lilac-lt)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--lilac)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="stlbl">Pending payment</div><div class="stval">$'+Math.round(pend).toLocaleString()+'</div><span class="pill pl-neu">'+pendCt+' claims queued</span>'+bars([450,380,510,420,480,360,Math.round(pend)],'#8b5cf6')+'</div>'
+    +'<div class="stat" style="--accent:linear-gradient(90deg,#2563eb,#3b82f6)"><div class="stico" style="background:var(--sky-lt)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--sky)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div><div class="stlbl">Claims submitted</div><div class="stval">'+CLAIMS.length+'</div><span class="pill pl-up">↑ 8% this month</span>'+bars([18,24,20,28,25,32,CLAIMS.length],'#2563eb')+'</div>'
+    +(function(){var hot=rej>=15;var ac=hot?'#e11d48,#f43f5e':'#8b5cf6,#a78bfa';var bg=hot?'var(--bad-lt)':'var(--lilac-lt)';var st=hot?'var(--bad)':'var(--lilac)';var bc=hot?'#e11d48':'#8b5cf6';var pillCls=hot?'pl-dn':'pl-up';var pillTxt=hot?'⚠ '+rej+'% — above 15% threshold':'↓ 2% from last month';var valStyle=hot?' style="color:var(--bad)"':'';return '<div class="stat'+(hot?' stat-hot':'')+'" style="--accent:linear-gradient(90deg,'+ac+')"'+(hot?' role="alert" aria-live="polite" aria-label="High rejection rate '+rej+' percent, above 15 percent threshold"':'')+'><div class="stico" style="background:'+bg+'"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="'+st+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div class="stlbl">Rejection rate</div><div class="stval"'+valStyle+'>'+rej+'%</div><span class="pill '+pillCls+'">'+pillTxt+'</span>'+bars([12,18,14,16,11,14,rej],bc)+'</div>';})()
+  +'</div>'
+
+  +'<div class="qa-grid">'
+    +'<div class="qa" onclick="openClaim()"><div class="qa-ic" style="background:var(--sky-lt)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--sky)" stroke-width="1.8" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div><div class="qa-t">Submit a new claim</div><div class="qa-d">4-step guided flow with PHN verification</div></div></div>'
+    +'<div class="qa" onclick="claimTab=\'rejected\';goTo(\'claims\')"><div class="qa-ic" style="background:var(--bad-lt)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--bad)" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div><div class="qa-t">Resolve rejections</div><div class="qa-d">1 claim needs attention — review refusal codes</div></div></div>'
+    +'<div class="qa" onclick="goTo(\'remittance\')"><div class="qa-ic" style="background:var(--violet-lt)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--violet)" stroke-width="1.8" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div><div><div class="qa-t">Latest remittance</div><div class="qa-d">$3,847.22 received April 15 · 28 claims</div></div></div>'
+  +'</div>'
+
+  +'<div style="display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start">'
+    +'<div class="card cp"><div class="ch"><div><div class="ct">Recent claims</div><div class="cs">Latest billing activity</div></div><button class="btn btn-s btn-sm" onclick="goTo(\'claims\')">View all →</button></div>'
+      +'<div class="tw"><table><thead><tr><th>ID</th><th>Patient</th><th class="hm">Code</th><th>Amount</th><th>Status</th><th class="hm">Date</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>'
+    +'<div style="display:flex;flex-direction:column;gap:14px">'
+      +'<div class="card cp"><div style="display:flex;align-items:center;gap:8px;margin-bottom:14px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--sky)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg><div class="ct">Teleplan</div></div><div style="display:flex;align-items:center;gap:8px;padding:9px 13px;background:var(--ok-lt);border:1px solid var(--ok-b);border-radius:10px;margin-bottom:13px"><div class="tpdot"></div><span style="font-size:.82rem;font-weight:700;color:var(--ok)">Connected</span><span class="mono" style="margin-left:auto;font-size:.72rem;color:var(--ok)">T1847</span></div><div style="font-size:.78rem;color:var(--t2);display:flex;flex-direction:column;gap:7px"><div style="display:flex;justify-content:space-between"><span style="color:var(--t3)">Password expires</span><span style="color:var(--warn);font-weight:700">12 days</span></div><div style="display:flex;justify-content:space-between"><span style="color:var(--t3)">Last sync</span><span class="mono" style="font-size:.72rem">Today 09:14</span></div><div style="display:flex;justify-content:space-between"><span style="color:var(--t3)">Protocol</span><span class="mono" style="font-size:.72rem">TLS 1.3</span></div></div></div>'
+      +'<div class="card cp" style="background:var(--grad-soft)"><div style="font-size:.7rem;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Next MSP payment</div><div style="font-family:var(--ff);font-size:1.65rem;font-weight:400;color:var(--sky-dk);margin-bottom:3px;letter-spacing:-.02em">April 30, 2026</div><div style="font-size:.76rem;color:var(--t3);margin-bottom:12px">Semi-monthly cycle · EFT to TD</div><div style="font-size:.84rem;margin-bottom:8px">Estimated <strong>$2,847.40</strong></div><div class="prog"><div class="prog-fill" style="width:65%"></div></div><div style="font-size:.7rem;color:var(--t4);margin-top:6px">Claim close-off: April 24</div></div>'
+      +'<div class="card cp"><div style="font-size:.88rem;font-weight:700;margin-bottom:11px;letter-spacing:-.005em">Compliance</div>'
+        +['PIPA BC compliant','TLS 1.3 active','90-day window','Teleplan certified','Password current'].map(function(l){return '<div style="display:flex;align-items:center;gap:9px;padding:6px 0;border-bottom:1px solid var(--bd)"><div style="width:18px;height:18px;border-radius:50%;background:var(--ok-lt);display:flex;align-items:center;justify-content:center;flex-shrink:0">'+chk(true)+'</div><span style="font-size:.8rem;color:var(--t2);font-weight:500">'+l+'</span></div>';}).join('')
+      +'</div>'
+    +'</div>'
+  +'</div>';
+}
+
+/* ─── Claims (revolutionized) ─────────────────────────────── */
+function rClaims(){
+  var fl=CLAIMS.filter(function(c){return(claimTab==='all'||c.status===claimTab)&&(!claimQ||c.patient.toLowerCase().indexOf(claimQ.toLowerCase())>-1||c.id.indexOf(claimQ)>-1||c.code.indexOf(claimQ)>-1);});
+
+  // Status counts
+  var counts={all:CLAIMS.length,pending:0,submitted:0,paid:0,rejected:0};
+  CLAIMS.forEach(function(c){counts[c.status]++;});
+  var totalAmt=CLAIMS.reduce(function(a,c){return a+c.fee;},0);
+  var pendAmt=CLAIMS.filter(function(c){return c.status==='pending'||c.status==='submitted';}).reduce(function(a,c){return a+c.fee;},0);
+
+  var statusList=[
+    {k:'all',label:'All',dot:'#64748b'},
+    {k:'pending',label:'Pending',dot:'#d97706'},
+    {k:'submitted',label:'Submitted',dot:'#2563eb'},
+    {k:'paid',label:'Paid',dot:'#059669'},
+    {k:'rejected',label:'Rejected',dot:'#e11d48'}
+  ];
+
+  var hero=''
+  +'<div class="claims-hero">'
+    +'<div class="ch-inner">'
+      +'<div class="ch-l">'
+        +'<div class="ch-eyebrow">Claim management</div>'
+        +'<div class="ch-title">Every claim, perfectly tracked</div>'
+        +'<div class="ch-sub">A complete view of your MSP billing pipeline — from PHN verification to remittance. Switch between table and board views.</div>'
+      +'</div>'
+      +'<div class="ch-stats">'
+        +'<div><div class="ch-stat-lbl">Total billed</div><div class="ch-stat-val">$'+fmt(totalAmt)+'</div></div>'
+        +'<div><div class="ch-stat-lbl">Outstanding</div><div class="ch-stat-val">$'+fmt(pendAmt)+'</div></div>'
+        +'<div><button class="btn btn-on-hero" onclick="openClaim()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New claim</button></div>'
+      +'</div>'
+    +'</div>'
+  +'</div>';
+
+  var toolbar=''
+  +'<div class="tbar">'
+    +'<div class="tbar-l">'
+      +'<div class="fpills">'
+        +statusList.map(function(s){return '<button class="fpill'+(claimTab===s.k?' active':'')+'" onclick="claimTab=\''+s.k+'\';goTo(\'claims\')"><span class="fpill-dot" style="background:'+s.dot+'"></span>'+s.label+'<span class="fpill-count">'+counts[s.k]+'</span></button>';}).join('')
+      +'</div>'
+    +'</div>'
+    +'<div class="tbar-r">'
+      +'<div class="sr" style="width:220px"><span class="sr-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><input placeholder="Filter claims..." value="'+claimQ+'" oninput="claimQ=this.value;goTo(\'claims\')"/></div>'
+      +'<div class="vt">'
+        +'<button class="'+(claimView==='table'?'active':'')+'" onclick="claimView=\'table\';goTo(\'claims\')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Table</button>'
+        +'<button class="'+(claimView==='board'?'active':'')+'" onclick="claimView=\'board\';goTo(\'claims\')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="6" height="18" rx="1.5"/><rect x="11" y="3" width="6" height="12" rx="1.5"/><rect x="19" y="3" width="2" height="8" rx="1"/></svg>Board</button>'
+      +'</div>'
+      +'<button class="btn btn-s btn-sm hm"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export</button>'
+    +'</div>'
+  +'</div>';
+
+  var body;
+  if(claimView==='board'){
+    body=renderBoard(fl);
+  } else {
+    var rows=fl.map(function(c){
+      return '<tr style="cursor:pointer" onclick="viewClaim(\''+c.id+'\')">'
+        +'<td><span class="mono" style="color:var(--sky-dk);font-weight:600">'+c.id+'</span></td>'
+        +'<td><div style="display:flex;align-items:center;gap:10px">'+patAv(c.patient,c.phn,30)+'<div><div style="font-weight:600">'+c.patient+'</div><div class="mono" style="font-size:.7rem;color:var(--t4)">PHN '+c.phn+'</div></div></div></td>'
+        +'<td class="hm"><span class="code-chip">'+c.code+'</span></td>'
+        +'<td class="hm"><span class="icd-chip">'+c.icd+'</span></td>'
+        +'<td><span class="mono" style="font-weight:700">$'+fmt(c.fee)+'</span></td>'
+        +'<td>'+badge(c.status)+'</td>'
+        +'<td class="hm" style="color:var(--t3);font-size:.79rem">'+c.date+'</td>'
+        +'<td style="text-align:right"><button class="btn btn-g btn-xs" onclick="event.stopPropagation();viewClaim(\''+c.id+'\')">View</button></td>'
+        +'</tr>';
+    }).join('');
+    var empty='<tr><td colspan="8"><div class="empty"><div class="empty-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--t4)" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div><div style="font-size:.88rem;color:var(--t2);font-weight:600;margin-bottom:4px">No claims match your filter</div><div style="font-size:.78rem">Try adjusting your search or selecting a different status.</div></div></td></tr>';
+    body='<div class="card cp" style="padding:0"><div class="tw"><table><thead><tr><th>Claim ID</th><th>Patient</th><th class="hm">Code</th><th class="hm">ICD-9</th><th>Amount</th><th>Status</th><th class="hm">Date</th><th></th></tr></thead><tbody>'+(rows||empty)+'</tbody></table></div></div>';
+  }
+
+  return hero+toolbar+body;
+}
+
+function renderBoard(filtered){
+  var cols=[
+    {k:'pending',label:'Pending',dot:'#d97706',bg:'var(--warn-lt)'},
+    {k:'submitted',label:'Submitted',dot:'#2563eb',bg:'var(--sky-lt)'},
+    {k:'paid',label:'Paid',dot:'#059669',bg:'var(--ok-lt)'},
+    {k:'rejected',label:'Rejected',dot:'#e11d48',bg:'var(--bad-lt)'}
+  ];
+  return '<div class="kb">'+cols.map(function(col){
+    var items=filtered.filter(function(c){return c.status===col.k;});
+    var total=items.reduce(function(a,c){return a+c.fee;},0);
+    var cards=items.map(function(c){
+      return '<div class="kcard" onclick="viewClaim(\''+c.id+'\')">'
+        +'<div class="kcard-h">'
+          +'<div><div class="kcard-id">'+c.id+'</div><div class="kcard-amt" style="margin-top:3px">$'+fmt(c.fee)+'</div></div>'
+          +badge(c.status)
+        +'</div>'
+        +'<div class="kcard-p">'+patAv(c.patient,c.phn,30)+'<div><div class="kcard-pn">'+c.patient+'</div><div class="kcard-pm">PHN '+c.phn+'</div></div></div>'
+        +'<div style="display:flex;gap:6px;margin-bottom:9px"><span class="code-chip">'+c.code+'</span><span class="icd-chip">'+c.icd+'</span></div>'
+        +'<div class="kcard-meta"><span>'+c.date+'</span>'+(c.rejCode?'<span style="color:var(--bad);font-weight:700">'+c.rejCode+'</span>':'<span style="color:var(--t4)">'+c.desc.slice(0,18)+(c.desc.length>18?'…':'')+'</span>')+'</div>'
+      +'</div>';
+    }).join('') || '<div style="padding:24px 12px;text-align:center;color:var(--t4);font-size:.78rem">No claims</div>';
+    return '<div class="kcol">'
+      +'<div class="kcol-h">'
+        +'<div class="kcol-t"><span class="fpill-dot" style="background:'+col.dot+'"></span>'+col.label+'<span class="fpill-count">'+items.length+'</span></div>'
+        +'<div class="kcol-tot">$'+fmt(total)+'</div>'
+      +'</div>'
+      +'<div class="kcol-body">'+cards+'</div>'
+    +'</div>';
+  }).join('')+'</div>';
+}
+
+function viewClaim(id){
+  var c=null;for(var i=0;i<CLAIMS.length;i++){if(CLAIMS[i].id===id){c=CLAIMS[i];break;}}
+  if(!c)return;
+  g('dmt').textContent=c.id;g('dms').textContent=c.patient+' · '+c.date;
+  var pairs=[['Patient',c.patient],['PHN',c.phn],['Service date',c.date],['Fee code',c.code],['Description',c.desc],['ICD-9',c.icd],['Amount','$'+fmt(c.fee)],['Status',c.status.toUpperCase()]];
+  if(c.submitted)pairs.push(['Submitted',c.submitted]);
+  if(c.paid)pairs.push(['Payment received',c.paid]);
+  if(c.rejCode)pairs.push(['Refusal code',c.rejCode],['Reason',c.rejDesc]);
+  g('dmb').innerHTML=''
+    +'<div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;padding:14px;background:var(--n50);border-radius:12px;border:1px solid var(--bd)">'
+      +patAv(c.patient,c.phn,44)
+      +'<div style="flex:1"><div style="font-weight:700;font-size:.95rem">'+c.patient+'</div><div class="mono" style="font-size:.74rem;color:var(--t3);margin-top:2px">PHN '+c.phn+'</div></div>'
+      +'<div style="text-align:right"><div class="mono" style="font-family:var(--ff);font-size:1.45rem;font-weight:400;letter-spacing:-.01em">$'+fmt(c.fee)+'</div><div style="margin-top:4px">'+badge(c.status)+'</div></div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">'
+      +pairs.map(function(p){return '<div style="background:var(--wh);border:1px solid var(--bd);border-radius:10px;padding:11px 13px"><div style="font-size:.66rem;color:var(--t4);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:3px">'+p[0]+'</div><div class="mono" style="font-size:.84rem;color:'+(p[0].indexOf('Refusal')>-1||p[0]==='Reason'?'var(--bad)':'var(--t1)')+';font-weight:500">'+p[1]+'</div></div>';}).join('')
+    +'</div>'
+    +(c.rejCode?alrt('err','<strong>Refusal '+c.rejCode+':</strong> '+c.rejDesc+'. Review the MSC payment schedule and resubmit with the correct code.'):'')
+    +'<div class="div"></div><div style="font-size:.7rem;color:var(--t4);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:10px">Audit trail</div>'
+    +[{a:'Claim created',t:c.date+' 10:22',actor:'Dr. K. Patel'},c.submitted&&{a:'Submitted to Teleplan',t:c.submitted+' 10:23',actor:'System · TLS 1.3'},c.paid&&{a:'Payment received',t:c.paid,actor:'MSP / HIBC'},c.rejCode&&{a:'Refusal received',t:c.submitted+' 23:41',actor:'MSP / HIBC'}].filter(Boolean).map(function(e){return '<div class="audit-row"><div class="audit-ic" style="background:var(--sky-lt)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--sky)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div><div><div style="font-size:.84rem;font-weight:500">'+e.a+'</div><div style="font-size:.71rem;color:var(--t4)">'+e.actor+' · <span class="mono">'+e.t+'</span></div></div></div>';}).join('');
+  g('dmf').innerHTML=(c.status==='rejected'?'<button class="btn btn-p btn-sm">Resubmit</button>':'')+'<button class="btn btn-s" onclick="closeDetail()">Close</button>';
+  var dm=g('detail-modal');dm.style.display='flex';dm.setAttribute('aria-hidden','false');
+  lastFocus=document.activeElement;
+  setTimeout(function(){var cls=dm.querySelector('.mcls');if(cls)cls.focus();},20);
+}
+function closeDetail(){
+  var dm=g('detail-modal');dm.style.display='none';dm.setAttribute('aria-hidden','true');
+  if(lastFocus&&lastFocus.focus)lastFocus.focus();
+}
+
+/* ─── Patients ────────────────────────────────────────────── */
+function rPats(){
+  var fl=PATS.filter(function(p){return p.name.toLowerCase().indexOf(patSearch().toLowerCase())>-1||p.phn.indexOf(patSearch())>-1;});
+  var rows=fl.map(function(p){var ct=CLAIMS.filter(function(c){return c.phn===p.phn;}).length;return '<tr style="cursor:pointer;background:'+(selPat&&selPat.phn===p.phn?'var(--sky-lt)':'')+'" onclick="selectPat(\''+p.phn+'\')"><td><div style="display:flex;align-items:center;gap:10px">'+patAv(p.name,p.phn,30)+'<div style="font-weight:600">'+p.name+'</div></div></td><td><span class="mono">'+p.phn+'</span></td><td class="hm" style="color:var(--t3)">'+p.dob+'</td><td class="hm" style="color:var(--t3)">'+(p.gender==='F'?'Female':'Male')+'</td><td>'+badge('active')+'</td><td style="color:var(--t2);font-weight:600">'+ct+'</td></tr>';}).join('');
+  var side=selPat?rPatDetail():'';
+  return '<div style="display:grid;grid-template-columns:'+(selPat?'1fr 340px':'1fr')+';gap:18px;align-items:start">'
+  +'<div><div class="sr" style="max-width:320px;margin-bottom:16px"><span class="sr-ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><input id="pat-search" placeholder="Search by name or PHN..." value="'+_patSearch+'" oninput="updatePatSearch(this.value)"/></div>'
+  +'<div class="card cp" style="padding:0"><div class="tw"><table><thead><tr><th>Patient</th><th>PHN</th><th class="hm">DOB</th><th class="hm">Gender</th><th>MSP coverage</th><th>Claims</th></tr></thead><tbody>'+rows+'</tbody></table></div></div></div>'
+  +side+'</div>';
+}
+var _patSearch='';
+function patSearch(){return _patSearch;}
+function updatePatSearch(v){_patSearch=v;var s=g('pat-search');var pos=s?s.selectionStart:0;goTo('patients');var s2=g('pat-search');if(s2){s2.focus();try{s2.setSelectionRange(pos,pos);}catch(e){}}}
+function rPatDetail(){
+  var p=selPat;
+  var ptCl=CLAIMS.filter(function(c){return c.phn===p.phn;});
+  var total=ptCl.reduce(function(a,c){return a+c.fee;},0);
+  return '<div style="display:flex;flex-direction:column;gap:14px">'
+  +'<div class="card cp"><div style="display:flex;align-items:center;gap:13px;margin-bottom:14px">'+patAv(p.name,p.phn,46)+'<div style="flex:1"><div style="font-family:var(--ff);font-size:1.25rem;font-weight:400;letter-spacing:-.01em">'+p.name+'</div><div class="mono" style="font-size:.74rem;color:var(--t3);margin-top:2px">PHN '+p.phn+'</div></div><button class="btn btn-g btn-xs" onclick="selPat=null;goTo(\'patients\')">✕</button></div>'
+  +'<div class="div" style="margin:0 0 12px"></div><div class="cov-grid">'
+  +[['Date of birth',p.dob],['Gender',p.gender==='F'?'Female':'Male'],['MSP coverage','Active'],['Total billed','$'+fmt(total)]].map(function(kv){return '<div class="cov-item"><div class="cov-lbl">'+kv[0]+'</div><div class="cov-val">'+kv[1]+'</div></div>';}).join('')
+  +'</div></div>'
+  +'<div class="card cp"><div class="ct" style="margin-bottom:13px">Claim history</div>'
+  +(ptCl.length?ptCl.map(function(c){return '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--bd);cursor:pointer" onclick="viewClaim(\''+c.id+'\')"><div><div class="mono" style="font-size:.73rem;color:var(--sky-dk);font-weight:600">'+c.id+'</div><div style="font-size:.81rem;color:var(--t2);margin-top:2px;font-weight:500">'+c.desc+'</div><div style="font-size:.7rem;color:var(--t4);margin-top:1px">'+c.date+'</div></div><div style="text-align:right;flex-shrink:0;margin-left:10px"><div class="mono" style="font-weight:700;margin-bottom:4px">$'+fmt(c.fee)+'</div>'+badge(c.status)+'</div></div>';}).join(''):'<div style="color:var(--t3);font-size:.83rem">No claims on file</div>')
+  +'</div></div>';
+}
+function selectPat(phn){selPat=null;for(var i=0;i<PATS.length;i++){if(PATS[i].phn===phn){selPat=PATS[i];break;}}goTo('patients');}
+
+/* ─── Remittance ──────────────────────────────────────────── */
+function rRem(){
+  var rows=REMS.map(function(r){return '<tr style="cursor:pointer;background:'+(selRem&&selRem.id===r.id?'var(--sky-lt)':'')+'" onclick="selRem=getRem(\''+r.id+'\');goTo(\'remittance\')"><td><span class="mono" style="color:var(--sky-dk);font-size:.78rem;font-weight:600">'+r.id+'</span></td><td style="font-weight:600">'+r.date+'</td><td style="color:var(--t2);font-weight:500">'+r.claims+'</td><td style="color:'+(r.rej>0?'var(--bad)':'var(--t4)')+';font-weight:'+(r.rej>0?700:500)+'">'+r.rej+'</td><td><span class="mono" style="font-weight:700;color:var(--ok)">$'+fmt(r.amount)+'</span></td><td style="text-align:right"><button class="btn btn-g btn-xs">Export</button></td></tr>';}).join('');
+  var side=selRem?'<div style="display:flex;flex-direction:column;gap:13px"><div class="card cp"><div style="display:flex;justify-content:space-between;margin-bottom:12px;align-items:flex-start"><div class="ct">'+selRem.id+'</div><button class="btn btn-g btn-xs" onclick="selRem=null;goTo(\'remittance\')">✕</button></div><div style="font-family:var(--ff);font-size:1.95rem;font-weight:400;color:var(--ok);margin-bottom:3px;letter-spacing:-.02em">$'+fmt(selRem.amount)+'</div><div style="font-size:.78rem;color:var(--t3);margin-bottom:14px">'+selRem.date+'</div><div class="div" style="margin:0 0 12px"></div>'+[['Claims approved',selRem.claims-selRem.rej],['Rejected',selRem.rej],['Rejection rate',Math.round((selRem.rej/selRem.claims)*100)+'%']].map(function(kv){return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bd);font-size:.84rem"><span style="color:var(--t3);font-weight:500">'+kv[0]+'</span><span class="mono" style="font-weight:700">'+kv[1]+'</span></div>';}).join('')+'<button class="btn btn-p" style="width:100%;justify-content:center;margin-top:14px">Download statement</button></div>'
+  +'<div class="card cp"><div class="ct" style="margin-bottom:12px">Payment calendar</div>'+[{l:'Next payment',d:'April 30, 2026',v:'~$2,847',hi:true},{l:'Close-off deadline',d:'April 24, 2026',v:'Submit by'},{l:'Previous received',d:'April 15, 2026',v:'$3,847.22'}].map(function(x){return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd)"><div><div style="font-size:.83rem;font-weight:'+(x.hi?700:500)+'">'+x.l+'</div><div style="font-size:.72rem;color:var(--t3)">'+x.d+'</div></div><div class="mono" style="font-size:.78rem;color:'+(x.hi?'var(--sky-dk)':'var(--t3)')+';font-weight:'+(x.hi?700:500)+'">'+x.v+'</div></div>';}).join('')+'</div></div>'
+  :'<div class="card cp" style="text-align:center;padding:40px 22px"><div style="color:var(--t4);font-size:.84rem">Select a statement to view details</div></div>';
+  return alrt('info','<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" class="alrt-ico"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><div>Remittance statements download automatically from Teleplan twice monthly. Records retained 7 years per PIPA BC.</div>')
+  +'<div style="display:grid;grid-template-columns:1fr 300px;gap:18px;align-items:start;margin-top:6px">'
+  +'<div class="card cp"><div class="ct" style="margin-bottom:15px">Payment statements</div><div class="tw"><table><thead><tr><th>Statement</th><th>Date</th><th>Claims</th><th>Rejected</th><th>Payment</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>'+side+'</div>';
+}
+function getRem(id){for(var i=0;i<REMS.length;i++){if(REMS[i].id===id)return REMS[i];}return null;}
+
+/* ─── Audit log ───────────────────────────────────────────── */
+function rAudit(){
+  var entries=[
+    {a:'Claim SKY-2026-0041 submitted to Teleplan',actor:'Dr. K. Patel',t:'2026-04-09 10:23:14',d:'Fee 00101 · PHN 9876543210 · $65.73',col:'var(--sky-lt)',ic:'var(--sky)'},
+    {a:'PHN 9876543210 eligibility verified',actor:'Dr. K. Patel',t:'2026-04-09 10:22:51',d:'MSP active · Margaret Chen',col:'var(--ok-lt)',ic:'var(--ok)'},
+    {a:'Teleplan password rotated (42-day cycle)',actor:'System',t:'2026-04-01 00:00:02',d:'Automated · next due May 13, 2026',col:'var(--warn-lt)',ic:'var(--warn)'},
+    {a:'Remittance REM-2026-03-31 downloaded',actor:'System',t:'2026-03-31 14:02:18',d:'$4,102.55 · 32 claims',col:'var(--sky-lt)',ic:'var(--sky)'},
+    {a:'Claim SKY-2026-0039 rejected by Teleplan',actor:'MSP / HIBC',t:'2026-04-07 23:41:09',d:'Refusal code BE018 · payment model mismatch',col:'var(--bad-lt)',ic:'var(--bad)'},
+    {a:'Practice settings updated',actor:'Dr. K. Patel',t:'2026-04-05 11:14:33',d:'Payment method changed to EFT',col:'var(--n100)',ic:'var(--t3)'},
+    {a:'Login from new device',actor:'Dr. K. Patel',t:'2026-04-04 08:55:12',d:'Safari / iOS · Surrey, BC',col:'var(--warn-lt)',ic:'var(--warn)'},
+    {a:'Claim SKY-2026-0038 submitted to Teleplan',actor:'Dr. K. Patel',t:'2026-04-05 14:03:22',d:'Fee 00100 · $32.69',col:'var(--sky-lt)',ic:'var(--sky)'}
+  ];
+  return alrt('info','<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" class="alrt-ico"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><div>This immutable audit log records every user and system action. Records are retained for 7 years per PIPA BC requirements.</div>')
+  +'<div class="card cp" style="margin-top:6px"><div class="ch"><div><div class="ct">Activity log</div><div class="cs">All user and system activity</div></div><button class="btn btn-s btn-sm"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export CSV</button></div>'
+  +entries.map(function(e){return '<div class="audit-row"><div class="audit-ic" style="background:'+e.col+'"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="'+e.ic+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div><div style="flex:1"><div style="font-size:.85rem;font-weight:500">'+e.a+'</div><div class="mono" style="font-size:.72rem;color:var(--t3);margin-top:2px">'+e.d+'</div><div style="font-size:.71rem;color:var(--t4);margin-top:1px">'+e.actor+' · <span class="mono">'+e.t+'</span></div></div></div>';}).join('')+'</div>';
+}
+
+/* ─── Settings ────────────────────────────────────────────── */
+function rSettings(){
+  var tabs=['profession','practice','teleplan','billing','security','compliance'];
+  var contents={
+    profession:'<div class="card cp"><div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><div class="ct">Billing profile</div><span style="font-size:.66rem;font-weight:700;color:var(--violet);background:var(--violet-lt);border:1px solid var(--violet-b);padding:3px 9px;border-radius:20px;letter-spacing:.04em;text-transform:uppercase">Demo · multi-profession</span></div><div style="font-size:.82rem;color:var(--t3);margin-bottom:14px">Switch the active billing profile. Each profile loads its own fee codes, ICD list, AI suggestion patterns, and practitioner details — useful for testing how Sky Claims serves different BC providers from one codebase.</div><div class="prof-grid">'+professionCards()+'</div>'+professionConfirmBar()+'</div>',
+    practice:'<div class="card cp"><div class="ct" style="margin-bottom:16px">Practice information</div><div class="fg fg2"><div class="field"><label>Practitioner name</label><input value="Dr. Kiran Patel"/></div><div class="field"><label>MSP billing number</label><input value="12847" class="mono"/></div><div class="field"><label>Specialty</label><select><option>General Practice</option><option>Internal Medicine</option><option>Pediatrics</option></select></div><div class="field"><label>Data Centre #</label><input value="T1847" class="mono"/></div><div class="field"><label>Practice name</label><input value="Surrey Medical Centre"/></div><div class="field"><label>MSP facility number</label><input value="F20483" class="mono"/></div><div class="field" style="grid-column:1/-1"><label>Practice address</label><input value="12345 King George Blvd, Surrey, BC V3W 4Y3"/></div></div><div style="margin-top:16px"><button class="btn btn-p" onclick="showSaved()">Save changes</button></div></div>',
+    teleplan:'<div style="display:flex;flex-direction:column;gap:14px"><div class="card cp"><div style="display:flex;align-items:center;gap:9px;margin-bottom:14px"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--sky)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg><div class="ct">Teleplan connection</div></div><div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--ok-lt);border:1px solid var(--ok-b);border-radius:11px;margin-bottom:14px"><div class="tpdot"></div><span style="font-size:.84rem;font-weight:700;color:var(--ok)">Connected · teleplan.hnet.bc.ca</span></div><div class="fg fg2"><div class="field"><label>Data Centre ID</label><input value="T1847" class="mono" readonly style="opacity:.65"/></div><div class="field"><label>Payee number</label><input value="12847" class="mono"/></div><div class="field"><label>Teleplan password</label><input type="password" value="secret"/><div class="hint">Expires in 12 days · required rotation every 42 days</div></div><div class="field"><label>Encryption</label><input value="TLS 1.3 (meets min TLS 1.2)" readonly style="opacity:.65"/></div></div><div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-p" onclick="showSaved()">Save &amp; test connection</button><button class="btn btn-s">Rotate password now</button></div></div><div class="card cp"><div class="ct" style="margin-bottom:14px">Submission preferences</div><div class="fg fg2"><div class="field"><label>Submission mode</label><select><option>Manual review (recommended)</option><option>Auto-submit on save</option><option>Daily batch</option></select><div class="hint">Manual review recommended for audit compliance</div></div><div class="field"><label>90-day expiry warning</label><select><option>7 days before</option><option selected>14 days before</option><option>30 days before</option></select></div></div></div></div>',
+    billing:'<div class="card cp"><div class="ct" style="margin-bottom:16px">Billing preferences</div><div class="fg fg2"><div class="field"><label>Default claim type</label><select><option>MSP Fee-for-service</option><option>LFP</option></select></div><div class="field"><label>Payment method</label><select><option>Electronic funds transfer (EFT)</option><option>Cheque</option></select></div><div class="field"><label>Bank institution</label><input value="TD Canada Trust"/></div><div class="field"><label>Account (encrypted)</label><input type="password" value="secret"/></div></div>'+alrt('info','<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" class="alrt-ico"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><div>Banking credentials are encrypted at rest (AES-256) and hosted in Canada (AWS ca-central-1).</div>')+'<button class="btn btn-p" onclick="showSaved()">Save changes</button></div>',
+    security:'<div class="card cp"><div style="display:flex;align-items:center;gap:9px;margin-bottom:15px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--sky)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><div class="ct">Security settings</div></div><div class="fg fg2"><div class="field"><label>Two-factor authentication</label><select><option>Authenticator app (TOTP) · recommended</option><option>SMS (less secure)</option></select></div><div class="field"><label>Session timeout</label><select><option>15 minutes</option><option selected>30 minutes</option><option>60 minutes</option></select></div></div><div class="div"></div><div class="ct" style="margin-bottom:11px">Recent login activity</div>'+[{d:'Chrome / macOS',l:'Surrey, BC',t:'Today 09:12',cur:true},{d:'Safari / iOS',l:'Surrey, BC',t:'Yesterday 18:30'},{d:'Chrome / macOS',l:'Surrey, BC',t:'Apr 8, 2026 11:04'}].map(function(s){return '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--bd);font-size:.83rem"><div><div style="font-weight:600">'+s.d+(s.cur?' <span class="badge b-active" style="font-size:.66rem">Current</span>':'')+'</div><div style="font-size:.71rem;color:var(--t4);margin-top:2px">'+s.l+' · '+s.t+'</div></div>'+(s.cur?'':'<button class="btn btn-d btn-xs">Revoke</button>')+'</div>';}).join('')+'</div>',
+    compliance:'<div style="display:flex;flex-direction:column;gap:14px"><div class="card cp"><div style="display:flex;align-items:center;gap:9px;margin-bottom:14px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--sky)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><div class="ct">Compliance checklist</div></div>'+[{l:'PIPA BC (Personal Information Protection Act)',ok:true,d:'Privacy policy active · PHI hosted in Canada (ca-central-1)'},{l:'PIPEDA · Federal privacy legislation',ok:true,d:'Consent flows active · breach notification procedures ready'},{l:'MSP Teleplan vendor agreement',ok:true,d:'Receipt Agreement signed · Data Centre T1847 active'},{l:'TLS 1.2+ on all connections',ok:true,d:'TLS 1.3 active · exceeds minimum requirement'},{l:'42-day password rotation',ok:true,d:'Next rotation: May 13, 2026 (12 days remaining)'},{l:'90-day claim submission window',ok:true,d:'Automated alerts at 14-day threshold'},{l:'7-year data retention',ok:true,d:'Claims, remittances and audit logs retained'},{l:'Errors & Omissions insurance',ok:true,d:'Coverage active to December 2026'},{l:'MSVA membership',ok:false,d:'Recommended · join the Medical Software Vendors Association of BC'}].map(function(item){return '<div class="comp-row"><div class="comp-ic" style="background:'+(item.ok?'var(--ok-lt)':'var(--warn-lt)')+'">'+chk(item.ok)+'</div><div><div style="font-size:.86rem;font-weight:600">'+item.l+'</div><div style="font-size:.74rem;color:var(--t3);margin-top:2px">'+item.d+'</div></div></div>';}).join('')+'</div><div class="card cp"><div class="ct" style="margin-bottom:9px">Your data, your rights</div><div style="font-size:.84rem;color:var(--t2);margin-bottom:14px">Sky Claims believes in full data portability. Export a complete copy at any time · no lock-in.</div><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-s btn-sm">Claims (CSV)</button><button class="btn btn-s btn-sm">Audit log (CSV)</button><button class="btn btn-s btn-sm">Patient records</button></div></div></div>'
+  };
+  return '<div class="tabs">'+tabs.map(function(t){return '<button class="tab'+(settTab===t?' active':'')+'" onclick="settTab=\''+t+'\';goTo(\'settings\')">'+(t[0].toUpperCase()+t.slice(1))+'</button>';}).join('')+'</div><div id="saved-banner" style="display:none">'+alrt('ok','<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="alrt-ico"><polyline points="20 6 9 17 4 12"/></svg><div>Settings saved successfully.</div>')+'</div>'+(contents[settTab]||'');
+}
+function showSaved(){var b=g('saved-banner');if(b){b.style.display='block';setTimeout(function(){b.style.display='none';},2500);}}
+
+/* ─── New claim modal ─────────────────────────────────────── */
+function stepsHtml(){
+  var names=['Patient','Service','Review','Submit'];
+  return '<div class="steps">'+names.map(function(s,i){return '<div style="display:flex;flex-direction:column;align-items:center;gap:3px"><div class="snode '+(i<cStep?'s-done':i===cStep?'s-act':'s-pend')+'">'+(i<cStep?'✓':(i+1))+'</div><div class="slbl">'+s+'</div></div>'+(i<names.length-1?'<div class="sline'+(i<cStep?' done':'')+'"></div>':'');}).join('')+'</div>';
+}
+function openClaim(){
+  cStep=0;cPat=null;cForm={date:today(),fee:'',diag:'',type:'MSP',fac:'',ref:'',aiNotes:'',extraFees:[],extraDiags:[]};
+  renderStep();
+  var m=g('claim-modal');m.style.display='flex';m.setAttribute('aria-hidden','false');
+  lastFocus=document.activeElement;
+  setTimeout(function(){var inp=g('phn-in');if(inp)inp.focus();},20);
+}
+function closeClaim(){
+  var m=g('claim-modal');m.style.display='none';m.setAttribute('aria-hidden','true');
+  if(lastFocus&&lastFocus.focus)lastFocus.focus();
+}
+function renderStep(){
+  var selFee=null;for(var i=0;i<FC.length;i++){if(FC[i].code===cForm.fee){selFee=FC[i];break;}}
+  var selDiag=null;for(var i=0;i<ICD.length;i++){if(ICD[i].code===cForm.diag){selDiag=ICD[i];break;}}
+  var body='',foot='';
+  if(cStep===0){
+    body=stepsHtml()+alrt('info','<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" class="alrt-ico"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><div>Enter the patient\'s PHN to verify MSP eligibility before billing.</div>')
+    +'<div class="field" style="margin-bottom:12px"><label>Personal Health Number (PHN)</label><div style="display:flex;gap:8px"><input id="phn-in" placeholder="e.g. 9876543210" style="flex:1" onkeydown="if(event.key===\'Enter\')verifyPHN()"/><button class="btn btn-p" onclick="verifyPHN()">Verify</button></div></div><div id="phr"></div>';
+    foot='<button class="btn btn-s" onclick="closeClaim()">Cancel</button><button class="btn btn-p" onclick="nextStep()">Continue →</button>';
+  } else if(cStep===1){
+    var fOpts=FC.filter(function(fc){return fc.type==='GP'||fc.type===cForm.type;}).map(function(fc){return '<option value="'+fc.code+'"'+(cForm.fee===fc.code?' selected':'')+'>'+fc.code+' · '+fc.desc+' ($'+fc.fee.toFixed(2)+')</option>';}).join('');
+    var dOpts=ICD.map(function(d){return '<option value="'+d.code+'"'+(cForm.diag===d.code?' selected':'')+'>'+d.code+' · '+d.desc+'</option>';}).join('');
+    var aiCard='<div class="ai-card">'
+      +'<div class="ai-hdr">'
+        +'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--violet)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l2.4 6.5L21 11l-6.6 2.5L12 20l-2.4-6.5L3 11l6.6-2.5z"/></svg>'
+        +'<div style="flex:1"><div class="ai-title">Suggest from encounter notes <span class="ai-badge">AI · beta</span></div><div class="ai-sub">Paste or dictate your SOAP note — get a suggested fee code, ICD, and rationale.</div></div>'
+      +'</div>'
+      +'<label for="ai-notes" class="sr-only">Encounter notes</label>'
+      +'<textarea id="ai-notes" class="ai-textarea" placeholder="e.g. 58F follow-up for hypertension, BP 148/92, adjusted ramipril 5 to 10mg, ordered AST/ALT + lipids. Plan: recheck in 6 weeks.">'+(cForm.aiNotes||'')+'</textarea>'
+      +'<div class="ai-actions">'
+        +'<button type="button" class="btn-ai" onclick="runAISuggest()" aria-label="Generate AI code suggestion">'
+          +'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>'
+          +'Suggest codes'
+        +'</button>'
+        +'<span class="ai-example">Tip: include chief complaint, key findings, and plan for the best result.</span>'
+      +'</div>'
+      +'<div id="ai-result" aria-live="polite"></div>'
+    +'</div>';
+    body=stepsHtml()+aiCard+'<div class="fg fg2">'
+    +'<div class="field"><label>Claim type</label><select id="f-type" onchange="cForm.type=this.value;renderStep()"><option value="MSP"'+(cForm.type==='MSP'?' selected':'')+'>MSP · Fee-for-service</option><option value="LFP"'+(cForm.type==='LFP'?' selected':'')+'>LFP · Longitudinal Family Physician</option><option value="ICBC"'+(cForm.type==='ICBC'?' selected':'')+'>ICBC</option><option value="WCB"'+(cForm.type==='WCB'?' selected':'')+'>WorkSafeBC / WCB</option><option value="OOP"'+(cForm.type==='OOP'?' selected':'')+'>Out-of-province / Reciprocal</option></select></div>'
+    +'<div class="field"><label>Service date</label><input type="date" id="f-date" value="'+cForm.date+'" max="'+today()+'" onchange="cForm.date=this.value"/><div class="hint">Must be within 90 days of today</div></div>'
+    +'<div class="field"><label>MSC fee code</label><input id="f-fee" list="fc-list" class="mono" value="'+(cForm.fee||'')+'" placeholder="Type or pick a code (e.g. 00101)" onchange="cForm.fee=this.value;renderStep()" autocomplete="off"/><div class="hint">Start typing the code or description — suggestions appear as you type</div><div id="fee-err" class="ferr" style="display:none">Required</div></div>'
+    +'<div class="field"><label>ICD-9 diagnostic code</label><input id="f-diag" list="icd-list" class="mono" value="'+(cForm.diag||'')+'" placeholder="Type or pick an ICD (e.g. 401)" onchange="cForm.diag=this.value" autocomplete="off"/><div id="diag-err" class="ferr" style="display:none">Required</div></div>'
+    +'<div class="field"><label>Facility number (if applicable)</label><input id="f-fac" value="'+cForm.fac+'" placeholder="e.g. F12345" onchange="cForm.fac=this.value"/><div class="hint">Required for LFP clinic-based services</div></div>'
+    +'<div class="field"><label>Referral MSP# (optional)</label><input id="f-ref" value="'+cForm.ref+'" placeholder="e.g. 12345" onchange="cForm.ref=this.value"/></div>'
+    +'</div>';
+    // Additional services / diagnoses
+    var xFees=cForm.extraFees||[];
+    var xDiags=cForm.extraDiags||[];
+    var feeRows=xFees.map(function(c,i){
+      var opts=FC.filter(function(fc){return fc.type==='GP'||fc.type===cForm.type;}).map(function(fc){return '<option value="'+fc.code+'"'+(c===fc.code?' selected':'')+'>'+fc.code+' · '+fc.desc+' ($'+fc.fee.toFixed(2)+')</option>';}).join('');
+      return '<div style="display:flex;gap:6px;margin-top:6px;align-items:center"><input id="xf-'+i+'" list="fc-list" class="bc-inline mono" style="flex:1;padding:8px 10px;font-size:.82rem" value="'+(c||'')+'" placeholder="Type or pick a fee code" onchange="cForm.extraFees['+i+']=this.value;renderStep()" aria-label="Additional fee code '+(i+1)+'" autocomplete="off"/><button type="button" class="bc-rowact" onclick="removeCfee('+i+')" aria-label="Remove this service"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>';
+    }).join('');
+    var diagRows=xDiags.map(function(c,i){
+      var opts=ICD.map(function(d){return '<option value="'+d.code+'"'+(c===d.code?' selected':'')+'>'+d.code+' · '+d.desc+'</option>';}).join('');
+      return '<div style="display:flex;gap:6px;margin-top:6px;align-items:center"><input id="xd-'+i+'" list="icd-list" class="bc-inline mono" style="flex:1;padding:8px 10px;font-size:.82rem" value="'+(c||'')+'" placeholder="Type or pick an ICD" onchange="cForm.extraDiags['+i+']=this.value" aria-label="Additional diagnostic '+(i+1)+'" autocomplete="off"/><button type="button" class="bc-rowact" onclick="removeCdiag('+i+')" aria-label="Remove this diagnosis"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>';
+    }).join('');
+    body+='<div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px" class="fg2">'
+      +'<div>'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div style="font-size:.76rem;font-weight:600;color:var(--t2)">Additional services <span style="color:var(--t4);font-weight:400">(optional)</span></div><button type="button" class="btn btn-g btn-xs" onclick="addCfee()" aria-label="Add another service"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add service</button></div>'
+        +feeRows
+      +'</div>'
+      +'<div>'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div style="font-size:.76rem;font-weight:600;color:var(--t2)">Additional diagnoses <span style="color:var(--t4);font-weight:400">(optional)</span></div><button type="button" class="btn btn-g btn-xs" onclick="addCdiag()" aria-label="Add another diagnosis"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add diagnosis</button></div>'
+        +diagRows
+      +'</div>'
+    +'</div>';
+    // Totals banner
+    var allFees=[cForm.fee].concat(xFees).filter(Boolean);
+    if(allFees.length){
+      var total=allFeesTotal();
+      var summary=allFees.map(function(c){var fc=null;for(var k=0;k<FC.length;k++){if(FC[k].code===c){fc=FC[k];break;}}return fc?(fc.code+' · $'+fc.fee.toFixed(2)):c;}).join(' + ');
+      body+='<div style="margin-top:14px">'+alrt('info','<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" class="alrt-ico"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><div>'+summary+' &nbsp;=&nbsp; <strong>$'+total.toFixed(2)+'</strong> total'+(allFees.length>1?' · will submit as '+allFees.length+' claim lines':'')+'</div>')+'</div>';
+    }
+    foot='<button class="btn btn-g" onclick="cStep=0;renderStep()">← Back</button><button class="btn btn-p" onclick="nextStep()">Continue →</button>';
+  } else if(cStep===2){
+    var allFeesArr=[cForm.fee].concat(cForm.extraFees||[]).filter(Boolean);
+    var allDiagsArr=[cForm.diag].concat(cForm.extraDiags||[]).filter(Boolean);
+    var feesDisplay=allFeesArr.map(function(c){var fc=null;for(var k=0;k<FC.length;k++){if(FC[k].code===c){fc=FC[k];break;}}return fc?(c+' · '+fc.desc+' ($'+fc.fee.toFixed(2)+')'):c;}).join(' + ');
+    var diagsDisplay=allDiagsArr.map(function(c){var d=null;for(var k=0;k<ICD.length;k++){if(ICD[k].code===c){d=ICD[k];break;}}return d?(c+' · '+d.desc):c;}).join(' + ');
+    var totalAmt=allFeesArr.reduce(function(a,c){for(var k=0;k<FC.length;k++){if(FC[k].code===c)return a+FC[k].fee;}return a;},0);
+    var pairs=[['Patient',cPat?cPat.name:''],['PHN',cPat?cPat.phn:''],['Type',cForm.type],['Date',cForm.date],['Fee codes',feesDisplay||(cForm.fee+(selFee?' · '+selFee.desc:''))],['Diagnostics',diagsDisplay||(cForm.diag+(selDiag?' · '+selDiag.desc:''))],['Amount','$'+totalAmt.toFixed(2)+(allFeesArr.length>1?' ('+allFeesArr.length+' lines)':'')]];
+    if(cForm.fac)pairs.push(['Facility',cForm.fac]);
+    if(cForm.ref)pairs.push(['Referral',cForm.ref]);
+    var risk=riskScore(cForm,selFee);
+    var riskClass=risk.pct<15?'risk-r-low':(risk.pct<35?'risk-r-med':'risk-r-hi');
+    var riskColor=risk.pct<15?'var(--ok)':(risk.pct<35?'var(--warn)':'var(--bad)');
+    var riskIcon=risk.pct<15
+      ?'<polyline points="20 6 9 17 4 12"/>'
+      :'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>';
+    var riskMeter='<div class="risk-card">'
+      +'<div class="risk-h"><div><div class="risk-label">Rejection probability</div><div class="risk-value" style="color:'+riskColor+'">'+risk.pct+'%</div></div>'
+      +'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="'+riskColor+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+riskIcon+'</svg></div>'
+      +'<div class="risk-bar"><div class="risk-fill '+riskClass+'" style="width:'+Math.max(risk.pct,3)+'%"></div></div>'
+      +'<div class="risk-reason"><strong>'+risk.headline+'.</strong> '+risk.reason+'</div>'
+    +'</div>';
+    body=stepsHtml()+riskMeter+'<div class="sum-box" style="margin-bottom:13px"><div style="font-size:.68rem;color:var(--t4);text-transform:uppercase;letter-spacing:.09em;font-weight:700;margin-bottom:11px">Claim preview</div>'+pairs.map(function(p){return '<div class="srow"><span style="color:var(--t3);font-weight:500">'+p[0]+'</span><span class="mono" style="font-weight:600">'+p[1]+'</span></div>';}).join('')+'</div>'+alrt('ok','<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="alrt-ico"><polyline points="20 6 9 17 4 12"/></svg><div>Pre-submission validation passed · ready to transmit via TLS 1.3</div>');
+    foot='<button class="btn btn-g" onclick="cStep=1;renderStep()">← Back</button><button class="btn btn-p" onclick="cStep=3;renderStep()">Continue →</button>';
+  } else if(cStep===3){
+    body=stepsHtml()+'<div style="text-align:center;padding:22px 0"><div style="font-family:var(--ff);font-size:1.3rem;font-style:italic;margin-bottom:7px;letter-spacing:-.01em">Ready to submit</div><div style="color:var(--t3);font-size:.86rem;margin-bottom:24px">Claim will be encrypted and transmitted to MSP Teleplan immediately.</div><button class="btn btn-p" style="padding:12px 30px;font-size:.94rem" onclick="submitClaim()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Submit to Teleplan</button></div>';
+    foot='<button class="btn btn-g" onclick="cStep=2;renderStep()">← Back</button><button class="btn btn-s" onclick="closeClaim()">Cancel</button>';
+  }
+  g('mb').innerHTML=body;g('mf').innerHTML=foot;
+  if(cPat&&cStep===0)showPHNResult();
+}
+function verifyPHN(){
+  var q=g('phn-in').value.replace(/\s/g,'');
+  cPat=null;for(var i=0;i<PATS.length;i++){if(PATS[i].phn===q){cPat=PATS[i];break;}}
+  showPHNResult();
+}
+function showPHNResult(){
+  var el=g('phr');if(!el)return;
+  if(cPat){el.innerHTML='<div class="phn-res"><div style="display:flex;align-items:center;gap:11px"><div style="width:20px;height:20px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+chk(true)+'</div>'+patAv(cPat.name,cPat.phn,40)+'<div style="flex:1"><div style="font-weight:700">'+cPat.name+'</div><div style="font-size:.77rem;color:var(--t2);margin-top:2px">DOB: '+cPat.dob+' · '+(cPat.gender==='F'?'Female':'Male')+' · PHN: '+cPat.phn+'</div></div><span class="badge b-active" style="font-size:.7rem">MSP active</span></div></div>';}
+  else{el.innerHTML=alrt('err','<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="alrt-ico"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div>No active MSP patient found for this PHN</div>');}
+}
+function nextStep(){
+  if(cStep===0){if(!cPat){var r=g('phr');if(r)r.innerHTML=alrt('err','<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="alrt-ico"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div>Please verify a patient PHN first</div>');return;}cStep=1;}
+  else if(cStep===1){
+    cForm.fee=(g('f-fee')||{value:cForm.fee}).value||cForm.fee;
+    cForm.diag=(g('f-diag')||{value:cForm.diag}).value||cForm.diag;
+    cForm.date=(g('f-date')||{value:cForm.date}).value||cForm.date;
+    cForm.fac=(g('f-fac')||{value:cForm.fac}).value||cForm.fac;
+    cForm.ref=(g('f-ref')||{value:cForm.ref}).value||cForm.ref;
+    var aiN=g('ai-notes');if(aiN)cForm.aiNotes=aiN.value;
+    // Sync extras
+    (cForm.extraFees||[]).forEach(function(_,i){var el=g('xf-'+i);if(el)cForm.extraFees[i]=el.value;});
+    (cForm.extraDiags||[]).forEach(function(_,i){var el=g('xd-'+i);if(el)cForm.extraDiags[i]=el.value;});
+    // Drop empties
+    cForm.extraFees=(cForm.extraFees||[]).filter(Boolean);
+    cForm.extraDiags=(cForm.extraDiags||[]).filter(Boolean);
+    var ok=true;
+    if(!cForm.fee){var e=g('fee-err');if(e)e.style.display='block';ok=false;}
+    if(!cForm.diag){var e=g('diag-err');if(e)e.style.display='block';ok=false;}
+    if(!ok)return;
+    cStep=2;
+  }
+  renderStep();
+}
+function submitClaim(){
+  g('mb').innerHTML='<div style="text-align:center;padding:24px 0"><div style="width:48px;height:48px;border-radius:50%;border:3px solid var(--sky-lt);border-top:3px solid var(--sky);margin:0 auto 16px;animation:spin .9s linear infinite"></div><div style="color:var(--t3);font-weight:500">Transmitting to Teleplan…</div></div>';
+  g('mf').innerHTML='';
+  setTimeout(function(){
+    var allFeesArr=[cForm.fee].concat(cForm.extraFees||[]).filter(Boolean);
+    var primaryDiag=cForm.diag;
+    var newIds=[];
+    allFeesArr.forEach(function(c){
+      var fc=null;for(var i=0;i<FC.length;i++){if(FC[i].code===c){fc=FC[i];break;}}
+      var nid='SKY-2026-'+String(Math.floor(Math.random()*9000)+1000);
+      newIds.push(nid);
+      CLAIMS.unshift({id:nid,phn:cPat.phn,patient:cPat.name,date:cForm.date,code:c,desc:fc?fc.desc:'',fee:fc?fc.fee:0,status:'submitted',icd:primaryDiag,submitted:cForm.date});
+    });
+    var idsHtml=newIds.map(function(id){return '<div class="mono" style="display:inline-block;background:var(--sky-lt);border:1px solid var(--sky-b);color:var(--sky-dk);padding:6px 14px;border-radius:20px;font-size:.78rem;font-weight:700;margin:3px">'+id+'</div>';}).join('');
+    var headlineLbl=newIds.length>1?(newIds.length+' claim lines transmitted'):'Claim transmitted';
+    g('mb').innerHTML='<div style="text-align:center;padding:24px 0"><div style="width:60px;height:60px;border-radius:50%;background:var(--ok-lt);border:2px solid var(--ok-b);display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></div><div style="font-family:var(--ff);font-size:1.45rem;font-weight:400;margin-bottom:7px;letter-spacing:-.01em">'+headlineLbl+'</div><div style="color:var(--t3);font-size:.86rem;margin-bottom:14px">Sent to Teleplan at '+new Date().toLocaleTimeString()+'</div><div>'+idsHtml+'</div></div>';
+    g('mf').innerHTML='<button class="btn btn-p" onclick="closeClaim();goTo(\'claims\')">View claims →</button>';
+    setLive(headlineLbl+'.');
+  },1500);
+}
+
+// AI claim coder (mock — placeholder for real LLM backend)
+var AI_PATTERNS=[
+  {kw:['hypertens','blood pressure',' bp '],code:'00101',icd:'401',why:'Established-patient follow-up with med adjustment for hypertension matches an intermediate visit (00101) + ICD 401.'},
+  {kw:['diabet','glycemic','hba1c','blood sugar'],code:'00101',icd:'250',why:'Diabetes follow-up with labs and titration fits intermediate visit (00101) + ICD 250.'},
+  {kw:['asthma','wheez','inhaler','salbutamol'],code:'00101',icd:'493',why:'Asthma assessment with inhaler review fits intermediate visit (00101) + ICD 493.'},
+  {kw:['back pain','low back','lumbar','lbp'],code:'00100',icd:'724',why:'Focused musculoskeletal complaint — brief visit (00100) + ICD 724.'},
+  {kw:['depress','low mood','phq'],code:'00102',icd:'311',why:'Mental-health follow-up with counselling matches extended visit (00102) + ICD 311.'},
+  {kw:['anxiety','panic',' gad'],code:'00102',icd:'300',why:'Anxiety-disorder visit with counselling content typically codes as 00102 + ICD 300.'},
+  {kw:['pap smear','cervical screen'],code:'14070',icd:'V72',why:'Cervical-screening procedure: 14070 + ICD V72 (special investigation).'},
+  {kw:['ecg','electrocardiogram'],code:'03150',icd:'401',why:'In-office 12-lead ECG procedure: 03150. Underlying indication suggests ICD 401.'},
+  {kw:['phone consult','telephone','tele-'],code:'00590',icd:'V70',why:'Phone-based encounter: 00590 telephone consultation.'},
+  {kw:['preventive','checkup','wellness','annual'],code:'00140',icd:'V70',why:'Preventive / wellness visit: 00140 + ICD V70 general medical exam.'},
+  {kw:['sore throat','pharyngitis','tonsil'],code:'00100',icd:'462',why:'Brief acute-care visit for pharyngitis: 00100 + ICD 462.'},
+  {kw:['pneumonia','chest infection',' cap '],code:'00102',icd:'486',why:'Pneumonia work-up with exam and management plan: extended visit (00102) + ICD 486.'},
+  {kw:['arthritis','joint pain',' ra '],code:'00101',icd:'714',why:'RA / joint-disease follow-up: intermediate visit (00101) + ICD 714.'}
+];
+function aiSuggest(notes){
+  var n=' '+notes.toLowerCase()+' ';
+  for(var i=0;i<AI_PATTERNS.length;i++){
+    var p=AI_PATTERNS[i];
+    for(var j=0;j<p.kw.length;j++){
+      if(n.indexOf(p.kw[j])>-1){
+        var conf=72+Math.floor(Math.random()*22);
+        return {code:p.code,icd:p.icd,why:p.why,confidence:conf};
+      }
+    }
+  }
+  return {code:'00100',icd:'V70',why:'Could not match a specific pattern. Defaulted to brief visit (00100) + general exam ICD (V70). Add more clinical detail (chief complaint, findings, plan) for a tighter suggestion.',confidence:42};
+}
+function runAISuggest(){
+  var ta=g('ai-notes');if(!ta)return;
+  var notes=ta.value.trim();cForm.aiNotes=ta.value;
+  var rEl=g('ai-result');if(!rEl)return;
+  if(notes.length<10){
+    rEl.innerHTML=alrt('warn','<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" class="alrt-ico"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div>Add a few more words about the encounter for a better suggestion.</div>');
+    return;
+  }
+  rEl.innerHTML='<div style="padding:14px;text-align:center"><div style="width:24px;height:24px;border-radius:50%;border:2.5px solid var(--violet-b);border-top:2.5px solid var(--violet);margin:0 auto 8px;animation:spin .8s linear infinite" aria-hidden="true"></div><div style="font-size:.78rem;color:var(--t3);font-weight:500">Analysing encounter notes…</div></div>';
+  setTimeout(function(){
+    var s=aiSuggest(notes);
+    var fc=null;for(var i=0;i<FC.length;i++){if(FC[i].code===s.code){fc=FC[i];break;}}
+    var ic=null;for(var i=0;i<ICD.length;i++){if(ICD[i].code===s.icd){ic=ICD[i];break;}}
+    rEl.innerHTML='<div class="ai-result">'
+      +'<div class="ai-result-row">'
+        +'<div class="ai-chips"><span class="code-chip" style="background:var(--violet-lt);color:var(--violet);border:1px solid var(--violet-b)">'+s.code+(fc?' · '+fc.desc:'')+'</span><span class="icd-chip">'+s.icd+(ic?' · '+ic.desc:'')+'</span></div>'
+        +'<span class="ai-conf"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>'+s.confidence+'% confidence</span>'
+      +'</div>'
+      +(fc?'<div style="font-family:var(--ff);font-size:1.35rem;font-weight:400;color:var(--t1);letter-spacing:-.01em;margin-bottom:4px">$'+fc.fee.toFixed(2)+'</div>':'')
+      +'<div class="ai-why"><strong>Why:</strong> '+s.why+'</div>'
+      +'<div class="ai-foot">'
+        +'<button type="button" class="btn btn-g btn-sm" onclick="dismissAISuggestion()">Dismiss</button>'
+        +'<button type="button" class="btn btn-p btn-sm" onclick="acceptAISuggestion(\''+s.code+'\',\''+s.icd+'\')">Accept &amp; fill</button>'
+      +'</div>'
+    +'</div>';
+    setLive('Code suggested: '+s.code+' with '+s.confidence+' percent confidence.');
+  },650);
+}
+function dismissAISuggestion(){
+  var ta=g('ai-notes');if(ta)cForm.aiNotes=ta.value;
+  var rEl=g('ai-result');if(rEl)rEl.innerHTML='';
+}
+
+// Multi-code helpers (single claim flow)
+function addCfee(){
+  // Save current inputs first so dropdown values aren't lost on re-render
+  cExtraSync();
+  cForm.extraFees=cForm.extraFees||[];
+  cForm.extraFees.push('');
+  renderStep();
+}
+function removeCfee(idx){
+  cExtraSync();
+  cForm.extraFees.splice(idx,1);
+  renderStep();
+}
+function addCdiag(){
+  cExtraSync();
+  cForm.extraDiags=cForm.extraDiags||[];
+  cForm.extraDiags.push('');
+  renderStep();
+}
+function removeCdiag(idx){
+  cExtraSync();
+  cForm.extraDiags.splice(idx,1);
+  renderStep();
+}
+function cExtraSync(){
+  // Read current form fields into cForm before any re-render
+  var f=g('f-fee');if(f)cForm.fee=f.value||cForm.fee;
+  var d=g('f-diag');if(d)cForm.diag=d.value||cForm.diag;
+  (cForm.extraFees||[]).forEach(function(_,i){var el=g('xf-'+i);if(el)cForm.extraFees[i]=el.value;});
+  (cForm.extraDiags||[]).forEach(function(_,i){var el=g('xd-'+i);if(el)cForm.extraDiags[i]=el.value;});
+}
+function allFeesTotal(){
+  var t=0;
+  var codes=[cForm.fee].concat(cForm.extraFees||[]).filter(Boolean);
+  codes.forEach(function(c){for(var i=0;i<FC.length;i++){if(FC[i].code===c){t+=FC[i].fee;break;}}});
+  return t;
+}
+function acceptAISuggestion(code,icd){
+  cForm.fee=code;cForm.diag=icd;
+  var ta=g('ai-notes');if(ta)cForm.aiNotes=ta.value;
+  renderStep();
+  setLive('Suggestion accepted. Fee code '+code+' and diagnostic '+icd+' applied.');
+}
+
+// Rejection probability
+function riskScore(form,fc){
+  var pct=6;var reasons=[];
+  if(!form.fee){pct+=80;reasons.push('no fee code selected');}
+  if(!form.diag){pct+=40;reasons.push('no ICD-9 code selected');}
+  if(fc){
+    if(fc.type==='LFP'&&!form.fac){pct+=18;reasons.push('LFP code without facility number — a common refusal');}
+    if(fc.code==='00115'&&!form.fac){pct+=14;reasons.push('hospital visit without facility number');}
+    if((fc.type==='ICBC'||fc.type==='WCB')&&!form.ref){pct+=10;reasons.push('third-party claim without referral number');}
+  }
+  if(form.date){
+    var d=new Date(form.date),now=new Date();
+    var days=Math.floor((now-d)/86400000);
+    if(days>85&&days<=90){pct+=22;reasons.push('service date approaching 90-day cut-off');}
+    if(days>90){pct+=50;reasons.push('service date past 90-day window');}
+  }
+  pct=Math.min(pct,98);
+  var headline=pct<15?'Low risk':(pct<35?'Moderate risk':'High risk');
+  var reason=reasons.length?'Most likely cause: '+reasons[0]+'.':'No common refusal patterns detected. Validation, fee-code / ICD pairing, and 90-day window all look clean.';
+  return {pct:pct,headline:headline,reason:reason};
+}
+
+// Live region + focus management
+function setLive(msg){var el=g('live-status');if(el){el.textContent='';setTimeout(function(){el.textContent=msg;},10);}}
+var lastFocus=null;
+
+// ── Batch claim flow ──
+var bStep=0,bPats=[],bCommon={},bClaims=[],bExpanded={};
+function bToggleExpand(idx){bExpanded[idx]=!bExpanded[idx];renderBatchStep();}
+function bAddExtraFee(idx){if(!bClaims[idx])return;bClaims[idx].extraFees=bClaims[idx].extraFees||[];bClaims[idx].extraFees.push('');bClaims[idx].edited=true;bExpanded[idx]=true;renderBatchStep();}
+function bSetExtraFee(idx,ei,val){if(!bClaims[idx])return;bClaims[idx].extraFees[ei]=val;bClaims[idx].edited=true;renderBatchStep();}
+function bRemoveExtraFee(idx,ei){if(!bClaims[idx])return;bClaims[idx].extraFees.splice(ei,1);bClaims[idx].edited=true;renderBatchStep();}
+function bAddExtraDiag(idx){if(!bClaims[idx])return;bClaims[idx].extraDiags=bClaims[idx].extraDiags||[];bClaims[idx].extraDiags.push('');bClaims[idx].edited=true;bExpanded[idx]=true;renderBatchStep();}
+function bSetExtraDiag(idx,ei,val){if(!bClaims[idx])return;bClaims[idx].extraDiags[ei]=val;bClaims[idx].edited=true;renderBatchStep();}
+function bRemoveExtraDiag(idx,ei){if(!bClaims[idx])return;bClaims[idx].extraDiags.splice(ei,1);bClaims[idx].edited=true;renderBatchStep();}
+function bRowTotal(c){var t=0;var codes=[c.fee].concat(c.extraFees||[]).filter(Boolean);codes.forEach(function(code){for(var i=0;i<FC.length;i++){if(FC[i].code===code){t+=FC[i].fee;break;}}});return t;}
+
+function openBatch(){
+  bStep=0;bPats=[];
+  bCommon={date:today(),fee:'',diag:'',type:'MSP',fac:'',ref:'',aiNotes:''};
+  bClaims=[];
+  renderBatchStep();
+  var m=g('batch-modal');m.style.display='flex';m.setAttribute('aria-hidden','false');
+  lastFocus=document.activeElement;
+  setTimeout(function(){var fi=g('b-add-phn');if(fi)fi.focus();},20);
+}
+function closeBatch(){
+  var m=g('batch-modal');m.style.display='none';m.setAttribute('aria-hidden','true');
+  if(lastFocus&&lastFocus.focus)lastFocus.focus();
+}
+function batchStepsHtml(){
+  var names=['Patients','Service','Review','Submit'];
+  return '<div class="steps">'+names.map(function(s,i){
+    return '<div style="display:flex;flex-direction:column;align-items:center;gap:3px"><div class="snode '+(i<bStep?'s-done':(i===bStep?'s-act':'s-pend'))+'">'+(i<bStep?'✓':(i+1))+'</div><div class="slbl">'+s+'</div></div>'+(i<names.length-1?'<div class="sline'+(i<bStep?' done':'')+'"></div>':'');
+  }).join('')+'</div>';
+}
+function bGetPatByPhn(phn){for(var i=0;i<PATS.length;i++){if(PATS[i].phn===phn)return PATS[i];}return null;}
+function bPatToggle(phn){
+  var idx=bPats.indexOf(phn);
+  if(idx>-1)bPats.splice(idx,1);else bPats.push(phn);
+  renderBatchStep();
+}
+function bRemovePat(phn){
+  var idx=bPats.indexOf(phn);
+  if(idx>-1){bPats.splice(idx,1);renderBatchStep();}
+}
+function bAddPHN(){
+  var inp=g('b-add-phn');if(!inp)return;
+  var q=inp.value.replace(/\s/g,'');
+  var found=bGetPatByPhn(q);
+  var er=g('b-add-err');
+  if(!found){if(er)er.textContent='PHN not found in MSP registry';return;}
+  if(bPats.indexOf(q)>-1){if(er)er.textContent='Already in batch';return;}
+  if(er)er.textContent='';
+  bPats.push(q);renderBatchStep();
+}
+
+function renderBatchStep(){
+  var body='',foot='';
+  if(bStep===0){
+    var selPills=bPats.length?'<div class="bsel-pills">'+bPats.map(function(phn){
+      var p=bGetPatByPhn(phn);if(!p)return '';
+      return '<span class="bsel-pill">'+patAv(p.name,p.phn,22)+p.name+'<button type="button" class="bsel-pill-x" onclick="bRemovePat(\''+phn+'\')" aria-label="Remove '+p.name+' from batch"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></span>';
+    }).join('')+'</div>':'';
+    var rows=PATS.map(function(p){
+      var on=bPats.indexOf(p.phn)>-1;
+      return '<div class="bp-row'+(on?' on':'')+'" onclick="bPatToggle(\''+p.phn+'\')" role="button" tabindex="0" aria-pressed="'+on+'" onkeydown="if(event.key===\' \'||event.key===\'Enter\'){event.preventDefault();bPatToggle(\''+p.phn+'\')}"><div class="bp-check"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></div>'+patAv(p.name,p.phn,32)+'<div class="bp-info"><div class="bp-name">'+p.name+'</div><div class="bp-meta">PHN '+p.phn+' · DOB '+p.dob+'</div></div><span class="bp-tag">'+(p.gender==='F'?'Female':'Male')+'</span></div>';
+    }).join('');
+    body=batchStepsHtml()
+      +alrt('info','<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" class="alrt-ico"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><div>Pick the patients you saw today. Uniform codes in the next step, then fine-tune individual claims before submitting.</div>')
+      +selPills
+      +'<div class="bp-addbar"><input id="b-add-phn" class="bc-inline" placeholder="Add by PHN (e.g. 9876543210)" style="flex:1;padding:9px 12px;font-size:.86rem" onkeydown="if(event.key===\'Enter\'){event.preventDefault();bAddPHN();}"/><button class="btn btn-s btn-sm" onclick="bAddPHN()">Add</button></div>'
+      +'<div id="b-add-err" class="ferr" style="margin-top:-8px;margin-bottom:10px"></div>'
+      +(rows?'<div class="bp-list">'+rows+'</div>':'<div class="bp-empty"><div class="empty-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--t4)" stroke-width="1.8" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>No patients yet — add by PHN above.</div>');
+    foot='<button class="btn btn-s" onclick="closeBatch()">Cancel</button><button class="btn btn-p" onclick="bNextStep()">Continue → ('+bPats.length+' selected)</button>';
+  } else if(bStep===1){
+    var fOpts=FC.filter(function(fc){return fc.type==='GP'||fc.type===bCommon.type;}).map(function(fc){return '<option value="'+fc.code+'"'+(bCommon.fee===fc.code?' selected':'')+'>'+fc.code+' · '+fc.desc+' ($'+fc.fee.toFixed(2)+')</option>';}).join('');
+    var dOpts=ICD.map(function(d){return '<option value="'+d.code+'"'+(bCommon.diag===d.code?' selected':'')+'>'+d.code+' · '+d.desc+'</option>';}).join('');
+    var selFee=null;for(var i=0;i<FC.length;i++){if(FC[i].code===bCommon.fee){selFee=FC[i];break;}}
+    var aiCard='<div class="ai-card">'
+      +'<div class="ai-hdr">'
+        +'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--violet)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l2.4 6.5L21 11l-6.6 2.5L12 20l-2.4-6.5L3 11l6.6-2.5z"/></svg>'
+        +'<div style="flex:1"><div class="ai-title">Suggest from a typical day\'s notes <span class="ai-badge">AI · beta</span></div><div class="ai-sub">Describe the common encounter — applies to all '+bPats.length+' claims (still editable per row next).</div></div>'
+      +'</div>'
+      +'<label for="b-ai-notes" class="sr-only">Encounter notes</label>'
+      +'<textarea id="b-ai-notes" class="ai-textarea" placeholder="e.g. Half-day of hypertension follow-ups, established patients, BP recheck and med review">'+(bCommon.aiNotes||'')+'</textarea>'
+      +'<div class="ai-actions">'
+        +'<button type="button" class="btn-ai" onclick="bRunAISuggest()" aria-label="Generate AI code suggestion for batch">'
+          +'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>'
+          +'Suggest codes'
+        +'</button>'
+      +'</div>'
+      +'<div id="b-ai-result" aria-live="polite"></div>'
+    +'</div>';
+    body=batchStepsHtml()+aiCard+'<div class="fg fg2">'
+      +'<div class="field"><label>Claim type</label><select id="bf-type" onchange="bCommon.type=this.value;renderBatchStep()"><option value="MSP"'+(bCommon.type==='MSP'?' selected':'')+'>MSP · Fee-for-service</option><option value="LFP"'+(bCommon.type==='LFP'?' selected':'')+'>LFP</option><option value="ICBC"'+(bCommon.type==='ICBC'?' selected':'')+'>ICBC</option><option value="WCB"'+(bCommon.type==='WCB'?' selected':'')+'>WorkSafeBC / WCB</option></select></div>'
+      +'<div class="field"><label>Service date (applies to all)</label><input type="date" id="bf-date" value="'+bCommon.date+'" max="'+today()+'" onchange="bCommon.date=this.value"/><div class="hint">Same date for every claim — editable per row next</div></div>'
+      +'<div class="field"><label>Common MSC fee code</label><input id="bf-fee" list="fc-list" class="mono" value="'+(bCommon.fee||'')+'" placeholder="Type or pick a code (e.g. 00101)" onchange="bCommon.fee=this.value;renderBatchStep()" autocomplete="off"/><div class="hint">Applies to every claim in the batch — start typing to see matches</div></div>'
+      +'<div class="field"><label>Common ICD-9</label><input id="bf-diag" list="icd-list" class="mono" value="'+(bCommon.diag||'')+'" placeholder="Type or pick an ICD (e.g. 401)" onchange="bCommon.diag=this.value" autocomplete="off"/></div>'
+      +'<div class="field"><label>Facility number (if applicable)</label><input id="bf-fac" value="'+(bCommon.fac||'')+'" placeholder="F12345" onchange="bCommon.fac=this.value"/></div>'
+      +'<div class="field"><label>Referral MSP# (optional)</label><input id="bf-ref" value="'+(bCommon.ref||'')+'" placeholder="12345" onchange="bCommon.ref=this.value"/></div>'
+      +(selFee?'<div style="grid-column:1/-1">'+alrt('info','<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" class="alrt-ico"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><div><strong>'+selFee.code+'</strong> × '+bPats.length+' = <strong>$'+(selFee.fee*bPats.length).toFixed(2)+'</strong> total batch value</div>')+'</div>':'')
+      +'</div>';
+    foot='<button class="btn btn-g" onclick="bStep=0;renderBatchStep()">← Back</button><button class="btn btn-p" onclick="bNextStep()">Continue →</button>';
+  } else if(bStep===2){
+    var total=0,editedCount=0,aggRisk=0,lineCount=0;
+    bClaims.forEach(function(c){
+      var fc=null;for(var i=0;i<FC.length;i++){if(FC[i].code===c.fee){fc=FC[i];break;}}
+      total+=bRowTotal(c);
+      lineCount+=([c.fee].concat(c.extraFees||[]).filter(Boolean)).length||1;
+      if(c.edited)editedCount++;
+      var r=riskScore({fee:c.fee,diag:c.diag,fac:c.fac,ref:c.ref,date:c.date},fc);
+      c._risk=r.pct;if(r.pct>aggRisk)aggRisk=r.pct;
+    });
+    var claimsLabel=lineCount===bClaims.length?bClaims.length:(bClaims.length+' / '+lineCount+' lines');
+    var summary='<div class="batch-summary">'
+      +'<div class="batch-summary-stat"><div class="bss-lbl">Patients · Lines</div><div class="bss-val">'+claimsLabel+'</div></div>'
+      +'<div class="batch-summary-stat"><div class="bss-lbl">Total</div><div class="bss-val">$'+fmt(total)+'</div></div>'
+      +'<div class="batch-summary-stat"><div class="bss-lbl">Edited</div><div class="bss-val">'+editedCount+'</div></div>'
+      +'<div class="batch-summary-stat"><div class="bss-lbl">Max risk</div><div class="bss-val" style="color:'+(aggRisk<15?'var(--ok)':(aggRisk<35?'var(--warn)':'var(--bad)'))+'">'+aggRisk+'%</div></div>'
+    +'</div>';
+    var rows=bClaims.map(function(c,idx){
+      var fOpts=FC.filter(function(fc){return fc.type==='GP'||fc.type===c.type;}).map(function(fc){return '<option value="'+fc.code+'"'+(c.fee===fc.code?' selected':'')+'>'+fc.code+' · $'+fc.fee.toFixed(2)+'</option>';}).join('');
+      var dOpts=ICD.map(function(d){return '<option value="'+d.code+'"'+(c.diag===d.code?' selected':'')+'>'+d.code+'</option>';}).join('');
+      var rowTotal=bRowTotal(c);
+      var xFees=(c.extraFees||[]).filter(Boolean);
+      var xDiags=(c.extraDiags||[]).filter(Boolean);
+      var xfBadge=(c.extraFees&&c.extraFees.length)?' <span class="bc-edit-badge" style="background:var(--sky-lt);color:var(--sky-dk);border-color:var(--sky-b)">+'+c.extraFees.length+'</span>':'';
+      var xdBadge=(c.extraDiags&&c.extraDiags.length)?' <span class="bc-edit-badge" style="background:var(--sky-lt);color:var(--sky-dk);border-color:var(--sky-b)">+'+c.extraDiags.length+'</span>':'';
+      var isExp=!!bExpanded[idx];
+      var mainRow='<tr'+(c.edited?' class="bc-edited"':'')+'>'
+        +'<td style="min-width:170px"><div style="display:flex;align-items:center;gap:8px">'+patAv(c.patient,c.phn,26)+'<div style="min-width:0"><div style="font-size:.83rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+c.patient+'</div><div class="mono" style="font-size:.66rem;color:var(--t4)">'+c.phn+'</div></div></div></td>'
+        +'<td style="min-width:140px"><div style="display:flex;align-items:center;gap:4px"><input list="fc-list" class="bc-inline mono" value="'+(c.fee||'')+'" placeholder="Type or pick" onchange="bEditClaim('+idx+',\'fee\',this.value)" aria-label="Fee code for '+c.patient+'" autocomplete="off" style="flex:1;min-width:0"/>'+xfBadge+'</div></td>'
+        +'<td style="min-width:110px"><div style="display:flex;align-items:center;gap:4px"><input list="icd-list" class="bc-inline mono" value="'+(c.diag||'')+'" placeholder="Type or pick" onchange="bEditClaim('+idx+',\'diag\',this.value)" aria-label="ICD for '+c.patient+'" autocomplete="off" style="flex:1;min-width:0"/>'+xdBadge+'</div></td>'
+        +'<td style="min-width:120px"><input type="date" class="bc-inline mono" value="'+c.date+'" onchange="bEditClaim('+idx+',\'date\',this.value)" aria-label="Date for '+c.patient+'"/></td>'
+        +'<td style="text-align:right;font-family:var(--fm);font-weight:700">$'+rowTotal.toFixed(2)+'</td>'
+        +'<td style="text-align:center"><span style="font-size:.74rem;font-weight:700;color:'+(c._risk<15?'var(--ok)':(c._risk<35?'var(--warn)':'var(--bad)'))+'">'+c._risk+'%</span>'+(c.edited?' <span class="bc-edit-badge">Edited</span>':'')+'</td>'
+        +'<td style="text-align:right;white-space:nowrap">'
+          +'<button type="button" class="btn btn-g btn-xs" onclick="bToggleExpand('+idx+')" aria-label="'+(isExp?'Hide':'Show')+' additional codes for '+c.patient+'" aria-expanded="'+isExp+'" style="margin-right:4px;gap:4px">'+(isExp?'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><polyline points="18 15 12 9 6 15"/></svg>Hide':'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add codes')+'</button>'
+          +'<button type="button" class="bc-rowact" onclick="bRemoveClaim('+idx+')" aria-label="Remove '+c.patient+' from batch"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
+        +'</td>'
+      +'</tr>';
+      if(!isExp)return mainRow;
+      // Expanded panel
+      var extraFeeRows=(c.extraFees||[]).map(function(ef,ei){
+        var opts=FC.filter(function(fc){return fc.type==='GP'||fc.type===c.type;}).map(function(fc){return '<option value="'+fc.code+'"'+(ef===fc.code?' selected':'')+'>'+fc.code+' · '+fc.desc+' ($'+fc.fee.toFixed(2)+')</option>';}).join('');
+        return '<div style="display:flex;gap:6px;margin-top:6px;align-items:center"><span style="font-size:.66rem;color:var(--t4);font-weight:700;width:62px">SERVICE '+(ei+2)+'</span><input list="fc-list" class="bc-inline mono" style="flex:1" value="'+(ef||'')+'" placeholder="Type or pick a fee code" onchange="bSetExtraFee('+idx+','+ei+',this.value)" aria-label="Extra fee '+(ei+2)+' for '+c.patient+'" autocomplete="off"/><button type="button" class="bc-rowact" onclick="bRemoveExtraFee('+idx+','+ei+')" aria-label="Remove this service"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>';
+      }).join('');
+      var extraDiagRows=(c.extraDiags||[]).map(function(ed,ei){
+        var opts=ICD.map(function(d){return '<option value="'+d.code+'"'+(ed===d.code?' selected':'')+'>'+d.code+' · '+d.desc+'</option>';}).join('');
+        return '<div style="display:flex;gap:6px;margin-top:6px;align-items:center"><span style="font-size:.66rem;color:var(--t4);font-weight:700;width:62px">ICD '+(ei+2)+'</span><input list="icd-list" class="bc-inline mono" style="flex:1" value="'+(ed||'')+'" placeholder="Type or pick an ICD" onchange="bSetExtraDiag('+idx+','+ei+',this.value)" aria-label="Extra ICD '+(ei+2)+' for '+c.patient+'" autocomplete="off"/><button type="button" class="bc-rowact" onclick="bRemoveExtraDiag('+idx+','+ei+')" aria-label="Remove this diagnosis"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>';
+      }).join('');
+      var expRow='<tr class="bc-exp-row"><td colspan="7" style="background:var(--n50);border-top:none;padding:12px 16px"><div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">'
+        +'<div>'
+          +'<div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:.7rem;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em">Additional services</div><button type="button" class="btn btn-g btn-xs" onclick="bAddExtraFee('+idx+')" aria-label="Add a service for '+c.patient+'"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add</button></div>'
+          +(extraFeeRows||'<div style="font-size:.74rem;color:var(--t4);margin-top:6px;font-style:italic">No additional services. Click Add to bill another code under this encounter.</div>')
+        +'</div>'
+        +'<div>'
+          +'<div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:.7rem;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em">Additional diagnoses</div><button type="button" class="btn btn-g btn-xs" onclick="bAddExtraDiag('+idx+')" aria-label="Add a diagnosis for '+c.patient+'"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add</button></div>'
+          +(extraDiagRows||'<div style="font-size:.74rem;color:var(--t4);margin-top:6px;font-style:italic">No additional diagnoses.</div>')
+        +'</div>'
+      +'</div></td></tr>';
+      return mainRow+expRow;
+    }).join('');
+    body=batchStepsHtml()+summary
+      +alrt('info','<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" class="alrt-ico"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><div>Tweak fee code, ICD, or date per row. Click the <strong>›</strong> chevron to add extra fee codes or diagnoses for an encounter. Rows you change get a violet Edited badge.</div>')
+      +'<div style="overflow-x:auto;border:1px solid var(--bd);border-radius:11px"><table class="bc-table"><thead><tr><th>Patient</th><th>Fee code</th><th>ICD-9</th><th>Date</th><th style="text-align:right">Amount</th><th style="text-align:center">Risk</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+    foot='<button class="btn btn-g" onclick="bStep=1;renderBatchStep()">← Back</button><button class="btn btn-p" onclick="bNextStep()">Continue → ('+lineCount+' lines)</button>';
+  } else if(bStep===3){
+    var total=0,lineTotal=0;
+    bClaims.forEach(function(c){
+      total+=bRowTotal(c);
+      lineTotal+=([c.fee].concat(c.extraFees||[]).filter(Boolean)).length||1;
+    });
+    body=batchStepsHtml()
+      +'<div style="text-align:center;padding:22px 0">'
+        +'<div style="font-family:var(--ff);font-size:1.3rem;font-style:italic;margin-bottom:7px;letter-spacing:-.01em">Ready to submit '+lineTotal+' claim lines</div>'
+        +'<div style="color:var(--t3);font-size:.86rem;margin-bottom:6px">'+bClaims.length+' patients · all claim lines will be encrypted and transmitted to MSP Teleplan sequentially.</div>'
+        +'<div style="font-family:var(--ff);font-size:1.6rem;font-weight:400;color:var(--sky-dk);letter-spacing:-.02em;margin-bottom:20px">$'+fmt(total)+' total batch value</div>'
+        +'<button class="btn btn-p" style="padding:12px 30px;font-size:.94rem" onclick="bSubmit()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Submit batch to Teleplan</button>'
+      +'</div>';
+    foot='<button class="btn btn-g" onclick="bStep=2;renderBatchStep()">← Back</button><button class="btn btn-s" onclick="closeBatch()">Cancel</button>';
+  }
+  g('bb').innerHTML=body;g('bf').innerHTML=foot;
+}
+
+function bNextStep(){
+  if(bStep===0){
+    if(bPats.length===0){var er=g('b-add-err');if(er)er.textContent='Add at least one patient to the batch';return;}
+    bStep=1;
+  } else if(bStep===1){
+    bCommon.fee=(g('bf-fee')||{value:bCommon.fee}).value||bCommon.fee;
+    bCommon.diag=(g('bf-diag')||{value:bCommon.diag}).value||bCommon.diag;
+    bCommon.date=(g('bf-date')||{value:bCommon.date}).value||bCommon.date;
+    bCommon.fac=(g('bf-fac')||{value:bCommon.fac}).value||bCommon.fac;
+    bCommon.ref=(g('bf-ref')||{value:bCommon.ref}).value||bCommon.ref;
+    if(!bCommon.fee||!bCommon.diag){setLive('Choose both a fee code and an ICD before continuing.');return;}
+    bClaims=bPats.map(function(phn){
+      var p=bGetPatByPhn(phn)||{name:'Unknown',phn:phn};
+      return {phn:phn,patient:p.name,type:bCommon.type,date:bCommon.date,fee:bCommon.fee,diag:bCommon.diag,fac:bCommon.fac,ref:bCommon.ref,edited:false,extraFees:[],extraDiags:[]};
+    });
+    bExpanded={};
+    bStep=2;
+  } else if(bStep===2){
+    bStep=3;
+  }
+  renderBatchStep();
+}
+function bEditClaim(idx,field,val){
+  if(!bClaims[idx])return;
+  bClaims[idx][field]=val;
+  bClaims[idx].edited=true;
+  renderBatchStep();
+}
+function bRemoveClaim(idx){
+  if(idx<0||idx>=bClaims.length)return;
+  bClaims.splice(idx,1);
+  delete bExpanded[idx];
+  bPats=bClaims.map(function(c){return c.phn;});
+  if(bClaims.length===0){bStep=0;}
+  renderBatchStep();
+}
+function bRunAISuggest(){
+  var ta=g('b-ai-notes');if(!ta)return;
+  var notes=ta.value.trim();bCommon.aiNotes=ta.value;
+  var rEl=g('b-ai-result');if(!rEl)return;
+  if(notes.length<10){
+    rEl.innerHTML=alrt('warn','<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" class="alrt-ico"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div>Add a few more words for a better suggestion.</div>');
+    return;
+  }
+  rEl.innerHTML='<div style="padding:14px;text-align:center"><div style="width:24px;height:24px;border-radius:50%;border:2.5px solid var(--violet-b);border-top:2.5px solid var(--violet);margin:0 auto 8px;animation:spin .8s linear infinite" aria-hidden="true"></div><div style="font-size:.78rem;color:var(--t3);font-weight:500">Analysing typical encounter…</div></div>';
+  setTimeout(function(){
+    var s=aiSuggest(notes);
+    var fc=null;for(var i=0;i<FC.length;i++){if(FC[i].code===s.code){fc=FC[i];break;}}
+    var ic=null;for(var i=0;i<ICD.length;i++){if(ICD[i].code===s.icd){ic=ICD[i];break;}}
+    rEl.innerHTML='<div class="ai-result">'
+      +'<div class="ai-result-row">'
+        +'<div class="ai-chips"><span class="code-chip" style="background:var(--violet-lt);color:var(--violet);border:1px solid var(--violet-b)">'+s.code+(fc?' · '+fc.desc:'')+'</span><span class="icd-chip">'+s.icd+(ic?' · '+ic.desc:'')+'</span></div>'
+        +'<span class="ai-conf"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>'+s.confidence+'% confidence</span>'
+      +'</div>'
+      +(fc?'<div style="font-family:var(--ff);font-size:1.2rem;font-weight:400;color:var(--t1);letter-spacing:-.01em;margin-bottom:4px">$'+fc.fee.toFixed(2)+' per claim × '+bPats.length+' = $'+(fc.fee*bPats.length).toFixed(2)+'</div>':'')
+      +'<div class="ai-why"><strong>Why:</strong> '+s.why+'</div>'
+      +'<div class="ai-foot">'
+        +'<button type="button" class="btn btn-g btn-sm" onclick="g(\'b-ai-result\').innerHTML=\'\'">Dismiss</button>'
+        +'<button type="button" class="btn btn-p btn-sm" onclick="bAcceptAI(\''+s.code+'\',\''+s.icd+'\')">Apply to batch</button>'
+      +'</div>'
+    +'</div>';
+    setLive('Batch suggestion: '+s.code+' and '+s.icd+'.');
+  },650);
+}
+function bAcceptAI(code,icd){
+  bCommon.fee=code;bCommon.diag=icd;
+  var ta=g('b-ai-notes');if(ta)bCommon.aiNotes=ta.value;
+  renderBatchStep();
+  setLive('Applied '+code+' and '+icd+' to all '+bPats.length+' patients.');
+}
+function bSubmit(){
+  // Flatten claims into line items (one per fee code)
+  var lines=[];
+  bClaims.forEach(function(c){
+    var feeCodes=[c.fee].concat(c.extraFees||[]).filter(Boolean);
+    feeCodes.forEach(function(code){
+      lines.push({phn:c.phn,patient:c.patient,type:c.type,date:c.date,fee:code,diag:c.diag,fac:c.fac,ref:c.ref});
+    });
+  });
+  var total=lines.length;
+  var patientCount=bClaims.length;
+  var label=(total===patientCount)?(total+' claims'):(total+' claim lines across '+patientCount+' patients');
+  g('bb').innerHTML='<div style="text-align:center;padding:32px 0"><div style="width:52px;height:52px;border-radius:50%;border:3px solid var(--sky-lt);border-top:3px solid var(--sky);margin:0 auto 16px;animation:spin .9s linear infinite" aria-hidden="true"></div><div style="color:var(--t3);font-weight:500;margin-bottom:6px">Transmitting '+label+' to Teleplan…</div><div id="b-progress" style="font-size:.78rem;color:var(--t4);font-family:var(--fm)">0 / '+total+'</div></div>';
+  g('bf').innerHTML='';
+  var newIds=[];
+  function transmit(i){
+    if(i>=total){
+      g('bb').innerHTML='<div style="text-align:center;padding:24px 0"><div style="width:60px;height:60px;border-radius:50%;background:var(--ok-lt);border:2px solid var(--ok-b);display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></div><div style="font-family:var(--ff);font-size:1.45rem;font-weight:400;margin-bottom:7px;letter-spacing:-.01em">Batch transmitted</div><div style="color:var(--t3);font-size:.86rem;margin-bottom:14px">'+label+' sent at '+new Date().toLocaleTimeString()+'</div><div class="bsel-pills" style="justify-content:center;max-width:100%;overflow-y:auto;max-height:200px">'+newIds.map(function(id){return '<span class="bsel-pill" style="font-family:var(--fm);font-size:.7rem;padding:4px 10px">'+id+'</span>';}).join('')+'</div></div>';
+      g('bf').innerHTML='<button class="btn btn-p" onclick="closeBatch();goTo(\'claims\')">View claims →</button>';
+      setLive('Batch transmitted: '+label+'.');
+      return;
+    }
+    var line=lines[i];
+    var fc=null;for(var j=0;j<FC.length;j++){if(FC[j].code===line.fee){fc=FC[j];break;}}
+    var newId='SKY-2026-'+String(Math.floor(Math.random()*9000)+1000);
+    newIds.push(newId);
+    CLAIMS.unshift({id:newId,phn:line.phn,patient:line.patient,date:line.date,code:line.fee,desc:fc?fc.desc:'',fee:fc?fc.fee:0,status:'submitted',icd:line.diag,submitted:line.date});
+    var prog=g('b-progress');if(prog)prog.textContent=(i+1)+' / '+total;
+    setTimeout(function(){transmit(i+1);},120);
+  }
+  setTimeout(function(){transmit(0);},400);
+}
+
+
+// Keyboard shortcuts
+var kbdBuffer='',kbdBufferTimer=null;
+function showShortcuts(){
+  g('kbd-body').innerHTML='<div class="kbd-grid">'
+    +'<div class="kbd-grp-t">Global</div>'
+    +'<div class="kbd-row"><span>New claim</span><span class="kbd-keys"><span class="kbd">N</span></span></div>'
+    +'<div class="kbd-row"><span>New batch</span><span class="kbd-keys"><span class="kbd">B</span></span></div>'
+    +'<div class="kbd-row"><span>Focus search</span><span class="kbd-keys"><span class="kbd">/</span></span></div>'
+    +'<div class="kbd-row"><span>Search (Cmd-K)</span><span class="kbd-keys"><span class="kbd">⌘</span><span class="kbd-plus">+</span><span class="kbd">K</span></span></div>'
+    +'<div class="kbd-row"><span>This help</span><span class="kbd-keys"><span class="kbd">?</span></span></div>'
+    +'<div class="kbd-row"><span>Close modal</span><span class="kbd-keys"><span class="kbd">Esc</span></span></div>'
+    +'<div class="kbd-grp-t">Navigate (press G then…)</div>'
+    +'<div class="kbd-row"><span>Dashboard</span><span class="kbd-keys"><span class="kbd">G</span><span class="kbd-plus">then</span><span class="kbd">D</span></span></div>'
+    +'<div class="kbd-row"><span>Claims</span><span class="kbd-keys"><span class="kbd">G</span><span class="kbd-plus">then</span><span class="kbd">C</span></span></div>'
+    +'<div class="kbd-row"><span>Patients</span><span class="kbd-keys"><span class="kbd">G</span><span class="kbd-plus">then</span><span class="kbd">P</span></span></div>'
+    +'<div class="kbd-row"><span>Remittance</span><span class="kbd-keys"><span class="kbd">G</span><span class="kbd-plus">then</span><span class="kbd">R</span></span></div>'
+    +'<div class="kbd-row"><span>Audit log</span><span class="kbd-keys"><span class="kbd">G</span><span class="kbd-plus">then</span><span class="kbd">A</span></span></div>'
+    +'<div class="kbd-row"><span>Settings</span><span class="kbd-keys"><span class="kbd">G</span><span class="kbd-plus">then</span><span class="kbd">S</span></span></div>'
+  +'</div>';
+  var m=g('kbd-modal');m.style.display='flex';m.setAttribute('aria-hidden','false');
+  lastFocus=document.activeElement;
+  setTimeout(function(){var cls=m.querySelector('.mcls');if(cls)cls.focus();},20);
+}
+function closeShortcuts(){var m=g('kbd-modal');m.style.display='none';m.setAttribute('aria-hidden','true');if(lastFocus&&lastFocus.focus)lastFocus.focus();}
+function anyModalOpen(){return g('claim-modal').style.display!=='none'||g('detail-modal').style.display!=='none'||g('kbd-modal').style.display!=='none'||g('batch-modal').style.display!=='none';}
+document.addEventListener('keydown',function(e){
+  var t=e.target,tag=t.tagName;
+  var inField=(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||t.isContentEditable);
+  if(e.key==='Escape'){
+    if(g('kbd-modal').style.display!=='none'){closeShortcuts();e.preventDefault();return;}
+    if(g('batch-modal').style.display!=='none'){closeBatch();e.preventDefault();return;}
+    if(g('claim-modal').style.display!=='none'){closeClaim();e.preventDefault();return;}
+    if(g('detail-modal').style.display!=='none'){closeDetail();e.preventDefault();return;}
+  }
+  if((e.metaKey||e.ctrlKey)&&(e.key==='k'||e.key==='K')){
+    var inp=g('tb-search-input');if(inp){inp.focus();e.preventDefault();}return;
+  }
+  if(inField)return;
+  if(anyModalOpen())return;
+  if(e.key==='?'||(e.shiftKey&&e.key==='/')){showShortcuts();e.preventDefault();return;}
+  if(e.key==='/'){var inp=g('tb-search-input');if(inp){inp.focus();e.preventDefault();}return;}
+  if(e.key==='n'||e.key==='N'){openClaim();e.preventDefault();return;}
+  if(e.key==='b'||e.key==='B'){openBatch();e.preventDefault();return;}
+  if(e.key==='g'||e.key==='G'){
+    kbdBuffer='g';
+    if(kbdBufferTimer)clearTimeout(kbdBufferTimer);
+    kbdBufferTimer=setTimeout(function(){kbdBuffer='';},1200);
+    return;
+  }
+  if(kbdBuffer==='g'){
+    var map={d:'dashboard',c:'claims',p:'patients',r:'remittance',a:'audit',s:'settings'};
+    var dest=map[(e.key||'').toLowerCase()];
+    if(dest){goTo(dest);e.preventDefault();}
+    kbdBuffer='';if(kbdBufferTimer)clearTimeout(kbdBufferTimer);
+  }
+});
+
+// aria-current on nav (wrap goTo)
+var _origGoTo=goTo;
+goTo=function(p){
+  _origGoTo(p);
+  document.querySelectorAll('.nav-item').forEach(function(el){el.removeAttribute('aria-current');});
+  var ni=g('nav-'+p);if(ni)ni.setAttribute('aria-current','page');
+  var meta=PAGE_META[p]||['',''];
+  setLive('Now on '+meta[0]);
+};
+
+// Show hamburger on small screens
+function checkResize(){
+  var ham=g('ham');
+  if(window.innerWidth<=768){ham.style.display='inline-flex';}else{ham.style.display='none';}
+}
+window.addEventListener('resize',checkResize);
+checkResize();
+
+
+// ── Profession switcher ──
+var currentProfession='physician';
+var pendingProfession=null;
+
+function selectPendingProfession(key){
+  if(key===currentProfession){pendingProfession=null;goTo('settings');return;}
+  pendingProfession=key;
+  goTo('settings');
+}
+function cancelProfessionSwitch(){
+  pendingProfession=null;
+  goTo('settings');
+  setLive('Profession switch cancelled.');
+}
+function confirmProfessionSwitch(){
+  if(!pendingProfession)return;
+  var key=pendingProfession;
+  pendingProfession=null;
+  switchProfession(key);
+}
+function professionConfirmBar(){
+  if(!pendingProfession||pendingProfession===currentProfession)return '';
+  var p=PROFESSIONS[pendingProfession];if(!p)return '';
+  return '<div class="prof-confirm" role="region" aria-label="Confirm profession switch">'
+    +'<div class="prof-confirm-text">Switch to <strong>'+p.label+'</strong>? This reloads all fee codes, ICDs, AI patterns and practitioner details.</div>'
+    +'<div class="prof-confirm-actions"><button class="btn btn-s btn-sm" onclick="cancelProfessionSwitch()">Cancel</button><button class="btn btn-p btn-sm" onclick="confirmProfessionSwitch()" autofocus>Confirm switch</button></div>'
+  +'</div>';
+}
+
+var PROFESSIONS={
+  physician:{
+    label:'Family physician',
+    practitioner:'Dr. Kiran Patel',
+    mspNum:'12847',
+    specialty:'General Practice',
+    initials:'KP',
+    icon:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5"/><circle cx="12" cy="14" r="6"/><path d="M12 11v6M9 14h6"/></svg>',
+    description:'Bill MSP for office visits, procedures, longitudinal family care, LFP and other models.',
+    feeCodes:[],icds:[],aiPatterns:[]
+  },
+  ophthalmology:{
+    label:'Ophthalmologist',
+    practitioner:'Dr. Priya Kapoor, MD, FRCSC',
+    mspNum:'24105',
+    specialty:'Ophthalmology',
+    initials:'PK',
+    icon:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/><path d="M19 5l-3 3M5 5l3 3"/></svg>',
+    description:'Eye surgeon: cataract surgery, glaucoma procedures, vitreoretinal, anti-VEGF injections.',
+    feeCodes:[
+      {code:"02701",desc:"Comprehensive ophthalmology exam",fee:142.50,type:"GP"},
+      {code:"02702",desc:"Limited ophthalmology exam",fee:78.40,type:"GP"},
+      {code:"02703",desc:"Follow-up exam",fee:54.20,type:"GP"},
+      {code:"22301",desc:"Cataract extraction with IOL",fee:485.40,type:"GP"},
+      {code:"22302",desc:"YAG laser capsulotomy",fee:218.50,type:"GP"},
+      {code:"22303",desc:"Trabeculectomy (glaucoma)",fee:864.20,type:"GP"},
+      {code:"22304",desc:"Vitrectomy (pars plana)",fee:1124.00,type:"GP"},
+      {code:"22311",desc:"Retinal photocoagulation",fee:328.50,type:"GP"},
+      {code:"22321",desc:"Intravitreal anti-VEGF injection",fee:218.50,type:"GP"},
+      {code:"22401",desc:"Strabismus surgery",fee:524.80,type:"GP"},
+      {code:"22501",desc:"Pterygium excision",fee:285.40,type:"GP"},
+      {code:"13404",desc:"Intraocular foreign body removal",fee:418.20,type:"GP"}
+    ],
+    icds:[
+      {code:"365",desc:"Glaucoma"},
+      {code:"366",desc:"Cataract"},
+      {code:"362",desc:"Retinal disorders"},
+      {code:"362.0",desc:"Diabetic retinopathy"},
+      {code:"362.5",desc:"Macular degeneration"},
+      {code:"368",desc:"Visual disturbances"},
+      {code:"370",desc:"Keratitis"},
+      {code:"371",desc:"Corneal opacity"},
+      {code:"378",desc:"Strabismus"},
+      {code:"379",desc:"Other eye disorders"}
+    ],
+    aiPatterns:[
+      {kw:['cataract','iol','lens extraction'],code:'22301',icd:'366',why:'Cataract extraction with IOL: 22301 + ICD 366.'},
+      {kw:['glaucoma surgery','trabeculect'],code:'22303',icd:'365',why:'Trabeculectomy for glaucoma: 22303 + ICD 365.'},
+      {kw:['macular degener','wet amd','anti-vegf','injection'],code:'22321',icd:'362.5',why:'Intravitreal anti-VEGF for AMD: 22321 + ICD 362.5.'},
+      {kw:['diabetic retin','prp','laser retina'],code:'22311',icd:'362.0',why:'Retinal photocoagulation for diabetic retinopathy: 22311 + ICD 362.0.'},
+      {kw:['vitrectomy','vitreous'],code:'22304',icd:'362',why:'Pars plana vitrectomy: 22304 + ICD 362.'},
+      {kw:['comprehensive eye','full ophthalmology'],code:'02701',icd:'379',why:'Comprehensive ophthalmology exam: 02701 + ICD 379.'},
+      {kw:['strabismus','squint'],code:'22401',icd:'378',why:'Strabismus surgery: 22401 + ICD 378.'},
+      {kw:['yag','capsulotomy','posterior capsule'],code:'22302',icd:'366',why:'YAG capsulotomy: 22302 + ICD 366.'}
+    ]
+  },
+  cardiology:{
+    label:'Cardiologist',
+    practitioner:'Dr. James Okonkwo, MD, FRCPC',
+    mspNum:'18234',
+    specialty:'Cardiology',
+    initials:'JO',
+    icon:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>',
+    description:'Cardiac consultation, ECG/Holter, echocardiography, stress testing, catheterization.',
+    feeCodes:[
+      {code:"03301",desc:"Initial cardiology consultation",fee:182.50,type:"GP"},
+      {code:"03302",desc:"Cardiology follow-up",fee:78.40,type:"GP"},
+      {code:"03303",desc:"Comprehensive consultation (complex)",fee:245.80,type:"GP"},
+      {code:"03150",desc:"ECG - 12 lead",fee:37.20,type:"GP"},
+      {code:"03161",desc:"Stress ECG / treadmill",fee:142.50,type:"GP"},
+      {code:"03162",desc:"Echocardiogram (TTE)",fee:218.50,type:"GP"},
+      {code:"03163",desc:"Stress echocardiogram",fee:328.40,type:"GP"},
+      {code:"03164",desc:"Transesophageal echo (TEE)",fee:485.20,type:"GP"},
+      {code:"03165",desc:"24-hour Holter monitor",fee:128.50,type:"GP"},
+      {code:"03170",desc:"Cardiac catheterization",fee:824.50,type:"GP"},
+      {code:"03175",desc:"Coronary angiography",fee:642.30,type:"GP"},
+      {code:"03180",desc:"Cardiac MRI",fee:418.20,type:"GP"}
+    ],
+    icds:[
+      {code:"401",desc:"Essential hypertension"},
+      {code:"410",desc:"Acute myocardial infarction"},
+      {code:"411",desc:"Other acute ischemic heart disease"},
+      {code:"413",desc:"Angina pectoris"},
+      {code:"414",desc:"Chronic ischemic heart disease"},
+      {code:"425",desc:"Cardiomyopathy"},
+      {code:"427",desc:"Cardiac arrhythmia"},
+      {code:"428",desc:"Heart failure"},
+      {code:"429",desc:"Other heart disease"},
+      {code:"785",desc:"Cardiovascular symptoms"}
+    ],
+    aiPatterns:[
+      {kw:['chest pain','angina','retrosternal'],code:'03301',icd:'413',why:'Initial cardiology consultation for angina: 03301 + ICD 413.'},
+      {kw:['mi','myocardial','heart attack','stemi','nstemi'],code:'03303',icd:'410',why:'Complex consultation post-MI: 03303 + ICD 410.'},
+      {kw:['arrhythmia','palpitation','afib','svt'],code:'03165',icd:'427',why:'24-hour Holter for arrhythmia: 03165 + ICD 427.'},
+      {kw:['heart failure','chf','shortness of breath','dyspnea'],code:'03162',icd:'428',why:'Echocardiogram for CHF assessment: 03162 + ICD 428.'},
+      {kw:['stress test','exercise tolerance','treadmill'],code:'03161',icd:'411',why:'Stress ECG: 03161 + ICD 411.'},
+      {kw:['echo','echocardiog','ejection fraction'],code:'03162',icd:'428',why:'TTE for cardiac function: 03162 + ICD 428.'},
+      {kw:['cath','angiogram','coronary disease'],code:'03175',icd:'414',why:'Coronary angiography: 03175 + ICD 414.'},
+      {kw:['hypertens','blood pressure','bp '],code:'03302',icd:'401',why:'Cardiology follow-up for HTN: 03302 + ICD 401.'}
+    ]
+  },
+  internalMed:{
+    label:'Internal medicine',
+    practitioner:'Dr. Lin Zhao, MD, FRCPC',
+    mspNum:'29478',
+    specialty:'General Internal Medicine',
+    initials:'LZ',
+    icon:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg>',
+    description:'Adult internal medicine: comprehensive consults, hospitalist care, multimorbidity, pre-op.',
+    feeCodes:[
+      {code:"33001",desc:"Initial IM consultation",fee:218.50,type:"GP"},
+      {code:"33002",desc:"Follow-up visit",fee:82.40,type:"GP"},
+      {code:"33003",desc:"Hospital admission",fee:185.20,type:"GP"},
+      {code:"33004",desc:"Hospital daily care",fee:62.50,type:"GP"},
+      {code:"33010",desc:"Comprehensive geriatric assessment",fee:285.40,type:"GP"},
+      {code:"33020",desc:"Pre-operative assessment",fee:142.50,type:"GP"},
+      {code:"33030",desc:"Complex multimorbidity visit",fee:165.80,type:"GP"},
+      {code:"33040",desc:"Specialty-to-specialty consult",fee:158.40,type:"GP"},
+      {code:"33050",desc:"Telephone consultation",fee:48.20,type:"GP"}
+    ],
+    icds:[
+      {code:"250",desc:"Diabetes mellitus"},
+      {code:"401",desc:"Essential hypertension"},
+      {code:"285",desc:"Anemia, unspecified"},
+      {code:"491",desc:"Chronic bronchitis / COPD"},
+      {code:"530",desc:"Diseases of esophagus"},
+      {code:"571",desc:"Liver disease"},
+      {code:"585",desc:"Chronic kidney disease"},
+      {code:"710",desc:"Diffuse connective tissue disease"},
+      {code:"780",desc:"General symptoms"}
+    ],
+    aiPatterns:[
+      {kw:['comprehensive','initial consult','specialist referral'],code:'33001',icd:'250',why:'Initial IM consultation: 33001 + ICD 250 (most common).'},
+      {kw:['admission','admit','hospital'],code:'33003',icd:'491',why:'Hospital admission: 33003 + ICD 491 (e.g., COPD).'},
+      {kw:['preop','preoperative','clearance'],code:'33020',icd:'401',why:'Pre-operative assessment: 33020 + ICD 401.'},
+      {kw:['multimorbid','complex elderly','frail'],code:'33030',icd:'250',why:'Complex multimorbidity visit: 33030 + ICD 250.'},
+      {kw:['geriatric','elderly assessment','cga'],code:'33010',icd:'780',why:'Comprehensive geriatric assessment: 33010 + ICD 780.'},
+      {kw:['anemia','low hemoglobin','iron'],code:'33002',icd:'285',why:'IM follow-up for anemia work-up: 33002 + ICD 285.'},
+      {kw:['ckd','kidney','creatinine'],code:'33002',icd:'585',why:'IM follow-up for CKD: 33002 + ICD 585.'}
+    ]
+  },
+  pediatrics:{
+    label:'Pediatrician',
+    practitioner:'Dr. Naomi Singh, MD, FRCPC',
+    mspNum:'37109',
+    specialty:'Pediatrics',
+    initials:'NS',
+    icon:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11c0-3 1.5-5 3-5s3 2 3 5"/><circle cx="12" cy="13" r="6"/><circle cx="10" cy="12" r="0.6" fill="currentColor"/><circle cx="14" cy="12" r="0.6" fill="currentColor"/><path d="M10.5 15c.4.5 1 .8 1.5.8s1.1-.3 1.5-.8"/></svg>',
+    description:'Pediatric care: newborn, well-child, adolescent, developmental, asthma, ADHD.',
+    feeCodes:[
+      {code:"50001",desc:"Pediatric consultation (new)",fee:185.40,type:"GP"},
+      {code:"50002",desc:"Pediatric follow-up",fee:72.50,type:"GP"},
+      {code:"50003",desc:"Newborn examination",fee:96.80,type:"GP"},
+      {code:"50004",desc:"Well-baby visit (<2 yr)",fee:64.20,type:"GP"},
+      {code:"50005",desc:"Well-child visit (2–12 yr)",fee:58.50,type:"GP"},
+      {code:"50006",desc:"Adolescent visit (13–18 yr)",fee:68.40,type:"GP"},
+      {code:"50010",desc:"Developmental assessment",fee:142.50,type:"GP"},
+      {code:"50020",desc:"Behavioural / ADHD assessment",fee:165.30,type:"GP"},
+      {code:"50030",desc:"Pediatric asthma management",fee:78.40,type:"GP"},
+      {code:"50040",desc:"Telephone advice (parent)",fee:24.50,type:"GP"}
+    ],
+    icds:[
+      {code:"V20",desc:"Health supervision of infant or child"},
+      {code:"V70",desc:"General medical examination"},
+      {code:"460",desc:"Acute nasopharyngitis"},
+      {code:"462",desc:"Acute pharyngitis"},
+      {code:"487",desc:"Influenza"},
+      {code:"493",desc:"Asthma"},
+      {code:"783",desc:"General symptoms"},
+      {code:"314",desc:"ADHD / hyperkinetic syndromes"},
+      {code:"315",desc:"Developmental delays"},
+      {code:"V03",desc:"Immunization, bacterial"}
+    ],
+    aiPatterns:[
+      {kw:['newborn','baby check','first visit'],code:'50003',icd:'V20',why:'Newborn examination: 50003 + V20.'},
+      {kw:['well child','wcc','check-up'],code:'50005',icd:'V70',why:'Well-child visit: 50005 + V70.'},
+      {kw:['asthma','wheez','inhaler','salbutamol'],code:'50030',icd:'493',why:'Pediatric asthma management: 50030 + ICD 493.'},
+      {kw:['adhd','attention deficit','hyperactiv'],code:'50020',icd:'314',why:'ADHD assessment: 50020 + ICD 314.'},
+      {kw:['developmental delay','speech delay','motor delay'],code:'50010',icd:'315',why:'Developmental assessment: 50010 + ICD 315.'},
+      {kw:['adolescent','teenager','teen visit'],code:'50006',icd:'V70',why:'Adolescent visit: 50006 + V70.'},
+      {kw:['immuniz','vaccin','shot'],code:'50005',icd:'V03',why:'Well-child visit with immunizations: 50005 + V03.'}
+    ]
+  },
+  psychiatry:{
+    label:'Psychiatrist',
+    practitioner:'Dr. Hannah Park, MD, FRCPC',
+    mspNum:'45821',
+    specialty:'Psychiatry',
+    initials:'HP',
+    icon:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a6 6 0 0 0-6 6c0 2 1 3 1 5 0 1-1 2-1 3v2a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-2c0-1-1-2-1-3 0-2 1-3 1-5a6 6 0 0 0-6-6z"/><path d="M9 21v1M15 21v1"/></svg>',
+    description:'Psychiatric assessment, follow-up, psychotherapy, crisis intervention, telepsychiatry.',
+    feeCodes:[
+      {code:"00410",desc:"Initial psychiatric assessment",fee:285.40,type:"GP"},
+      {code:"00411",desc:"Psychiatric follow-up",fee:142.50,type:"GP"},
+      {code:"00412",desc:"Complex psychiatric consultation",fee:368.20,type:"GP"},
+      {code:"00420",desc:"Group psychotherapy",fee:82.40,type:"GP"},
+      {code:"00425",desc:"Family therapy session",fee:158.40,type:"GP"},
+      {code:"00430",desc:"Crisis intervention",fee:212.50,type:"GP"},
+      {code:"00440",desc:"Telepsychiatry consultation",fee:142.50,type:"GP"},
+      {code:"00450",desc:"Inpatient psychiatric care",fee:185.20,type:"GP"},
+      {code:"00460",desc:"Brief medication review",fee:54.20,type:"GP"}
+    ],
+    icds:[
+      {code:"296",desc:"Mood / bipolar disorders"},
+      {code:"295",desc:"Schizophrenic disorders"},
+      {code:"300",desc:"Anxiety, dissociative, somatoform disorders"},
+      {code:"309",desc:"Adjustment disorder"},
+      {code:"311",desc:"Depressive disorder NEC"},
+      {code:"303",desc:"Alcohol dependence"},
+      {code:"304",desc:"Drug dependence"},
+      {code:"314",desc:"ADHD"},
+      {code:"301",desc:"Personality disorders"},
+      {code:"V62",desc:"Psychosocial circumstances"}
+    ],
+    aiPatterns:[
+      {kw:['depress','low mood','phq','sadness'],code:'00410',icd:'296',why:'Initial psychiatric assessment for depression: 00410 + ICD 296.'},
+      {kw:['anxiety','panic','gad','worry'],code:'00411',icd:'300',why:'Psychiatric follow-up for anxiety: 00411 + ICD 300.'},
+      {kw:['psychosis','schizoph','hallucinat','delusion'],code:'00410',icd:'295',why:'Psychiatric assessment for psychosis: 00410 + ICD 295.'},
+      {kw:['bipolar','mania','hypomania'],code:'00411',icd:'296',why:'Psychiatric follow-up for bipolar: 00411 + ICD 296.'},
+      {kw:['crisis','suicidal','self-harm','overdose'],code:'00430',icd:'296',why:'Crisis intervention: 00430 + ICD 296.'},
+      {kw:['family therapy','couples'],code:'00425',icd:'309',why:'Family therapy: 00425 + ICD 309.'},
+      {kw:['telepsych','virtual psych'],code:'00440',icd:'300',why:'Telepsychiatry consult: 00440 + ICD 300.'},
+      {kw:['med review','medication adjust','antipsych'],code:'00460',icd:'296',why:'Brief medication review: 00460 + ICD 296.'},
+      {kw:['adhd','attention deficit'],code:'00411',icd:'314',why:'Psychiatric follow-up for ADHD: 00411 + ICD 314.'}
+    ]
+  },
+  optometry:{
+    label:'Optometrist',
+    practitioner:'Dr. Austin Ekeoba, OD',
+    mspNum:'J4674',
+    specialty:'Optometry',
+    initials:'AE',
+    icon:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+    description:'MSP-eligible eye exams (under-19, 65+, medical), tonometry, OCT, foreign body removal.',
+    feeCodes:[
+      {code:"02000",desc:"Complete eye exam (≤19 or ≥65)",fee:78.46,type:"GP"},
+      {code:"02002",desc:"Partial eye exam",fee:35.21,type:"GP"},
+      {code:"02014",desc:"Medical eye exam",fee:62.38,type:"GP"},
+      {code:"02015",desc:"Diabetic retinopathy screening",fee:55.40,type:"GP"},
+      {code:"02016",desc:"Glaucoma follow-up",fee:48.92,type:"GP"},
+      {code:"02100",desc:"Visual field assessment",fee:42.50,type:"GP"},
+      {code:"02300",desc:"Tonometry (IOP)",fee:18.75,type:"GP"},
+      {code:"02400",desc:"Corneal foreign body removal",fee:54.21,type:"GP"},
+      {code:"02500",desc:"Subconjunctival injection",fee:36.50,type:"GP"},
+      {code:"02600",desc:"Emergency eye assessment",fee:89.30,type:"GP"},
+      {code:"02700",desc:"OCT - retina",fee:67.90,type:"GP"},
+      {code:"02710",desc:"OCT - optic nerve",fee:67.90,type:"GP"},
+      {code:"02800",desc:"Pediatric eye exam (<19)",fee:65.40,type:"GP"},
+      {code:"02810",desc:"Senior eye exam (≥65)",fee:78.46,type:"GP"}
+    ],
+    icds:[
+      {code:"367",desc:"Disorders of refraction"},
+      {code:"365",desc:"Glaucoma"},
+      {code:"366",desc:"Cataract"},
+      {code:"362",desc:"Retinal disorders"},
+      {code:"362.0",desc:"Diabetic retinopathy"},
+      {code:"372",desc:"Conjunctivitis"},
+      {code:"379",desc:"Other eye disorders"},
+      {code:"930",desc:"Foreign body, external eye"},
+      {code:"370",desc:"Keratitis"},
+      {code:"373",desc:"Inflammation of eyelid"},
+      {code:"378",desc:"Strabismus"},
+      {code:"V72",desc:"Special investigations / screening"}
+    ],
+    aiPatterns:[
+      {kw:['eye exam','vision check','annual eye'],code:'02000',icd:'V72',why:'Routine eye exam under MSP for eligible age groups: 02000 + V72 screening.'},
+      {kw:['glaucoma','iop','intraocular pressure'],code:'02016',icd:'365',why:'Glaucoma follow-up assessment: 02016 + ICD 365.'},
+      {kw:['diabetic retin','fundus','retinal screen'],code:'02015',icd:'362.0',why:'Diabetic retinopathy screening: 02015 + ICD 362.0.'},
+      {kw:['foreign body','corneal abrasion'],code:'02400',icd:'930',why:'Corneal foreign body removal: 02400 + ICD 930.'},
+      {kw:['cataract'],code:'02014',icd:'366',why:'Medical eye exam for cataract assessment: 02014 + ICD 366.'},
+      {kw:['conjunctivitis','pink eye','red eye'],code:'02014',icd:'372',why:'Medical eye exam for conjunctivitis: 02014 + ICD 372.'},
+      {kw:['refraction','glasses','prescription'],code:'02002',icd:'367',why:'Partial eye exam for refraction: 02002 + ICD 367.'},
+      {kw:['oct','optical coherence','retinal scan'],code:'02700',icd:'362',why:'OCT retinal imaging: 02700 + ICD 362.'},
+      {kw:['visual field','perimetry'],code:'02100',icd:'365',why:'Visual field assessment (often glaucoma): 02100 + ICD 365.'}
+    ]
+  },
+  dentistry:{
+    label:'Dentist',
+    practitioner:'Dr. Marcus Lee, DDS',
+    mspNum:'64823',
+    specialty:'General dentistry',
+    initials:'ML',
+    icon:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5.5c-1.5-1.5-3.5-1.5-5 0-1 1-1 2.5-1 4 0 5 2 8 3 11 .5 1 1 1.5 1.5 1.5s1-1 1.5-2 1-3 1.5-4c.5 1 1 3 1.5 4s1 2 1.5 2 1-.5 1.5-1.5c1-3 3-6 3-11 0-1.5 0-3-1-4-1.5-1.5-3.5-1.5-5 0-.5.5-1 .5-1.5 0-.5-.5-1-.5-1.5 0z"/></svg>',
+    description:'CDA fee codes — recall exams, restorations, extractions, endodontics, periodontal scaling.',
+    feeCodes:[
+      {code:"01101",desc:"Complete oral exam, primary",fee:88.50,type:"GP"},
+      {code:"01102",desc:"Recall exam",fee:48.20,type:"GP"},
+      {code:"01103",desc:"Emergency exam",fee:62.40,type:"GP"},
+      {code:"02112",desc:"Radiograph - bitewing (1 film)",fee:28.50,type:"GP"},
+      {code:"02114",desc:"Radiograph - 4 films",fee:96.00,type:"GP"},
+      {code:"11101",desc:"Amalgam restoration - 1 surface",fee:106.20,type:"GP"},
+      {code:"11102",desc:"Amalgam restoration - 2 surface",fee:145.50,type:"GP"},
+      {code:"11201",desc:"Composite - 1 surface anterior",fee:128.40,type:"GP"},
+      {code:"11202",desc:"Composite - 2 surface anterior",fee:172.10,type:"GP"},
+      {code:"23501",desc:"Extraction - simple",fee:142.30,type:"GP"},
+      {code:"23601",desc:"Extraction - surgical",fee:218.50,type:"GP"},
+      {code:"32311",desc:"Root canal - anterior",fee:610.50,type:"GP"},
+      {code:"32312",desc:"Root canal - premolar",fee:760.20,type:"GP"},
+      {code:"32313",desc:"Root canal - molar",fee:1024.40,type:"GP"},
+      {code:"71101",desc:"Periodontal scaling (15 min)",fee:62.40,type:"GP"},
+      {code:"71109",desc:"Polishing (15 min)",fee:30.80,type:"GP"},
+      {code:"99111",desc:"Fluoride application",fee:24.50,type:"GP"}
+    ],
+    icds:[
+      {code:"521",desc:"Dental caries"},
+      {code:"522",desc:"Pulp / periapical disease"},
+      {code:"523",desc:"Gingival & periodontal disease"},
+      {code:"525",desc:"Other tooth disorders"},
+      {code:"528",desc:"Oral soft tissue disease"},
+      {code:"873",desc:"Open wound of head"},
+      {code:"802",desc:"Facial bone fracture"},
+      {code:"V72.2",desc:"Dental examination"}
+    ],
+    aiPatterns:[
+      {kw:['recall','cleaning','hygiene','prophy'],code:'01102',icd:'V72.2',why:'Routine recall exam: 01102 + V72.2.'},
+      {kw:['cavity','caries','filling','decay'],code:'11101',icd:'521',why:'1-surface amalgam restoration for caries: 11101 + ICD 521.'},
+      {kw:['composite','tooth-colored','anterior'],code:'11201',icd:'521',why:'Anterior composite: 11201 + ICD 521.'},
+      {kw:['extraction','tooth removal','pull tooth'],code:'23501',icd:'525',why:'Simple extraction: 23501 + ICD 525.'},
+      {kw:['surgical','impacted','wisdom'],code:'23601',icd:'525',why:'Surgical extraction: 23601 + ICD 525.'},
+      {kw:['root canal','endodontic','rct','molar pain'],code:'32313',icd:'522',why:'Molar root canal: 32313 + ICD 522.'},
+      {kw:['periodontal','scaling','perio','gum disease'],code:'71101',icd:'523',why:'Periodontal scaling unit: 71101 + ICD 523.'},
+      {kw:['polishing','prophylaxis'],code:'71109',icd:'V72.2',why:'Polishing: 71109 + V72.2.'},
+      {kw:['fluoride'],code:'99111',icd:'V72.2',why:'Fluoride application: 99111 + V72.2.'},
+      {kw:['xray','bitewing','radiograph'],code:'02112',icd:'521',why:'Bitewing radiograph: 02112 + ICD 521.'},
+      {kw:['emergency','tooth pain','toothache','abscess'],code:'01103',icd:'522',why:'Emergency exam for pulpal pain: 01103 + ICD 522.'}
+    ]
+  }
+  ,
+  midwife:{
+    label:'Midwife',
+    practitioner:'Jordan Whitford, RM',
+    mspNum:'42105',
+    specialty:'Registered Midwifery',
+    initials:'JW',
+    icon:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21a8 8 0 0 0 8-8 8 8 0 0 0-8-8 8 8 0 0 0-8 8c0 2 .7 3.8 1.9 5.3"/><circle cx="12" cy="9" r="2"/><path d="M9 15c0-1 1-2 3-2s3 1 3 2v3H9z"/></svg>',
+    description:'BC midwifery: antenatal, labour & birth, postnatal home visits, newborn assessment.',
+    feeCodes:[
+      {code:"14000",desc:"Initial midwifery booking",fee:215.00,type:"GP"},
+      {code:"14010",desc:"Antenatal visit (wk 1–28)",fee:62.50,type:"GP"},
+      {code:"14011",desc:"Antenatal visit (wk 29–36)",fee:71.40,type:"GP"},
+      {code:"14012",desc:"Antenatal visit (wk 37+)",fee:78.20,type:"GP"},
+      {code:"14020",desc:"Active labour assessment",fee:118.30,type:"GP"},
+      {code:"14021",desc:"Labour & birth attendance",fee:1240.00,type:"GP"},
+      {code:"14030",desc:"Postnatal home visit (day 1–3)",fee:142.50,type:"GP"},
+      {code:"14031",desc:"Postnatal visit (wk 1–6)",fee:82.40,type:"GP"},
+      {code:"14040",desc:"Newborn complete assessment",fee:96.80,type:"GP"},
+      {code:"14050",desc:"Hospital intrapartum care",fee:285.00,type:"GP"},
+      {code:"14060",desc:"Lab / diagnostic interpretation",fee:24.50,type:"GP"},
+      {code:"14070",desc:"Consultation with physician",fee:48.20,type:"GP"}
+    ],
+    icds:[
+      {code:"V22",desc:"Normal pregnancy"},
+      {code:"V23",desc:"Supervision of high-risk pregnancy"},
+      {code:"V24",desc:"Postpartum care"},
+      {code:"V27",desc:"Outcome of delivery"},
+      {code:"V30",desc:"Newborn"},
+      {code:"644",desc:"Threatened / preterm labour"},
+      {code:"645",desc:"Prolonged pregnancy"},
+      {code:"646",desc:"Other complications of pregnancy"},
+      {code:"648",desc:"Pre-existing condition complicating pregnancy"},
+      {code:"669",desc:"Other complications of labour & delivery"}
+    ],
+    aiPatterns:[
+      {kw:['antenatal','prenatal','obstetric visit'],code:'14010',icd:'V22',why:'Routine antenatal visit early pregnancy: 14010 + V22.'},
+      {kw:['labour','birth','delivery'],code:'14021',icd:'V27',why:'Labour & birth attendance: 14021 + V27 outcome of delivery.'},
+      {kw:['postnatal','postpartum','newborn home'],code:'14030',icd:'V24',why:'Postnatal home visit days 1–3: 14030 + V24.'},
+      {kw:['newborn assessment','baby check'],code:'14040',icd:'V30',why:'Newborn complete assessment: 14040 + V30.'},
+      {kw:['booking','initial midwifery','first visit'],code:'14000',icd:'V22',why:'Initial midwifery booking: 14000 + V22.'},
+      {kw:['high risk','gestational','preeclampsia'],code:'14011',icd:'V23',why:'Antenatal visit, high-risk supervision: 14011 + V23.'}
+    ]
+  },
+  podiatrist:{
+    label:'Podiatrist',
+    practitioner:'Dr. Aisha Olawale, DPM',
+    mspNum:'31827',
+    specialty:'Podiatry',
+    initials:'AO',
+    icon:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4c-2 0-3 2-3 4v6c0 2 1 4 3 4h4c2 0 3-2 3-4v-2"/><circle cx="14" cy="6" r="1.2"/><circle cx="17" cy="7" r="1.1"/><circle cx="19" cy="9" r="1"/><circle cx="20" cy="11" r="0.9"/></svg>',
+    description:'Podiatric foot care: nail debridement, ingrown toenail procedures, diabetic foot assessment.',
+    feeCodes:[
+      {code:"64101",desc:"Initial podiatric consultation",fee:96.40,type:"GP"},
+      {code:"64102",desc:"Follow-up visit",fee:48.20,type:"GP"},
+      {code:"64200",desc:"Nail debridement (per foot)",fee:38.50,type:"GP"},
+      {code:"64210",desc:"Callus / corn debridement",fee:42.30,type:"GP"},
+      {code:"64300",desc:"Ingrown toenail – partial avulsion",fee:118.40,type:"GP"},
+      {code:"64310",desc:"Ingrown toenail – total avulsion",fee:165.20,type:"GP"},
+      {code:"64400",desc:"Minor foot surgery",fee:285.00,type:"GP"},
+      {code:"64500",desc:"Diabetic foot assessment",fee:78.60,type:"GP"},
+      {code:"64600",desc:"Biomechanical / orthotic assessment",fee:124.50,type:"GP"},
+      {code:"64700",desc:"Local injection (foot)",fee:54.80,type:"GP"}
+    ],
+    icds:[
+      {code:"700",desc:"Corns and callosities"},
+      {code:"703",desc:"Ingrown nail / nail disorders"},
+      {code:"707",desc:"Chronic ulcer of skin (foot)"},
+      {code:"250.7",desc:"Diabetes with peripheral circulatory complications"},
+      {code:"729",desc:"Other soft-tissue disorders"},
+      {code:"845",desc:"Sprain of ankle / foot"},
+      {code:"924",desc:"Contusion of foot"},
+      {code:"726",desc:"Plantar fasciitis / enthesopathy"}
+    ],
+    aiPatterns:[
+      {kw:['ingrown','toenail','onychocrypt'],code:'64300',icd:'703',why:'Ingrown toenail partial avulsion: 64300 + ICD 703.'},
+      {kw:['nail debrid','thick nail','onychomyc'],code:'64200',icd:'703',why:'Nail debridement: 64200 + ICD 703.'},
+      {kw:['callus','corn','hyperkerat'],code:'64210',icd:'700',why:'Callus / corn debridement: 64210 + ICD 700.'},
+      {kw:['diabetic foot','neuropathy','ulcer'],code:'64500',icd:'250.7',why:'Diabetic foot assessment: 64500 + ICD 250.7.'},
+      {kw:['plantar fasc','heel pain'],code:'64102',icd:'726',why:'Follow-up for plantar fasciitis: 64102 + ICD 726.'},
+      {kw:['orthotic','biomechan','gait'],code:'64600',icd:'729',why:'Biomechanical / orthotic assessment: 64600 + ICD 729.'}
+    ]
+  },
+  nursePractitioner:{
+    label:'Nurse practitioner',
+    practitioner:'Maya Tremblay, NP',
+    mspNum:'71943',
+    specialty:'NP – Family',
+    initials:'MT',
+    icon:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v4M16 2v4"/><rect x="4" y="6" width="16" height="14" rx="2"/><path d="M9 13h6M12 10v6"/></svg>',
+    description:'BC NP Alternative Payments Program: comprehensive visits, chronic disease, mental health.',
+    feeCodes:[
+      {code:"13001",desc:"Comprehensive visit – new patient",fee:106.40,type:"GP"},
+      {code:"13002",desc:"Limited visit / acute concern",fee:42.50,type:"GP"},
+      {code:"13003",desc:"Counselling visit (20 min)",fee:68.30,type:"GP"},
+      {code:"13010",desc:"Chronic disease management visit",fee:74.20,type:"GP"},
+      {code:"13020",desc:"Minor procedure",fee:96.80,type:"GP"},
+      {code:"13030",desc:"Well-child / pediatric visit",fee:62.10,type:"GP"},
+      {code:"13040",desc:"Senior care visit (≥75)",fee:78.50,type:"GP"},
+      {code:"13050",desc:"Mental health visit",fee:84.20,type:"GP"},
+      {code:"13060",desc:"Sexual / reproductive health visit",fee:65.40,type:"GP"},
+      {code:"13070",desc:"Telephone / virtual visit",fee:24.50,type:"GP"}
+    ],
+    icds:[
+      {code:"401",desc:"Essential hypertension"},
+      {code:"250",desc:"Diabetes mellitus"},
+      {code:"311",desc:"Depressive disorder"},
+      {code:"300",desc:"Anxiety states"},
+      {code:"V70",desc:"General medical examination"},
+      {code:"462",desc:"Acute pharyngitis"},
+      {code:"466",desc:"Acute bronchitis"},
+      {code:"599",desc:"Urinary tract infection"},
+      {code:"783",desc:"General symptoms"},
+      {code:"V25",desc:"Contraceptive management"}
+    ],
+    aiPatterns:[
+      {kw:['new patient','intake','comprehensive'],code:'13001',icd:'V70',why:'NP comprehensive new-patient visit: 13001 + V70.'},
+      {kw:['hypertens','blood pressure','bp '],code:'13010',icd:'401',why:'NP chronic disease management for HTN: 13010 + ICD 401.'},
+      {kw:['diabet','hba1c','glycemic'],code:'13010',icd:'250',why:'NP chronic disease management for diabetes: 13010 + ICD 250.'},
+      {kw:['depress','low mood','phq'],code:'13050',icd:'311',why:'NP mental health visit: 13050 + ICD 311.'},
+      {kw:['contracep','iud','birth control'],code:'13060',icd:'V25',why:'NP reproductive-health visit: 13060 + V25.'},
+      {kw:['phone','virtual','telephone consult'],code:'13070',icd:'V70',why:'NP telephone / virtual visit: 13070 + V70.'},
+      {kw:['well child','pediatric','immuniz'],code:'13030',icd:'V70',why:'NP well-child visit: 13030 + V70.'}
+    ]
+  },
+  oralSurgeon:{
+    label:'Oral surgeon',
+    practitioner:'Dr. Rohan Mehta, DDS, MD, FRCDC',
+    mspNum:'58621',
+    specialty:'Oral & Maxillofacial Surgery',
+    initials:'RM',
+    icon:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>',
+    description:'MSP-billable oral/maxillofacial procedures: surgical extractions, jaw fractures, biopsies, TMJ.',
+    feeCodes:[
+      {code:"92121",desc:"Excision of cyst (intra-oral)",fee:328.50,type:"GP"},
+      {code:"92301",desc:"Surgical removal – impacted tooth",fee:218.50,type:"GP"},
+      {code:"92302",desc:"Surgical removal – multiple impacted",fee:445.00,type:"GP"},
+      {code:"92402",desc:"Mandibular fracture – open reduction",fee:1462.30,type:"GP"},
+      {code:"92501",desc:"Biopsy of oral mucosa",fee:142.50,type:"GP"},
+      {code:"92601",desc:"Salivary gland surgery",fee:867.40,type:"GP"},
+      {code:"92701",desc:"Orthognathic / reconstructive jaw surgery",fee:2104.50,type:"GP"},
+      {code:"92801",desc:"Removal of bone tumour (jaw)",fee:1284.20,type:"GP"},
+      {code:"92901",desc:"TMJ arthrocentesis / arthroscopy",fee:546.80,type:"GP"}
+    ],
+    icds:[
+      {code:"525",desc:"Other tooth disorders / impaction"},
+      {code:"526",desc:"Diseases of jaw"},
+      {code:"528",desc:"Diseases of oral soft tissues"},
+      {code:"802",desc:"Fracture of face bones"},
+      {code:"873",desc:"Open wound of head"},
+      {code:"695",desc:"Erythematous oral lesions"},
+      {code:"213",desc:"Benign neoplasm of bone"},
+      {code:"145",desc:"Malignant neoplasm of mouth"},
+      {code:"524",desc:"Dentofacial anomalies"},
+      {code:"527",desc:"Diseases of salivary glands"}
+    ],
+    aiPatterns:[
+      {kw:['impacted','wisdom','third molar'],code:'92301',icd:'525',why:'Surgical removal of impacted tooth: 92301 + ICD 525.'},
+      {kw:['jaw fracture','mandibular fracture'],code:'92401',icd:'802',why:'Mandibular fracture closed reduction: 92401 + ICD 802.'},
+      {kw:['biopsy','oral lesion','suspicious'],code:'92501',icd:'528',why:'Biopsy of oral mucosa: 92501 + ICD 528.'},
+      {kw:['cyst','odontogenic'],code:'92121',icd:'526',why:'Excision of intra-oral cyst: 92121 + ICD 526.'},
+      {kw:['tmj','jaw joint','temporomand'],code:'92901',icd:'524',why:'TMJ arthrocentesis: 92901 + ICD 524.'},
+      {kw:['orthognath','reconstructive jaw'],code:'92701',icd:'524',why:'Orthognathic surgery: 92701 + ICD 524.'},
+      {kw:['salivary','parotid','sialaden'],code:'92601',icd:'527',why:'Salivary gland surgery: 92601 + ICD 527.'}
+    ]
+  }
+};
+
+// Snapshot the current physician data (already populated in FC/ICD/AI_PATTERNS) into PROFESSIONS.physician
+PROFESSIONS.physician.feeCodes=FC.slice();
+PROFESSIONS.physician.icds=ICD.slice();
+PROFESSIONS.physician.aiPatterns=AI_PATTERNS.slice();
+
+function switchProfession(key){
+  var p=PROFESSIONS[key];
+  if(!p||currentProfession===key)return;
+  FC.length=0;p.feeCodes.forEach(function(x){FC.push(x);});
+  ICD.length=0;p.icds.forEach(function(x){ICD.push(x);});
+  AI_PATTERNS.length=0;p.aiPatterns.forEach(function(x){AI_PATTERNS.push(x);});
+  currentProfession=key;
+  initCombos();
+  var av=document.querySelector('.prac-av');if(av)av.textContent=p.initials;
+  var nm=document.querySelector('.prac-name');if(nm)nm.textContent=p.practitioner;
+  var mt=document.querySelector('.prac-meta');if(mt)mt.textContent='MSP '+p.mspNum+' · '+p.specialty;
+  goTo(curPage);
+  setLive('Switched to '+p.label+' billing profile.');
+}
+
+function professionCards(){
+  return Object.keys(PROFESSIONS).map(function(key){
+    var p=PROFESSIONS[key];
+    var active=key===currentProfession;
+    var pending=key===pendingProfession&&!active;
+    var cls='prof-card'+(active?' active':'')+(pending?' pending':'');
+    var aria=active?'aria-current="true"':'aria-pressed="'+pending+'"';
+    return '<div class="'+cls+'" onclick="selectPendingProfession(\''+key+'\')" role="button" tabindex="0" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();selectPendingProfession(\''+key+'\');}" '+aria+' aria-label="'+(active?'Currently active: ':'Select ')+p.label+(active?'':' (then confirm below)')+'">'
+      +(pending?'<span class="prof-pending-tag">Selected</span>':'')
+      +'<div class="prof-icon">'+p.icon+'</div>'
+      +'<div class="prof-name">'+p.label+'</div>'
+    +'</div>';
+  }).join('');
+}
+
+// Build datalists for combobox typeahead inputs
+function initCombos(){
+  var fcDl=g('fc-list');
+  if(fcDl){fcDl.innerHTML=FC.map(function(fc){return '<option value="'+fc.code+'">'+fc.desc+' — $'+fc.fee.toFixed(2)+'</option>';}).join('');}
+  var icdDl=g('icd-list');
+  if(icdDl){icdDl.innerHTML=ICD.map(function(d){return '<option value="'+d.code+'">'+d.desc+'</option>';}).join('');}
+}
+initCombos();
+
+// Start in optometry mode (Sky Claims is currently certified for BC MSP optometry billing)
+switchProfession('optometry');
+
+goTo('dashboard');
+</script>
+</body>
+</html>

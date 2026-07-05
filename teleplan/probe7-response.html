@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+
+
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+               "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <title>Medical Services Plan Teleplan Web Access</title>
+   <link rel="icon" href="images/health.png" type="image/x-icon">
+</head>
+<body bgcolor="#FFFFFF" link="#00008B" vlink="#00008B">
+<a NAME="top"></a>
+<div align="CENTER"><table>
+<tr>
+<td>
+<!--START OF TOP BANNER -->
+<table BORDER="0" CELLSPACING=0 CELLPADDING=0 WIDTH="595" >
+<tr>
+<td>
+<!--ADD AREA BANNER GRAPHIC HERE--></td>
+<td COLSPAN="7"><img src="images/mspteleplan.gif" ALT="MSPs Teleplan Web Access" ></td>
+<td><!--END OF AREA BANNER GRAPHIC--></td>
+</tr>
+</table>
+
+<!--END OF TOP BANNER -->
+<TABLE WIDTH="900" BORDER="0" CELLSPACING="0" CELLPADDING="0">
+
+<tr> 
+<TD COLSPAN="5"><IMG SRC="images/spacer.gif" WIDTH="5" HEIGHT="30" alt="blank space for alignment"></TD>
+</TR>
+<TR> 
+
+<TD><IMG SRC="images/spacer.gif" WIDTH="5" HEIGHT="10" alt="spacer"></TD>
+
+<TD ALIGN="LEFT" VALIGN="TOP" width="2">
+<!--START OF TABLE OF CONTENTS-->
+
+<table BORDER="0" CELLSPACING=0 CELLPADDING=3 WIDTH="163" align="left">
+<tr>
+<td COLSPAN="3"><img src="images/t_contents.gif" ALT="Contents" ></td>
+</tr>
+
+<tr>
+<td><img src="images/spacer.gif" height=2 width=13></td>
+<td><img src="images/spacer.gif" height=2 width=130></td>
+<td><img src="images/spacer.gif" height=2 width=2></td>
+</tr>
+
+<tr>
+<TD align="RIGHT" valign="TOP"><FONT size="2">&#149;</FONT></TD>
+<td align="LEFT" VALIGN=TOP><font face="Arial, Helvetica, sans-serif" size="2">
+<a href="TeleplanBroker?ExternalAction=JteleplanHome">Home</a></font></td>
+<td>&nbsp;</td>
+</tr>
+
+<tr>
+<TD align="RIGHT" valign="TOP"><FONT size="2">&#149;</FONT></TD>
+<td align="LEFT" VALIGN=TOP><font face="Arial, Helvetica, sans-serif" size="2">
+<a href="TeleplanBroker?ExternalAction=JsubmitClaim">Send Claims</a></font></td>
+<td>&nbsp;</td>
+</tr>
+
+<tr>
+<TD align="RIGHT" valign="TOP"><FONT size="2">&#149;</FONT></TD>
+<td align="LEFT" VALIGN=TOP><font face="Arial, Helvetica, sans-serif" size="2">
+<a href="TeleplanBroker?ExternalAction=JretrieveRemit">Retrieve Remittances</a></font></td>
+<td>&nbsp;</td>
+</tr>
+
+<tr>
+<TD align="RIGHT" valign="TOP"><FONT size="2">&#149;</FONT></TD>
+<td align="LEFT" VALIGN=TOP><font face="Arial, Helvetica, sans-serif" size="2">
+<a href="TeleplanBroker?ExternalAction=JotherProcess">Other Processing + Logs</a></font></td>
+<td>&nbsp;</td>
+</tr>
+
+<tr>
+<TD align="RIGHT" valign="TOP"><FONT size="2">&#149;</FONT></TD>
+<td align="LEFT" VALIGN=TOP><font face="Arial, Helvetica, sans-serif" size="2">
+<a href="TeleplanBroker?ExternalAction=JcheckEligibility">Check Eligibility</a></font></td>
+<td>&nbsp;</td>
+</tr>
+
+<tr>
+<TD align="RIGHT" valign="TOP"><FONT size="2">&#149;</FONT></TD>
+<td align="LEFT" VALIGN=TOP><font face="Arial, Helvetica, sans-serif" size="2">
+<a href="TeleplanBroker?ExternalAction=JcontactEmail">Contact Email</a></font></td>
+<td>&nbsp;</td>
+</tr>
+
+<tr>
+<TD align="RIGHT" valign="TOP"><FONT size="2">&#149;</FONT></TD>
+<td align="LEFT" VALIGN=TOP><font face="Arial, Helvetica, sans-serif" size="2">
+<a href="TeleplanBroker?ExternalAction=JchangePassword">Change Password</a></font></td>
+<td>&nbsp;</td>
+</tr>
+
+
+
+<tr>
+<TD align="RIGHT" valign="TOP"><FONT size="2">&#149;</FONT></TD>
+<td align="LEFT" VALIGN=TOP><font face="Arial, Helvetica, sans-serif" size="2">
+<a href="TeleplanBroker?ExternalAction=Jhelp">Help</a></font></td>
+<td>&nbsp;</td>
+</tr>
+
+<tr>
+<TD align="RIGHT" valign="TOP"><FONT size="2">&#149;</FONT></TD>
+<td align="LEFT" VALIGN=TOP><font face="Arial, Helvetica, sans-serif" size="2">
+<a href="TeleplanBroker?ExternalAction=WsignOff">Sign off</a></font></td>
+<td>&nbsp;</td> 
+ 
+</tr>
+</table>
+<!--END OF TABLE OF CONTENTS--></td>
+
+<td bgcolor="white" width="2">&nbsp;</td>
+<td bgcolor="white" VALIGN=TOP COLSPAN="3" ALIGN="LEFT">
+
+<!-- END OF HEADER -->
+
+
+
+
+<HEAD>
+<META name="GENERATOR" content="IBM WebSphere Studio">
+</HEAD>
+<FONT SIZE="+1" FACE="Arial,Helvetica,Univers,Zurich BT">
+ <CENTER>MSP Coverage Status Check</CENTER>
+</FONT>
+<CENTER>
+ <!-- Messages -->
+<FORM NAME="MsgForm">
+<table border='0' cellspacing='0' cellpadding='0' minwidth='50%'>
+<tbody><tr><td align='right'>
+<select Name="errors" Size='3'  style='minwidth:200px'>
+<OPTION VALUE="0">
+HJMB001I SUCCESSFULLY COMPLETED
+</SELECT>
+</td></tr></tbody></table>
+</FORM>
+<br/>
+
+
+</CENTER>
+<TABLE WIDTH="100%">
+ <TBODY>
+  <TR>
+   <!-- Person data titles -->
+   <TD width="20%" ALIGN=CENTER><font face="Arial, Helvetica, sans-serif" size="2"><B>PHN</B></font></TD>
+   <TD WIDTH="40%" ALIGN=CENTER><font face="Arial, Helvetica, sans-serif" size="2"><B>Name</B></font></TD>
+   <TD WIDTH="20%" ALIGN=CENTER><font face="Arial, Helvetica, sans-serif" size="2"><B>Birth Date</B></font></TD>
+   <TD WIDTH="20%" ALIGN=CENTER><font face="Arial, Helvetica, sans-serif" size="2"><B>Gender</B></font></TD>
+  </TR>
+  <TR>
+   <!-- Person data values -->
+   <TD ALIGN=CENTER> <font face="Arial, Helvetica, sans-serif" size="2">
+     <span>9151210417</span></font></TD>
+   <TD ALIGN=CENTER><font face="Arial, Helvetica, sans-serif" size="2">
+     <span>BURNHAM RICHARD GERD</span></font></TD>
+   <TD ALIGN=CENTER><font face="Arial, Helvetica, sans-serif" size="2">
+     <span>19591128</span></font></TD>
+   <TD ALIGN=CENTER> <font face="Arial, Helvetica, sans-serif" size="2">
+     <span>MALE</span></font></TD>
+  </TR>
+  
+  <TR VALIGN=TOP ALIGN=LEFT>
+   <TD>&nbsp; <!-- White space -->
+   </TD>
+  </TR>
+
+  <TR>
+   <!-- Service data titles -->
+   <TD ALIGN=CENTER valign="bottom"><font face="Arial, Helvetica, sans-serif" size="2"><B>Date of Service</B></font></TD>
+   <TD ALIGN=CENTER><font face="Arial, Helvetica, sans-serif" size="2"><B>Eligible on Date<BR> of Service?</B></font></TD>
+   <TD ALIGN=CENTER><font face="Arial, Helvetica, sans-serif" size="2"><B>Coverage End<br/>Date  </B></font></TD>
+   <TD ALIGN=CENTER><font face="Arial, Helvetica, sans-serif" size="2"><B>Coverage End<br/>Reason</B></font></TD>
+  </TR>
+  <TR>
+   <!-- Service data values -->
+   <TD ALIGN=CENTER><font face="Arial, Helvetica, sans-serif"
+    size="2">20260526</font></TD>
+   <TD ALIGN=CENTER><font face="Arial, Helvetica, sans-serif"
+    size="2">YES</font></TD>
+   <TD ALIGN=CENTER><font face="Arial, Helvetica, sans-serif"
+    size="2"></font></TD>
+   <TD ALIGN=CENTER><font face="Arial, Helvetica, sans-serif"
+    size="2"></font></TD>
+  </TR>
+ </TBODY>
+</TABLE>
+
+<TABLE ID="Table15" BORDER=0 CELLSPACING=3 CELLPADDING=2 WIDTH=500>
+ <TR VALIGN=TOP ALIGN=LEFT>
+  <TD>&nbsp; <!-- White space -->
+  </TD>
+ </TR>
+
+ <TR width="100">
+  <TD style="background-color: silver;"><font
+   face="Arial, Helvetica, sans-serif" size="2"><B>Subsidy
+     Insured Service:</B> SERVICES PD TO DATE - 0<BR>
+   <BR></font> <font face="Arial, Helvetica, sans-serif" size="2"><B>Date
+     of Last Eye Examination:</B> 2024-01-01<BR>
+   <BR></font> <font face="Arial, Helvetica, sans-serif" size="2"><B>Patient
+     Restriction:</B> <BR>
+   <BR></font></TD>
+ </TR>
+ <TR VALIGN=TOP ALIGN=LEFT>
+  <TD>&nbsp; <!-- White space-->
+  </TD>
+ </TR>
+ <TR width="100">
+  <TD style="background-color: silver;"></TD>
+ </TR>
+</TABLE>
+<font face="Arial, Helvetica, sans-serif" size="-1"> <A
+ HREF="TeleplanBroker?ExternalAction=JcheckEligibility">Perform
+  another E45 request</A>
+</font>
+<!-- BEGIN OF FOOTER -->
+</td>
+</tr>
+
+<tr>
+<td COLSPAN="6"><img src="images/spacer.gif" ALT="blank space for alignment" height=15 width=50></td>
+</tr>
+<tr><td colspan="6"><hr></td></tr>
+<tr>
+<td colspan="4" align="left" valign="top">
+<font face="Arial, Helvetica, sans-serif" size="2">
+<a href="#top">Top</a>
+	| <a href="TeleplanBroker?ExternalAction=Jcopyright">Copyright</a>
+	| <a href="TeleplanBroker?ExternalAction=Jdisclaimer">Disclaimer</a>
+	| <a href="http://www.gov.bc.ca/com/privacy.html">Privacy</a>
+</font>
+</td>
+<td align="right" valign="top"><font face="Arial, Helvetica, sans-serif" size="2">
+
+<a href="https://www2.gov.bc.ca/gov/content/health/practitioner-professional-resources/msp/contact-us">Contact us</a></font></td>
+
+</tr>
+
+<tr>
+<td><img src="images/spacer.gif" ALT="blank space for alignment" height=10 width=5></td>
+
+<td><img src="images/spacer.gif" ALT="blank space for alignment" height=10 width=165></td>
+
+<td><img src="images/spacer.gif" ALT="blank space for alignment" height=10 width=20></td>
+
+<td><img src="images/spacer.gif" ALT="blank space for alignment" height=10 width=237></td>
+
+<td><img src="images/spacer.gif" ALT="blank space for alignment" height=10 width=163></td>
+
+<td><img src="images/spacer.gif" ALT="blank space for alignment" height=10 width=10></td>
+</tr>
+</table>
+</td>
+</tr>
+</table></div>
+
+</body>
+</html>
+

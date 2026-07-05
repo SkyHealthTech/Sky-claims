@@ -1,0 +1,203 @@
+
+
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+               "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <title>Medical Services Plan Teleplan Web Access</title>
+   <link rel="icon" href="images/health.png" type="image/x-icon">
+</head>
+<body bgcolor="#FFFFFF" link="#00008B" vlink="#00008B">
+<a NAME="top"></a>
+<div align="CENTER"><table>
+<tr>
+<td>
+<!--START OF TOP BANNER -->
+<table BORDER="0" CELLSPACING=0 CELLPADDING=0 WIDTH="595" >
+<tr>
+<td>
+<!--ADD AREA BANNER GRAPHIC HERE--></td>
+<td COLSPAN="7"><img src="images/mspteleplan.gif" ALT="MSPs Teleplan Web Access" ></td>
+<td><!--END OF AREA BANNER GRAPHIC--></td>
+</tr>
+</table>
+
+<!--END OF TOP BANNER -->
+<TABLE WIDTH="900" BORDER="0" CELLSPACING="0" CELLPADDING="0">
+
+<tr> 
+<TD COLSPAN="5"><IMG SRC="images/spacer.gif" WIDTH="5" HEIGHT="30" alt="blank space for alignment"></TD>
+</TR>
+<TR> 
+
+<TD><IMG SRC="images/spacer.gif" WIDTH="5" HEIGHT="10" alt="spacer"></TD>
+
+<TD ALIGN="LEFT" VALIGN="TOP" width="2">
+<!--START OF TABLE OF CONTENTS-->
+
+<table BORDER="0" CELLSPACING=0 CELLPADDING=3 WIDTH="163" align="left">
+<tr>
+<td COLSPAN="3"><img src="images/t_contents.gif" ALT="Contents" ></td>
+</tr>
+
+<tr>
+<td><img src="images/spacer.gif" height=2 width=13></td>
+<td><img src="images/spacer.gif" height=2 width=130></td>
+<td><img src="images/spacer.gif" height=2 width=2></td>
+</tr>
+
+<tr>
+<TD align="RIGHT" valign="TOP"><FONT size="2">&#149;</FONT></TD>
+<td align="LEFT" VALIGN=TOP><font face="Arial, Helvetica, sans-serif" size="2">
+<a href="TeleplanBroker?ExternalAction=JteleplanHome">Home</a></font></td>
+<td>&nbsp;</td>
+</tr>
+
+<tr>
+<TD align="RIGHT" valign="TOP"><FONT size="2">&#149;</FONT></TD>
+<td align="LEFT" VALIGN=TOP><font face="Arial, Helvetica, sans-serif" size="2">
+<a href="TeleplanBroker?ExternalAction=JsubmitClaim">Send Claims</a></font></td>
+<td>&nbsp;</td>
+</tr>
+
+<tr>
+<TD align="RIGHT" valign="TOP"><FONT size="2">&#149;</FONT></TD>
+<td align="LEFT" VALIGN=TOP><font face="Arial, Helvetica, sans-serif" size="2">
+<a href="TeleplanBroker?ExternalAction=JretrieveRemit">Retrieve Remittances</a></font></td>
+<td>&nbsp;</td>
+</tr>
+
+<tr>
+<TD align="RIGHT" valign="TOP"><FONT size="2">&#149;</FONT></TD>
+<td align="LEFT" VALIGN=TOP><font face="Arial, Helvetica, sans-serif" size="2">
+<a href="TeleplanBroker?ExternalAction=JotherProcess">Other Processing + Logs</a></font></td>
+<td>&nbsp;</td>
+</tr>
+
+<tr>
+<TD align="RIGHT" valign="TOP"><FONT size="2">&#149;</FONT></TD>
+<td align="LEFT" VALIGN=TOP><font face="Arial, Helvetica, sans-serif" size="2">
+<a href="TeleplanBroker?ExternalAction=JcheckEligibility">Check Eligibility</a></font></td>
+<td>&nbsp;</td>
+</tr>
+
+<tr>
+<TD align="RIGHT" valign="TOP"><FONT size="2">&#149;</FONT></TD>
+<td align="LEFT" VALIGN=TOP><font face="Arial, Helvetica, sans-serif" size="2">
+<a href="TeleplanBroker?ExternalAction=JcontactEmail">Contact Email</a></font></td>
+<td>&nbsp;</td>
+</tr>
+
+<tr>
+<TD align="RIGHT" valign="TOP"><FONT size="2">&#149;</FONT></TD>
+<td align="LEFT" VALIGN=TOP><font face="Arial, Helvetica, sans-serif" size="2">
+<a href="TeleplanBroker?ExternalAction=JchangePassword">Change Password</a></font></td>
+<td>&nbsp;</td>
+</tr>
+
+
+
+<tr>
+<TD align="RIGHT" valign="TOP"><FONT size="2">&#149;</FONT></TD>
+<td align="LEFT" VALIGN=TOP><font face="Arial, Helvetica, sans-serif" size="2">
+<a href="TeleplanBroker?ExternalAction=Jhelp">Help</a></font></td>
+<td>&nbsp;</td>
+</tr>
+
+<tr>
+<TD align="RIGHT" valign="TOP"><FONT size="2">&#149;</FONT></TD>
+<td align="LEFT" VALIGN=TOP><font face="Arial, Helvetica, sans-serif" size="2">
+<a href="TeleplanBroker?ExternalAction=WsignOff">Sign off</a></font></td>
+<td>&nbsp;</td> 
+ 
+</tr>
+</table>
+<!--END OF TABLE OF CONTENTS--></td>
+
+<td bgcolor="white" width="2">&nbsp;</td>
+<td bgcolor="white" VALIGN=TOP COLSPAN="3" ALIGN="LEFT">
+
+<!-- END OF HEADER -->
+
+
+<p><font face="Arial, Helvetica, sans-serif" size="4"><b>Send Claims</b></font></p>
+<!-- Messages -->
+
+
+
+
+
+<form action="TeleplanBroker" method="POST" enctype="multipart/form-data" onsubmit="window.open('./teleplan/html/status.jsp?statusID=2ab1cf4c-1c6b-43c6-a7bf-1c932c5c427b','status','width=250,height=120'); true;">
+
+<table border="0">
+	<tr>
+	<td align="left"><b><font face="Arial, Helvetica, sans-serif" size="2">Select&nbsp;file&nbsp;to&nbsp;send</font></b></td>
+	</tr>
+	
+	<tr>
+	<td>
+	<INPUT TYPE="HIDDEN" NAME="rfc1867statusid" VALUE="2ab1cf4c-1c6b-43c6-a7bf-1c932c5c427b">
+	<input type="file" name="submitFile" size="30"><br>
+	<INPUT TYPE="HIDDEN" NAME="ExternalAction" VALUE="WputRemit">
+	</td>
+	</tr>
+	
+	<tr>
+	<td>
+		&nbsp;<br><input type="submit" name="submit" value="Send file ">&nbsp;&nbsp;<input type="reset" name="reset" value="Clear">
+	</td>
+	</tr>
+	
+</table>
+
+</form>
+<font face="Arial, Helvetica, sans-serif" size="-1">
+<A HREF="TeleplanBroker?ExternalAction=WgetLog&LOGNAME=CURRENT&LOGTYPE=S&MODE=DISPLAY">View Current Log</A>
+</font>
+<!-- BEGIN OF FOOTER -->
+</td>
+</tr>
+
+<tr>
+<td COLSPAN="6"><img src="images/spacer.gif" ALT="blank space for alignment" height=15 width=50></td>
+</tr>
+<tr><td colspan="6"><hr></td></tr>
+<tr>
+<td colspan="4" align="left" valign="top">
+<font face="Arial, Helvetica, sans-serif" size="2">
+<a href="#top">Top</a>
+	| <a href="TeleplanBroker?ExternalAction=Jcopyright">Copyright</a>
+	| <a href="TeleplanBroker?ExternalAction=Jdisclaimer">Disclaimer</a>
+	| <a href="http://www.gov.bc.ca/com/privacy.html">Privacy</a>
+</font>
+</td>
+<td align="right" valign="top"><font face="Arial, Helvetica, sans-serif" size="2">
+
+<a href="https://www2.gov.bc.ca/gov/content/health/practitioner-professional-resources/msp/contact-us">Contact us</a></font></td>
+
+</tr>
+
+<tr>
+<td><img src="images/spacer.gif" ALT="blank space for alignment" height=10 width=5></td>
+
+<td><img src="images/spacer.gif" ALT="blank space for alignment" height=10 width=165></td>
+
+<td><img src="images/spacer.gif" ALT="blank space for alignment" height=10 width=20></td>
+
+<td><img src="images/spacer.gif" ALT="blank space for alignment" height=10 width=237></td>
+
+<td><img src="images/spacer.gif" ALT="blank space for alignment" height=10 width=163></td>
+
+<td><img src="images/spacer.gif" ALT="blank space for alignment" height=10 width=10></td>
+</tr>
+</table>
+</td>
+</tr>
+</table></div>
+
+</body>
+</html>
+
+<!-- END BODY TEXT -->
