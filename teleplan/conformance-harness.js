@@ -244,26 +244,30 @@ function generateTestClaims(cat, config) {
     // Category 2: Reciprocal Claims (out-of-province patients)
     // PHN field zeros; patient demographics in OIN portion.
     // NAME-VERIFY must be '0000' (zeros) for OIN/Other-Insurer claims — spec P16.
+    // P102 (OIN-REGISTRATION-NUM): out-of-province health numbers must be
+    // RIGHT-JUSTIFIED and LEFT-ZERO-FILLED (spec p.63).
+    // Pass the raw province health number — zpad() in buildC02 handles the
+    // left-zero-fill to 12 chars. Do NOT append trailing zeros here.
     case 2:
       return [
         { type: 'c02', phn: '0000000000', nameVerify: '0000',
           dependentNum: '00', units: '1', feeItem: '00110', amount: 36.60,
           dx1: '465  ', serviceDate: dos, serviceLocation: 'L', submissionCode: '0',
-          oin: { insurerCode: 'ON', regNum: '345678901200', birthDate: '19701201',
+          oin: { insurerCode: 'ON', regNum: '3456789012', birthDate: '19701201',
                  firstName: 'JAMES', middleInitial: 'R', surname: 'ONTARIO',
                  sex: 'M', address1: '123 MAIN ST TORONTO ON',
                  postalCode: 'M5V1A1' } },
         { type: 'c02', phn: '0000000000', nameVerify: '0000',
           dependentNum: '00', units: '1', feeItem: '00110', amount: 36.60,
           dx1: '490  ', serviceDate: dos, serviceLocation: 'L', submissionCode: '0',
-          oin: { insurerCode: 'AB', regNum: '123456789000', birthDate: '19830620',
+          oin: { insurerCode: 'AB', regNum: '1234567890', birthDate: '19830620',
                  firstName: 'SARAH', middleInitial: 'L', surname: 'ALBERTA',
                  sex: 'F', address1: '456 ELM AVE CALGARY AB',
                  postalCode: 'T2P1B1' } },
         { type: 'c02', phn: '0000000000', nameVerify: '0000',
           dependentNum: '00', units: '1', feeItem: '00110', amount: 36.60,
           dx1: '462  ', serviceDate: dos, serviceLocation: 'L', submissionCode: '0',
-          oin: { insurerCode: 'MB', regNum: '987654321000', birthDate: '19650903',
+          oin: { insurerCode: 'MB', regNum: '9876543210', birthDate: '19650903',
                  firstName: 'DAVID', middleInitial: 'T', surname: 'MANITOBA',
                  sex: 'M', address1: '789 OAK DR WINNIPEG MB',
                  postalCode: 'R3B2E1' } },
@@ -291,7 +295,9 @@ function generateTestClaims(cat, config) {
     // Category 4: WorkSafeBC Claims
     // OIN insurer WC, submission code W.
     // NAME-VERIFY = '0000' for OIN claims (spec P16: "Zeros if Other Insurer Claim").
-    // regNum must start with 9 for WC/PP (spec P102); using confirmed test PHNs.
+    // P102 (OIN-REGISTRATION-NUM): WSBC health numbers must start with "9" (spec p.25/26).
+    // Pass the raw 10-digit BC PHN (no trailing spaces) — buildC02 now uses rpad for
+    // WC/PP so the result is "9151252098  " (starts with 9, right-padded with spaces).
     // address1=date of injury, address2=area/anatomy, address3=nature of injury,
     // address4=WCB claim number (left zero-filled, max 8 chars, rest blank).
     case 4:
@@ -299,7 +305,7 @@ function generateTestClaims(cat, config) {
         { type: 'c02', phn: '0000000000', nameVerify: '0000',
           dependentNum: '00', units: '1', feeItem: '00110', amount: 36.60,
           dx1: '913  ', serviceDate: dos, serviceLocation: 'L', submissionCode: 'W',
-          oin: { insurerCode: 'WC', regNum: '9151252098  ', birthDate: '19611119',
+          oin: { insurerCode: 'WC', regNum: '9151252098', birthDate: '19611119',
                  firstName: 'SHELLY', middleInitial: 'D', surname: 'BUTLER',
                  sex: 'F',
                  address1: '20260501                 ',
@@ -310,7 +316,7 @@ function generateTestClaims(cat, config) {
         { type: 'c02', phn: '0000000000', nameVerify: '0000',
           dependentNum: '00', units: '1', feeItem: '00110', amount: 36.60,
           dx1: '913  ', serviceDate: dos, serviceLocation: 'L', submissionCode: 'W',
-          oin: { insurerCode: 'WC', regNum: '9151237142  ', birthDate: '19560314',
+          oin: { insurerCode: 'WC', regNum: '9151237142', birthDate: '19560314',
                  firstName: 'LISA', middleInitial: 'C', surname: 'DALEY',
                  sex: 'F',
                  address1: '20260501                 ',
@@ -321,7 +327,7 @@ function generateTestClaims(cat, config) {
         { type: 'c02', phn: '0000000000', nameVerify: '0000',
           dependentNum: '00', units: '1', feeItem: '00110', amount: 36.60,
           dx1: '913  ', serviceDate: dos, serviceLocation: 'L', submissionCode: 'W',
-          oin: { insurerCode: 'WC', regNum: '9151247483  ', birthDate: '19741002',
+          oin: { insurerCode: 'WC', regNum: '9151247483', birthDate: '19741002',
                  firstName: 'MELISSA', middleInitial: 'G', surname: 'WHALEN',
                  sex: 'F',
                  address1: '20260501                 ',
@@ -366,10 +372,12 @@ function generateTestClaims(cat, config) {
         // Fee item 09938 = Physiotherapy Service  $23.00
         // Source: gov.bc.ca/msp/physiotherapists  Service location N = non-physician HCP office
         // NAME-VERIFY = '0000' for all OIN/PP claims (spec P16).
+        // P102 regNum: raw 10-digit BC PHN — buildC02 uses rpad for PP so result
+        // is "9151071072  " (starts with "9", right-padded with spaces). Spec p.25/26.
         { type: 'c02', phn: '0000000000', nameVerify: '0000',
           dependentNum: '00', units: '1', feeItem: '09938', amount: 23.00,
           dx1: '724  ', serviceDate: dos, serviceLocation: 'N', submissionCode: '0',
-          oin: { insurerCode: 'PP', regNum: '9151071072  ', birthDate: '19410404',
+          oin: { insurerCode: 'PP', regNum: '9151071072', birthDate: '19410404',
                  firstName: 'GERALD', middleInitial: 'F', surname: 'MATTE',
                  sex: 'M', address1: '100 JOHNSON ST VICTORIA BC',
                  postalCode: 'V8W1M9' } },
@@ -380,7 +388,7 @@ function generateTestClaims(cat, config) {
         { type: 'c02', phn: '0000000000', nameVerify: '0000',
           dependentNum: '00', units: '1', feeItem: '00138', amount: 23.00,
           dx1: '723  ', serviceDate: dos, serviceLocation: 'N', submissionCode: '0',
-          oin: { insurerCode: 'PP', regNum: '9151247483  ', birthDate: '19741002',
+          oin: { insurerCode: 'PP', regNum: '9151247483', birthDate: '19741002',
                  firstName: 'MELISSA', middleInitial: 'G', surname: 'WHALEN',
                  sex: 'F', address1: '400 DOUGLAS ST VICTORIA BC',
                  postalCode: 'V8V2P5' } },
@@ -391,7 +399,7 @@ function generateTestClaims(cat, config) {
         { type: 'c02', phn: '0000000000', nameVerify: '0000',
           dependentNum: '00', units: '1', feeItem: '09948', amount: 23.00,
           dx1: '729  ', serviceDate: dos, serviceLocation: 'N', submissionCode: '0',
-          oin: { insurerCode: 'PP', regNum: '9151234921  ', birthDate: '19860815',
+          oin: { insurerCode: 'PP', regNum: '9151234921', birthDate: '19860815',
                  firstName: 'SANDI', middleInitial: 'D', surname: 'HUMPHREY',
                  sex: 'F', address1: '700 PANDORA AVE VICTORIA BC',
                  postalCode: 'V8W1N9' } },
@@ -399,53 +407,62 @@ function generateTestClaims(cat, config) {
 
     // Category 7: Institutional Claims
     // OIN IN, institution number in OIN regNum positions 1-10.
+    // Two fixes per HIBC feedback:
+    //   1. AH refusal: the 2-digit sub-code after the institution number must NOT be
+    //      "00". Spec p.63: use any two digits other than "00" (using "01" here).
+    //      regNum = institution# (10) + sub-code (2): "0010000008" + "01" = "001000000801"
+    //   2. CP refusal: the J4674 optometrist practitioner is opted-out; institutional
+    //      test claims should use the opted-in test payee as the practitioner to avoid
+    //      the opted-out vs opted-in mismatch in this category.
     case 7:
       return [
         // NAME-VERIFY = '0000' for all OIN/IN claims (spec P16).
         { type: 'c02', phn: '0000000000', nameVerify: '0000',
+          practitionerNum: config.testPayee,
           dependentNum: '00', units: '1', feeItem: '00110', amount: 36.60,
           dx1: '465  ', serviceDate: dos, serviceLocation: 'I', submissionCode: '0',
-          oin: { insurerCode: 'IN', regNum: '001000000800', birthDate: '19500101',
+          oin: { insurerCode: 'IN', regNum: '001000000801', birthDate: '19500101',
                  firstName: 'JOHN', middleInitial: 'A', surname: 'INPATIENT',
                  sex: 'M', address1: '1234 HOSPITAL RD VANCOUVER' } },
         { type: 'c02', phn: '0000000000', nameVerify: '0000',
+          practitionerNum: config.testPayee,
           dependentNum: '00', units: '1', feeItem: '00110', amount: 36.60,
           dx1: '490  ', serviceDate: dos, serviceLocation: 'I', submissionCode: '0',
-          oin: { insurerCode: 'IN', regNum: '001000000800', birthDate: '19620315',
+          oin: { insurerCode: 'IN', regNum: '001000000801', birthDate: '19620315',
                  firstName: 'MARY', middleInitial: 'B', surname: 'RESIDENT',
                  sex: 'F', address1: '5678 CARE CENTRE BURNABY' } },
         { type: 'c02', phn: '0000000000', nameVerify: '0000',
+          practitionerNum: config.testPayee,
           dependentNum: '00', units: '1', feeItem: '00110', amount: 36.60,
           dx1: '462  ', serviceDate: dos, serviceLocation: 'I', submissionCode: '0',
-          oin: { insurerCode: 'IN', regNum: '001000000800', birthDate: '19750720',
+          oin: { insurerCode: 'IN', regNum: '001000000801', birthDate: '19750720',
                  firstName: 'PETER', middleInitial: 'C', surname: 'PATIENT',
                  sex: 'M', address1: '9101 FACILITY BLVD SURREY' } },
       ];
 
     // Category 8: Correctional (Incarcerated) Claims
-    // PHN must be '0000000000' for correctional patients (1/2/3 fail MOD-11 — AA refusal).
-    // NAME-VERIFY = '0000' for OIN/IN claims (spec P16).
-    // Patient identity supplied via OIN block (insurerCode IN).
+    // Per HIBC feedback (spec pp. 52 & 31):
+    //   - Correctional claims use C02 PART 1 ONLY. No OIN (Part 2) block.
+    //   - P14 (MSP-REGISTRATION/PHN field) must contain a FAKE CORRECTIONAL ID,
+    //     not a BC PHN. Use a facility-issued 10-digit patient identifier.
+    //   - Patient DOB goes in C02 Part 1 field P52 (BIRTH-DATE).
+    //   - NAME-VERIFY = '0000' (no MSP PHN to verify against).
+    //   - Service location 'C' (correctional facility).
+    // Do NOT include an oin block — buildC02 will set Part 2 to all spaces.
     case 8:
       return [
-        { type: 'c02', phn: '0000000000', nameVerify: '0000',
+        { type: 'c02', phn: '0000001001', nameVerify: '0000',
+          birthDate: '19750101',
           dependentNum: '00', units: '1', feeItem: '00110', amount: 36.60,
-          dx1: '465  ', serviceDate: dos, serviceLocation: 'C', submissionCode: '0',
-          oin: { insurerCode: 'IN', regNum: '000000000100', birthDate: '19750101',
-                 firstName: 'CORR', middleInitial: 'A', surname: 'INMATE ONE',
-                 sex: 'M', address1: 'KENT INSTITUTION AGASSIZ BC' } },
-        { type: 'c02', phn: '0000000000', nameVerify: '0000',
+          dx1: '465  ', serviceDate: dos, serviceLocation: 'C', submissionCode: '0' },
+        { type: 'c02', phn: '0000002001', nameVerify: '0000',
+          birthDate: '19800215',
           dependentNum: '00', units: '1', feeItem: '00110', amount: 36.60,
-          dx1: '490  ', serviceDate: dos, serviceLocation: 'C', submissionCode: '0',
-          oin: { insurerCode: 'IN', regNum: '000000000200', birthDate: '19800215',
-                 firstName: 'CORR', middleInitial: 'B', surname: 'INMATE TWO',
-                 sex: 'M', address1: 'MOUNTAIN INSTITUTION AGASSIZ BC' } },
-        { type: 'c02', phn: '0000000000', nameVerify: '0000',
+          dx1: '490  ', serviceDate: dos, serviceLocation: 'C', submissionCode: '0' },
+        { type: 'c02', phn: '0000003001', nameVerify: '0000',
+          birthDate: '19920610',
           dependentNum: '00', units: '1', feeItem: '00110', amount: 36.60,
-          dx1: '462  ', serviceDate: dos, serviceLocation: 'C', submissionCode: '0',
-          oin: { insurerCode: 'IN', regNum: '000000000300', birthDate: '19920610',
-                 firstName: 'CORR', middleInitial: 'C', surname: 'INMATE THREE',
-                 sex: 'F', address1: 'FRASER VALLEY INST ABBOTSFORD BC' } },
+          dx1: '462  ', serviceDate: dos, serviceLocation: 'C', submissionCode: '0' },
       ];
 
     // Category 9: Debit Request Claims
@@ -505,39 +522,63 @@ function generateTestClaims(cat, config) {
           birthDate: '19670529', dateOfService: dos, sex: 'F' },
       ];
 
-    // Category 13: Clean real-data claims (no C12 pre-edit refusals)
-    // Uses TELEPLAN_PRACTITIONER_NUM (real optometry MSP#, e.g. J4674) with
-    // confirmed HIBC test PHNs.  Fee items from MSC Optometry Payment Schedule:
-    //   - 02899: Full optometric diagnostic examination ($47.08)
-    //     Billable for patients ≥65 (routine benefit) or any age with medical dx.
-    //   - 02889: Diagnostic exam, no final refractive determination ($47.08)
-    //     Use for adults 19–64 when exam is medically required.
-    // Test patients:
-    //   BURNHAM  M 1959 age 67 → senior routine exam → 02899, ICD 366 (cataract)
-    //   BURROWS  F 1959 age 67 → senior routine exam → 02899, ICD 365 (glaucoma)
-    //   MERCER   M 1988 age 38 → adult; routine NOT a benefit; diabetes qualifies
-    //                            as medically required (ICD 250, semi-annual) → 02889
+    // Category 13: Clean real-data claims — opted-out format (per HIBC feedback)
+    //
+    // Dr. Ekeoba (J4674) is an opted-out optometrist. HIBC requires:
+    //   1. Use the optometrist's PERSONAL PAYEE NUMBER (TELEPLAN_PAYEE_NUM in .env),
+    //      not the generic test payee.
+    //   2. Use OPTED-OUT / PAY-PATIENT format:
+    //      - P14 (phn field): '0000000000' — patient BC PHN goes in the OIN PP block
+    //      - P16 (nameVerify): '0000' — no MSP PHN in P14 to verify against
+    //      - OIN insurerCode 'PP' (Pay Patient) — same format as Cat 6 opted-out
+    //      - OIN regNum: patient's 10-digit BC PHN (rpad → starts with "9")
+    //
+    // Fee items from MSC Optometry Payment Schedule (real amounts, real codes):
+    //   02899: Full optometric diagnostic exam ($47.08) — routine benefit ≥65 or any
+    //          age with eligible medical diagnosis
+    //   02889: Diagnostic exam, no final refractive determination ($47.08) — adults
+    //          19–64 when medically required
+    //
+    // Requires TELEPLAN_PRACTITIONER_NUM and TELEPLAN_PAYEE_NUM in .env.
+    // Falls back to practitionerNum if payeeNum not separately configured.
     case 13:
       if (!config.practitionerNum) return null; // skip if TELEPLAN_PRACTITIONER_NUM not set
+      var payee13 = config.payeeNum || config.practitionerNum;
       return [
         // BURNHAM RICHARD GERD, M, born 1959 (age 67) — senior routine eye exam (≥65 benefit)
-        { type: 'c02', practitionerNum: config.practitionerNum,
-          phn: '9151210417', nameVerify: 'RGBU', birthDate: '19591128',
+        { type: 'c02',
+          payeeNum: payee13,
+          practitionerNum: config.practitionerNum,
+          phn: '0000000000', nameVerify: '0000', birthDate: '19591128',
           dependentNum: '00', units: '1', feeItem: '02899', amount: 47.08,
-          dx1: '366  ', serviceDate: dos, serviceLocation: 'L', submissionCode: '0' },
+          dx1: '366  ', serviceDate: dos, serviceLocation: 'L', submissionCode: '0',
+          oin: { insurerCode: 'PP', regNum: '9151210417',
+                 birthDate: '19591128', firstName: 'RICHARD', middleInitial: 'G',
+                 surname: 'BURNHAM', sex: 'M', address1: '' } },
 
         // BURROWS CHRISTINE JOSEPHINE, F, born 1959 (age 67) — senior routine eye exam (≥65 benefit)
-        { type: 'c02', practitionerNum: config.practitionerNum,
-          phn: '9151065434', nameVerify: 'CJBU', birthDate: '19591225',
+        { type: 'c02',
+          payeeNum: payee13,
+          practitionerNum: config.practitionerNum,
+          phn: '0000000000', nameVerify: '0000', birthDate: '19591225',
           dependentNum: '00', units: '1', feeItem: '02899', amount: 47.08,
-          dx1: '365  ', serviceDate: dos, serviceLocation: 'L', submissionCode: '0' },
+          dx1: '365  ', serviceDate: dos, serviceLocation: 'L', submissionCode: '0',
+          oin: { insurerCode: 'PP', regNum: '9151065434',
+                 birthDate: '19591225', firstName: 'CHRISTINE', middleInitial: 'J',
+                 surname: 'BURROWS', sex: 'F', address1: '' } },
+
         // MERCER AUSTIN CHARLES, M, born 1988 (age 38) — medically required eye exam
-        // Adults 19-64 not eligible for routine exams; ICD 250 (Diabetes Mellitus)
-        // qualifies for semi-annual benefit per Optometry Preamble Schedule A.
-        { type: 'c02', practitionerNum: config.practitionerNum,
-          phn: '9151242549', nameVerify: 'ACME', birthDate: '19880414',
+        // Adults 19-64: routine exams NOT a benefit. ICD 250 (Diabetes Mellitus)
+        // qualifies for semi-annual medically required exam per Optometry Preamble §A.2.
+        { type: 'c02',
+          payeeNum: payee13,
+          practitionerNum: config.practitionerNum,
+          phn: '0000000000', nameVerify: '0000', birthDate: '19880414',
           dependentNum: '00', units: '1', feeItem: '02889', amount: 47.08,
-          dx1: '250  ', serviceDate: dos, serviceLocation: 'L', submissionCode: '0' },
+          dx1: '250  ', serviceDate: dos, serviceLocation: 'L', submissionCode: '0',
+          oin: { insurerCode: 'PP', regNum: '9151242549',
+                 birthDate: '19880414', firstName: 'AUSTIN', middleInitial: 'C',
+                 surname: 'MERCER', sex: 'M', address1: '' } },
       ];
 
     default:

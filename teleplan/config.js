@@ -80,6 +80,11 @@ function loadConfig() {
     // If not set, testPayee is used as a fallback (fine for format-compliance testing).
     // Required for category 13 (clean real-data claims with no C12 refusals).
     practitionerNum: process.env.TELEPLAN_PRACTITIONER_NUM || null,
+    // Optional — your personal MSP payee (payment) number.
+    // Opted-out practitioners must bill under their own payee number, not the
+    // generic test payee. Falls back to practitionerNum if not separately set.
+    // Set TELEPLAN_PAYEE_NUM in .env if your payee # differs from your prac #.
+    payeeNum: process.env.TELEPLAN_PAYEE_NUM || process.env.TELEPLAN_PRACTITIONER_NUM || null,
     env,
     baseUrl: ENDPOINTS[env],
     isTest: env === 'test',

@@ -206,13 +206,16 @@ function buildB04(config, seqNum, rec) {
 // P122 OIN-POSTAL-CODE (6)
 
 function buildC02(config, seqNum, rec) {
+  // rec.payeeNum overrides config.testPayee — used for opted-out practitioners
+  // who must bill under their own payee number rather than the generic test payee.
+  var payeeNum = rec.payeeNum || config.testPayee;
   var practNum = rec.practitionerNum || config.practitionerNum || config.testPayee;
 
   var p1 =
     'C02' +
     rpad(config.vendorDC,                    5) +
     zpad(seqNum,                             7) +
-    rpad(config.testPayee,                   5) +
+    rpad(payeeNum,                           5) +
     rpad(practNum,                           5) +
     zpad(rec.phn       || '0000000000',     10) +
     rpad(rec.nameVerify || '    ',           4) +
@@ -257,9 +260,19 @@ function buildC02(config, seqNum, rec) {
   var oin = rec.oin || null;
   var p2;
   if (oin) {
+    // P102 (OIN-REGISTRATION-NUM, 12 chars) — padding rule depends on insurer type:
+    //   WC (WorkSafeBC) / PP (Pay Patient / opted-out BC):
+    //     BC PHN is 10 digits starting with "9"; right-pad with spaces so the
+    //     leading "9" is preserved. Spec p.25/26: health number must start with "9".
+    //   All other OIN insurer codes (ON, AB, MB, SK, etc.):
+    //     Out-of-province health numbers right-justified, left-zero-filled. Spec p.63.
+    var oinRegNum = (oin.insurerCode === 'WC' || oin.insurerCode === 'PP')
+      ? rpad(oin.regNum || '            ', 12, true)
+      : zpad(oin.regNum || '0', 12);
+
     p2 =
       rpad(oin.insurerCode  || '  ',  2) +
-      zpad(oin.regNum       || '0',  12) +
+      oinRegNum                          +
       zpad(oin.birthDate    || '0',   8) +
       rpad(oin.firstName    || '            ', 12, true) +
       rpad(oin.middleInitial || ' ',   1) +
