@@ -3,26 +3,67 @@
 /**
  * teleplan/parser.js
  *
- * Response / remittance parser.
- * Ingests the records retrieved from Teleplan and maps them to typed results.
+ * Remittance / response parser for Teleplan4 records.
  *
  * RECORD TYPES HANDLED
  * ─────────────────────
- *   C12   — Refusal record (the most important one to get right)
- *   RA    — Remittance / payment record
- *   E45   — Eligibility response (from B04 batch eligibility)
- *   VS1   — Header (metadata only)
+ *  C12   — Claim refusal (pre-edit or eligibility edit)
+ *  B14   — Batch eligibility response (returned for B04 submissions)
+ *  S01   — Individual claim payment record (basic)
+ *  S02   — Individual claim payment record (with patient/OIN info)
+ *  S03   — Enrolment record
+ *  S04   — Claim hold record
+ *  S21   — Payee summary header
+ *  S22   — Payee financial summary
+ *  S23   — Practitioner adjustment/rollback summary
+ *  S24   — Deduction summary
+ *  S25   — Broadcast message record
+ *  M01   — Administrative message (e.g. next close-off date)
+ *  VRCV  — Receive acknowledgement (per-batch)
+ *  VTCV  — File trailer
  *
- * C12 REFUSAL PARSING
- * ────────────────────
- * The C12 is the pre-edit / edit & eligibility refusal record.
- * Two stages:
- *   Pre-edit refusal: "YY" in the first field — claim never reached MSP adjudication.
- *   Edit & eligibility: up to 3 error fields, each surfacing a specific reason code.
+ * C12 FIELD LAYOUT (confirmed from 2026-08-08 dummy remittance)
+ * ──────────────────────────────────────────────────────────────
+ *  Pos  0-2   Record type "C12"
+ *  Pos  3-7   Vendor DC number (e.g. "V0127")
+ *  Pos  8-14  DC sequence number (7 digits, the submitted claim's seq)
+ *  Pos 15-19  Payee number (5 chars)
+ *  Pos 20-24  Practitioner number (5 chars)
+ *  Pos 25-30  Refusal codes (6 chars = up to 3 × 2-char codes, space-padded right)
+ *  Pos 31-38  Spaces (8 chars)
+ *  Pos 39-45  Cross-reference seq (7 digits, mirrors pos 8-14 when present, else 0000000)
  *
- * SPEC REFERENCE: The exact field positions for C12, RA, and E45 records
- * are in the Teleplan Specifications (gov.bc.ca/teleplan). Fill in
- * parseC12Refusal() once you have confirmed the spec layout.
+ * B14 FIELD LAYOUT (confirmed from 2026-08-08 dummy remittance)
+ * ──────────────────────────────────────────────────────────────
+ *  Pos  0-2   Record type "B14"
+ *  Pos  3-7   Vendor DC number
+ *  Pos  8-14  DC sequence number (the B04 submission seq)
+ *  Pos 15-18  Name-verify (4 chars)
+ *  Pos 19-26  Date of service (8 digits, YYYYMMDD)
+ *  Pos 27-28  Response code (2 chars, e.g. "AB" = rejected)
+ *  Pos 29     Space
+ *  Pos 30-37  (8 chars — 00000000 in sample)
+ *  Pos 38+    Text description (e.g. "REJECTED - CODE: AB")
+ *
+ * S-RECORD FIELD LAYOUT (common prefix, all S-types)
+ * ────────────────────────────────────────────────────
+ *  Pos  0-2   Record type (S01, S02, S03, S04, S21-S25)
+ *  Pos  3-7   Vendor DC number
+ *  Pos  8-14  Internal claim reference number (7 digits)
+ *  Pos 15-22  Remittance date (8 digits, YYYYMMDD)
+ *  Pos 23     Sub-type indicator (P=paid, H=hold, R=enrolment, etc.)
+ *  Pos 24-28  Payee number (5 chars)
+ *  Pos 29+    Type-specific fields
+ *
+ * S25 (broadcast message):
+ *  Pos  0-2   "S25"
+ *  Pos  3-7   Vendor DC number
+ *  Pos  8-14  Sequence
+ *  Pos 15-22  Date
+ *  Pos 23     "B" (broadcast)
+ *  Pos 24-28  PHN or payee (5 chars)
+ *  Pos 29-35  (7-char routing)
+ *  Pos 36+    Message text
  */
 
 // ─── Main entry point ─────────────────────────────────────────────────────────
@@ -34,41 +75,68 @@
  * @returns {RemittanceBundle}
  */
 function parseRemittanceBundle(rawText) {
-  const lines = rawText.split(/\r?\n/).filter(Boolean);
+  var lines = rawText.split(/\r?\n/).filter(Boolean);
 
-  const bundle = {
+  var bundle = {
     raw:           rawText,
-    header:        null,
-    refusals:      [],
-    payments:      [],
-    eligibility:   [],
-    messages:      [],
+    refusals:      [],   // C12
+    batchEligibility: [], // B14
+    payments:      [],   // S01/S02
+    holds:         [],   // S04
+    messages:      [],   // S25 broadcast + M01
+    summaries:     [],   // S21-S24
+    vrcv:          [],   // receive acknowledgements
+    vtcv:          null, // file trailer
+    hostMessages:  [],   // TETA/TETB/TETZ- codes
     unknownLines:  [],
   };
 
-  for (const line of lines) {
-    // Host messages (TETZ-NNN) — informational, not record data
-    if (/^TETZ-\d+/.test(line)) {
-      bundle.messages.push(line.trim());
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+
+    // Host messages (TETZ-NNN etc.) — informational, not record data
+    if (/^TETZ-\d+|^TETA-\d+|^TETB-\d+/.test(line)) {
+      bundle.hostMessages.push(line.trim());
       continue;
     }
 
-    // Identify record type from first field
-    // SPEC: confirm record type indicator position (typically cols 1-2 or 1-3)
-    const recordType = identifyRecordType(line);
+    var recordType = identifyRecordType(line);
 
     switch (recordType) {
-      case 'VS1':
-        bundle.header = parseVS1(line);
-        break;
       case 'C12':
         bundle.refusals.push(parseC12Refusal(line));
         break;
-      case 'RA':
-        bundle.payments.push(parseRemittanceRecord(line));
+      case 'B14':
+        bundle.batchEligibility.push(parseB14Response(line));
         break;
-      case 'E45':
-        bundle.eligibility.push(parseEligibilityReturn(line));
+      case 'S01':
+      case 'S02':
+        bundle.payments.push(parseSPayment(line));
+        break;
+      case 'S03':
+        // Enrolment record — store typed
+        bundle.payments.push({ type: 'S03', raw: line, seq: parseSeq(line) });
+        break;
+      case 'S04':
+        bundle.holds.push({ type: 'S04', raw: line, seq: parseSeq(line) });
+        break;
+      case 'S21':
+      case 'S22':
+      case 'S23':
+      case 'S24':
+        bundle.summaries.push({ type: recordType, raw: line, seq: parseSeq(line) });
+        break;
+      case 'S25':
+        bundle.messages.push(parseS25Message(line));
+        break;
+      case 'M01':
+        bundle.messages.push({ type: 'M01', raw: line, text: line.slice(15).trim() });
+        break;
+      case 'VRCV':
+        bundle.vrcv.push({ type: 'VRCV', raw: line });
+        break;
+      case 'VTCV':
+        bundle.vtcv = { type: 'VTCV', raw: line };
         break;
       default:
         bundle.unknownLines.push(line);
@@ -80,22 +148,28 @@ function parseRemittanceBundle(rawText) {
 
 // ─── Record type identification ───────────────────────────────────────────────
 
-/**
- * Identify the record type from a returned record line.
- *
- * SPEC REFERENCE: The record type indicator position is fixed.
- * Confirm position and length from the spec.
- */
 function identifyRecordType(line) {
-  // TODO: extract the record type code at the correct position
-  // Typical pattern: first 2-3 characters identify the record type.
-  // Examples: "C12...", "RA...", "VS1..."
-  const prefix = line.slice(0, 3).trim().toUpperCase();
+  if (line.length < 3) return 'UNKNOWN';
+  var p3 = line.slice(0, 3).toUpperCase();
+  var p4 = line.slice(0, 4).toUpperCase();
 
-  if (prefix === 'VS1') return 'VS1';
-  if (prefix === 'C12') return 'C12';
-  if (prefix.startsWith('RA'))  return 'RA';
-  if (prefix.startsWith('E45')) return 'E45';
+  if (p3 === 'C12') return 'C12';
+  if (p3 === 'B14') return 'B14';
+  if (p3 === 'S01') return 'S01';
+  if (p3 === 'S02') return 'S02';
+  if (p3 === 'S03') return 'S03';
+  if (p3 === 'S04') return 'S04';
+  if (p3 === 'S21') return 'S21';
+  if (p3 === 'S22') return 'S22';
+  if (p3 === 'S23') return 'S23';
+  if (p3 === 'S24') return 'S24';
+  if (p3 === 'S25') return 'S25';
+  if (p3 === 'M01') return 'M01';
+  if (p4 === 'VRCV') return 'VRCV';
+  if (p4 === 'VTCV') return 'VTCV';
+  // Legacy RA/E45 patterns (may appear in some response bodies)
+  if (p3.startsWith('RA'))  return 'RA';
+  if (p3.startsWith('E45')) return 'E45';
 
   return 'UNKNOWN';
 }
@@ -105,163 +179,205 @@ function identifyRecordType(line) {
 /**
  * Parse a C12 refusal record.
  *
- * A C12 is returned when a claim fails pre-edit or edit & eligibility checks.
- * It must be surfaced to the user with actionable messaging so they can correct
- * and resubmit. Category #13 in the conformance matrix ("clean real-data claims")
- * proves we can *avoid* C12s with properly formatted data.
- *
- * Pre-edit refusal marker:
- *   "YY" in the first field means the claim was refused at the data-centre
- *   level before reaching MSP adjudication.
- *
- * Edit & eligibility errors: up to 3 error fields, each containing:
- *   - Error field indicator
- *   - Specific reason code
- *   - Explanation text
- *
- * SPEC REFERENCE: "C12 Refusal Record Layout" — fill in field positions.
+ * Field positions confirmed from 2026-08-08 HIBC dummy remittance.
  *
  * @param {string} line
  * @returns {C12Refusal}
  */
 function parseC12Refusal(line) {
-  // TODO: Extract fields at their confirmed spec positions.
-  // Key fields to extract:
-  //   - Original claim sequence number (links back to submitted claim)
-  //   - Original service date
-  //   - Original PHN
-  //   - Pre-edit flag (YY = pre-edit refusal)
-  //   - Error field 1 indicator + reason code
-  //   - Error field 2 indicator + reason code
-  //   - Error field 3 indicator + reason code
+  var seqNum    = parseInt(line.slice(8, 15), 10);     // DC-SEQUENCE-NUM (7)
+  var payeeNum  = line.slice(15, 20).trim();            // PAYEE-NUM (5)
+  var practNum  = line.slice(20, 25).trim();            // PRACTITIONER-NUM (5)
+
+  // Refusal code block: 6 chars (up to 3 × 2-char codes), space-padded right.
+  var codeBlock = line.slice(25, 31);
+  var codes = [];
+  for (var i = 0; i < 3; i++) {
+    var code = codeBlock.slice(i * 2, i * 2 + 2).trim();
+    if (code) codes.push(code);
+  }
 
   return {
-    raw:              line,
-    type:             'C12',
-    isPreEdit:        false,     // TODO: line.slice(pos, pos+len) === 'YY'
-    sequenceNumber:   null,      // TODO
-    serviceDate:      null,      // TODO
-    phn:              null,      // TODO
-    errors:           [],        // TODO: [{field, code, description}]
-    actionRequired:   'Inspect C12 record — field parsing not yet implemented.',
+    raw:             line,
+    type:            'C12',
+    sequenceNumber:  isNaN(seqNum) ? null : seqNum,
+    payeeNum:        payeeNum,
+    practitionerNum: practNum,
+    refusalCodes:    codes,
+    actionRequired:  codes.length
+      ? 'Claim refused — code(s): ' + codes.join(', ') + '. ' + describeRefusalCodes(codes)
+      : 'Claim refused (see raw record).',
   };
 }
 
-// ─── Remittance / payment record ──────────────────────────────────────────────
-
 /**
- * Parse a remittance (RA) record.
- *
- * RA records confirm payment for a submitted claim.
- * Must reconcile back to the original claim via sequence number.
- *
- * SPEC REFERENCE: "Remittance Record Layout"
- *
- * @param {string} line
- * @returns {RemittanceRecord}
+ * Human-readable descriptions for common Teleplan refusal codes.
+ * Source: Teleplan4 specifications and HIBC documentation.
  */
-function parseRemittanceRecord(line) {
-  // TODO: extract field positions from spec
-  // Key fields:
-  //   - Original claim sequence number (reconciliation key)
-  //   - Paid amount
-  //   - Paid date
-  //   - Adjustment codes (if any)
-
-  return {
-    raw:              line,
-    type:             'RA',
-    sequenceNumber:   null,   // TODO
-    paidAmount:       null,   // TODO — in cents or dollars? confirm from spec
-    paidDate:         null,   // TODO — YYYYMMDD
-    adjustmentCode:   null,   // TODO
+function describeRefusalCodes(codes) {
+  var descriptions = {
+    'AB': 'Age bar — patient age does not qualify for this benefit.',
+    'AP': 'Authorization required — obtain prior approval before billing.',
+    'AA': 'Already adjudicated — claim previously processed.',
+    'BJ': 'Billing journal entry — claim has a note that requires review.',
+    'CK': 'Check — claim requires manual review.',
+    'CL': 'Claim limit reached — maximum claims per period exceeded.',
+    'CN': 'Cannot verify — patient information could not be confirmed.',
+    'CP': 'Coverage problem — patient may not be eligible on date of service.',
+    'FX': 'Fee item not found — fee item code not in current schedule.',
+    'RE': 'Refused — claim has been refused; see note for details.',
+    'T3': 'Timing violation — service billed outside allowed time window.',
+    'VI': 'Verification issue — identity verification required.',
+    'W1': 'Waiting period — patient in MSP waiting period.',
+    'X4': 'Format/edit error — check claim fields for compliance issues.',
+    'X9': 'Refused — practitioner/payee combination not accepted.',
+    'Y2': 'Advisory — no action required.',
   };
+  return codes
+    .filter(function(c) { return descriptions[c]; })
+    .map(function(c) { return c + ': ' + descriptions[c]; })
+    .join(' | ');
 }
 
-// ─── VS1 header ──────────────────────────────────────────────────────────────
+// ─── B14 Batch eligibility response ──────────────────────────────────────────
 
 /**
+ * Parse a B14 batch eligibility response record.
+ * These are returned in remittances for B04 batch eligibility submissions.
+ *
+ * Field positions confirmed from 2026-08-08 HIBC dummy remittance.
+ *
  * @param {string} line
  * @returns {object}
  */
-function parseVS1(line) {
-  // TODO: extract data-centre #, submission sequence #, date/time from spec
+function parseB14Response(line) {
+  var seqNum      = parseInt(line.slice(8, 15), 10);   // sequence of the B04 submission
+  var nameVerify  = line.slice(15, 19).trim();          // name-verify (4)
+  var dateOfSvc   = line.slice(19, 27).trim();          // YYYYMMDD (8)
+  var code        = line.slice(27, 29).trim();          // response/refusal code (2)
+  var descText    = line.slice(38).trim();              // text description (rest of record)
+
+  return {
+    raw:            line,
+    type:           'B14',
+    sequenceNumber: isNaN(seqNum) ? null : seqNum,
+    nameVerify:     nameVerify,
+    dateOfService:  dateOfSvc,
+    responseCode:   code,
+    description:    descText.replace(/\s+/g, ' ').trim(),
+    eligible:       code !== 'AB' && code !== 'X4' && code !== 'RE',
+  };
+}
+
+// ─── S-record payment ─────────────────────────────────────────────────────────
+
+/**
+ * Parse an S01/S02 claim payment record.
+ * Full S-record layout is extensive; this extracts the common header fields
+ * and stores the raw line for reconciliation.
+ *
+ * @param {string} line
+ * @returns {object}
+ */
+function parseSPayment(line) {
+  var type          = line.slice(0, 3).toUpperCase();
+  var refNum        = parseInt(line.slice(8, 15), 10);   // internal reference number
+  var remittDate    = line.slice(15, 23).trim();          // YYYYMMDD remittance date
+  var indicator     = line.slice(23, 24).trim();          // P=paid, etc.
+  var payeeNum      = line.slice(24, 29).trim();          // payee (5)
+
+  return {
+    raw:            line,
+    type:           type,
+    referenceNum:   isNaN(refNum) ? null : refNum,
+    remittanceDate: remittDate,
+    indicator:      indicator,
+    payeeNum:       payeeNum,
+    // sequenceNumber is the original DC seq (needed for reconciliation).
+    // For S-records the reference num is the internal MSP claim ref, not the
+    // vendor DC seq. Reconciliation must use other fields (date + fee item).
+    sequenceNumber: null,
+  };
+}
+
+// ─── S25 Broadcast message ────────────────────────────────────────────────────
+
+/**
+ * Parse an S25 broadcast message record.
+ * These carry administrative messages from MSP to all practitioners.
+ *
+ * @param {string} line
+ * @returns {object}
+ */
+function parseS25Message(line) {
+  // Text starts at position 36 (after type+DC+seq+date+indicator+payee+routing)
+  var text = line.slice(36).trim();
   return {
     raw:  line,
-    type: 'VS1',
+    type: 'S25',
+    text: text,
   };
 }
 
-// ─── B04 eligibility return ───────────────────────────────────────────────────
+// ─── Utility ──────────────────────────────────────────────────────────────────
 
-/**
- * Parse an eligibility return record (E45 response from B04 batch eligibility).
- * This is used for repeat/scheduled patients — not the real-time AcheckE45.
- *
- * SPEC REFERENCE: "B04 / E45 Eligibility Return Record"
- *
- * @param {string} line
- * @returns {object}
- */
-function parseEligibilityReturn(line) {
-  // TODO: extract field positions from spec
-  return {
-    raw:               line,
-    type:              'E45',
-    phn:               null,   // TODO
-    eligibleOnDate:    null,   // TODO
-    authorizedPeriod:  null,   // TODO — the date range MSP has authorized
-  };
+function parseSeq(line) {
+  var n = parseInt(line.slice(8, 15), 10);
+  return isNaN(n) ? null : n;
 }
 
 // ─── Reconciliation helper ────────────────────────────────────────────────────
 
 /**
- * Reconcile a parsed remittance bundle against the claims that were submitted.
+ * Reconcile a parsed remittance bundle against submitted claims.
+ *
+ * C12 refusals are matched by DC sequence number.
+ * S01/S02 payments cannot be matched by seq (MSP uses internal refs);
+ * they are reported in aggregate.
  *
  * @param {RemittanceBundle} bundle       From parseRemittanceBundle()
- * @param {object[]}         submitted    Array of claims with sequenceNumber fields
+ * @param {object[]}         submitted    Array of submitted records (with sequenceNumber)
  * @returns {ReconciliationReport}
  */
 function reconcile(bundle, submitted) {
-  const submittedMap = new Map(submitted.map(c => [c.sequenceNumber, c]));
+  var submittedSeqs = new Set(submitted.map(function(c) { return c.sequenceNumber; }));
 
-  const paid     = [];
-  const refused  = [];
-  const unmatched = [];
+  var refused   = [];
+  var unmatched = [];
 
-  for (const payment of bundle.payments) {
-    const original = submittedMap.get(payment.sequenceNumber);
-    if (original) {
-      paid.push({ original, payment });
-    } else {
-      unmatched.push({ type: 'payment', record: payment });
-    }
-  }
-
-  for (const refusal of bundle.refusals) {
-    const original = submittedMap.get(refusal.sequenceNumber);
-    if (original) {
-      refused.push({ original, refusal });
+  for (var i = 0; i < bundle.refusals.length; i++) {
+    var refusal = bundle.refusals[i];
+    if (refusal.sequenceNumber && submittedSeqs.has(refusal.sequenceNumber)) {
+      refused.push(refusal);
     } else {
       unmatched.push({ type: 'refusal', record: refusal });
     }
   }
 
   return {
-    totalSubmitted: submitted.length,
-    paid,
-    refused,
-    unmatched,
-    summary: `${paid.length} paid / ${refused.length} refused / ${unmatched.length} unmatched`,
+    totalSubmitted:  submitted.length,
+    totalRefusals:   bundle.refusals.length,
+    matchedRefusals: refused,
+    unmatchedRefusals: unmatched,
+    payments:        bundle.payments.length,
+    batchEligibility: bundle.batchEligibility.length,
+    messages:        bundle.messages.length,
+    summary: refused.length + ' refusal(s) for submitted seqs; ' +
+             bundle.payments.length + ' payment record(s); ' +
+             bundle.batchEligibility.length + ' B14 response(s)',
   };
 }
 
 module.exports = {
   parseRemittanceBundle,
   parseC12Refusal,
-  parseRemittanceRecord,
-  parseEligibilityReturn,
+  parseB14Response,
+  parseSPayment,
+  parseS25Message,
   reconcile,
   identifyRecordType,
+  describeRefusalCodes,
+  // Legacy aliases so existing callers don't break
+  parseRemittanceRecord:   parseSPayment,
+  parseEligibilityReturn:  parseB14Response,
 };

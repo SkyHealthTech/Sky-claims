@@ -448,18 +448,24 @@ function generateTestClaims(cat, config) {
     //   - Patient DOB goes in C02 Part 1 field P52 (BIRTH-DATE).
     //   - NAME-VERIFY = '0000' (no MSP PHN to verify against).
     //   - Service location 'C' (correctional facility).
+    // NOTE: Spec prohibits opted-out practitioners from billing institutional
+    // or incarcerated claims. Use testPayee (opted-in) as the practitioner,
+    // same as Cat 7 institutional. (Cat 13 real-data optometry stays as PP OIN.)
     // Do NOT include an oin block — buildC02 will set Part 2 to all spaces.
     case 8:
       return [
         { type: 'c02', phn: '0000001001', nameVerify: '0000',
+          practitionerNum: config.testPayee,
           birthDate: '19750101',
           dependentNum: '00', units: '1', feeItem: '00110', amount: 36.60,
           dx1: '465  ', serviceDate: dos, serviceLocation: 'C', submissionCode: '0' },
         { type: 'c02', phn: '0000002001', nameVerify: '0000',
+          practitionerNum: config.testPayee,
           birthDate: '19800215',
           dependentNum: '00', units: '1', feeItem: '00110', amount: 36.60,
           dx1: '490  ', serviceDate: dos, serviceLocation: 'C', submissionCode: '0' },
         { type: 'c02', phn: '0000003001', nameVerify: '0000',
+          practitionerNum: config.testPayee,
           birthDate: '19920610',
           dependentNum: '00', units: '1', feeItem: '00110', amount: 36.60,
           dx1: '462  ', serviceDate: dos, serviceLocation: 'C', submissionCode: '0' },
@@ -491,23 +497,25 @@ function generateTestClaims(cat, config) {
       ];
 
     // Category 10: Claims with Note Records
-    // Submission code C (coverage problem requires note). Correspondence code N.
+    // Submission code N (claim includes an electronic note record). Correspondence code N.
+    // Per HIBC: "if you expect to send a claim with an electronic note record in the
+    // future, the submission code must be 'N'." (not 'C' which is coverage problem only)
     case 10:
       return [
         { type: 'c02', phn: '9151071072', nameVerify: 'GFMA',
           dependentNum: '00', units: '1', feeItem: '00110', amount: 36.60,
           dx1: '465  ', serviceDate: dos, serviceLocation: 'L',
-          submissionCode: 'C', correspondenceCode: 'N' },
+          submissionCode: 'N', correspondenceCode: 'N' },
         { type: 'n01', text: 'SUBSCRIBER COVERAGE PROBLEM - PATIENT CONTACTED MSP. COVERAGE VERIFIED AT TIME OF SERVICE.' },
         { type: 'c02', phn: '9151274799', nameVerify: 'MFAB',
           dependentNum: '00', units: '1', feeItem: '00110', amount: 36.60,
           dx1: '490  ', serviceDate: dos, serviceLocation: 'L',
-          submissionCode: 'C', correspondenceCode: 'N' },
+          submissionCode: 'N', correspondenceCode: 'N' },
         { type: 'n01', text: 'SUBSCRIBER COVERAGE PROBLEM - BC SERVICES CARD PRESENTED. MSP CONFIRMED VALID COVERAGE ON DATE OF SERVICE.' },
         { type: 'c02', phn: '9151206012', nameVerify: 'SAVA',
           dependentNum: '00', units: '1', feeItem: '00110', amount: 36.60,
           dx1: '462  ', serviceDate: dos, serviceLocation: 'L',
-          submissionCode: 'C', correspondenceCode: 'N' },
+          submissionCode: 'N', correspondenceCode: 'N' },
         { type: 'n01', text: 'SUBSCRIBER COVERAGE PROBLEM - ADDRESS UPDATED WITH MSP. ELIGIBILITY RE-ESTABLISHED PRIOR TO DATE OF SERVICE.' },
       ];
 
