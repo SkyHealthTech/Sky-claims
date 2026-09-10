@@ -1,0 +1,16 @@
+Your identification has been saved in C:\Users\surface\.ssh\ahcip_rsa
+Your public key has been saved in C:\Users\surface\.ssh\ahcip_rsa.pub
+The key fingerprint is:
+SHA256:7bvAQzemCmg1+IPpK5U6yyYTlCYFmT6Iw8np5tMs4BQ sky-claims-ahcip
+The key's randomart image is:
++---[RSA 4096]----+
+|.+               |
+|o .              |
+|*.+              |
+|=E .     .       |
+|=.+.o   S =      |
+|o+o* . o = .     |
+|*+B +   = .      |
+|BO o o . o .     |
+|+*=.  .   o.     |
++----[SHA256]-----+

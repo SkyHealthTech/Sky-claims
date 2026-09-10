@@ -1,0 +1,17 @@
+{
+  "name": "sky-claims-hlink",
+  "version": "1.0.0",
+  "description": "Sky Claims Alberta AHCIP H-Link module",
+  "main": "index.js",
+  "scripts": {
+    "conformance": "node conformance-harness.js",
+    "retrieve": "node retrieve.js"
+  },
+  "dependencies": {
+    "ssh2-sftp-client": "^9.1.0",
+    "dotenv": "^16.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

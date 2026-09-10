@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800&display=swap');
+
+:root {
+  --bg:      #070b14;
+  --surface: rgba(255,255,255,0.04);
+  --border:  rgba(255,255,255,0.07);
+  --sky:     #3acafe;
+  --accent:  #7cf0d2;
+  --purple:  #7c3aed;
+  --ok:      #10b981;
+  --warn:    #f59e0b;
+  --danger:  #ef4444;
+  --glow-sky: 0 0 40px rgba(58,202,254,0.18);
+}
+
+* { box-sizing: border-box; }
+html { font-family: 'Inter', system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
+body { background: var(--bg); color: rgb(203,213,225); min-height: 100vh; }
+
+/* ── Utility classes ── */
+.glass {
+  background: rgba(255,255,255,0.03);
+  backdrop-filter: blur(12px);
+}
+.card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 1rem;
+}
+.btn {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  font-size: 0.875rem; font-weight: 600;
+  padding: 0.5rem 1rem; border-radius: 0.625rem;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.06);
+  color: rgb(203,213,225);
+  cursor: pointer; transition: all .15s;
+  text-decoration: none;
+}
+.btn:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.15); }
+.btn-primary {
+  background: #076fa5; border-color: #076fa5; color: #fff;
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  font-size: 0.875rem; font-weight: 600;
+  padding: 0.5rem 1rem; border-radius: 0.625rem;
+  cursor: pointer; transition: all .15s;
+  text-decoration: none;
+}
+.btn-primary:hover { background: #0c5d87; border-color: #0c5d87; }
+.btn-ghost {
+  background: transparent; border-color: transparent; color: rgb(100,116,139);
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  font-size: 0.875rem; font-weight: 500;
+  padding: 0.5rem 1rem; border-radius: 0.625rem;
+  cursor: pointer; transition: all .15s;
+}
+.btn-ghost:hover { background: rgba(255,255,255,0.05); color: rgb(203,213,225); }
+.btn-purple {
+  background: #7c3aed; border-color: #7c3aed; color: #fff;
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  font-size: 0.875rem; font-weight: 600;
+  padding: 0.5rem 1rem; border-radius: 0.625rem;
+  cursor: pointer; transition: all .15s;
+}
+.btn-purple:hover { background: #6d28d9; }
+.nav-item {
+  display: flex; align-items: center; gap: 0.625rem;
+  font-size: 0.875rem; font-weight: 500; color: rgb(100,116,139);
+  padding: 0.5rem 0.75rem; border-radius: 0.625rem;
+  transition: all .15s; text-decoration: none; cursor: pointer;
+}
+.nav-item:hover { background: rgba(255,255,255,0.05); color: rgb(203,213,225); }
+.nav-item-active { background: rgba(58,202,254,0.1); color: #3acafe !important; }
+.input {
+  width: 100%; background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08); border-radius: 0.75rem;
+  padding: 0.625rem 0.875rem; font-size: 0.875rem; color: rgb(203,213,225);
+  outline: none; transition: border-color .15s;
+}
+.input:focus { border-color: rgba(58,202,254,0.4); }
+.input::placeholder { color: rgb(71,85,105); }
+.badge {
+  display: inline-flex; align-items: center;
+  font-size: 0.6875rem; font-weight: 700;
+  padding: 0.2rem 0.5rem; border-radius: 100px;
+}
+.badge-ok     { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.25); }
+.badge-warn   { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.25); }
+.badge-danger { background: rgba(239,68,68,0.15);  color: #f87171; border: 1px solid rgba(239,68,68,0.25); }
+.badge-sky    { background: rgba(58,202,254,0.15); color: #3acafe; border: 1px solid rgba(58,202,254,0.25); }
+.badge-purple { background: rgba(124,58,237,0.15); color: #a78bfa; border: 1px solid rgba(124,58,237,0.25); }
+.badge-muted  { background: rgba(255,255,255,0.06); color: rgb(100,116,139); border: 1px solid rgba(255,255,255,0.08); }
+.shadow-glow-sky { box-shadow: var(--glow-sky); }
