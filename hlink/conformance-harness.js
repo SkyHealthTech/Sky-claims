@@ -111,6 +111,16 @@ const HSC = {
   OPTO_EXAM:       '03.01A ',  // Placeholder — adjust after first batch result
 };
 
+// R3 health service codes — SOMB 2026 (replaces expired 03.01A, end date 2007-01-31)
+// Source: Alberta Schedule of Medical Benefits, effective April 1, 2026
+const HSC_R3 = {
+  GP_OFFICE_VISIT: '03.03A ',  // Limited Assessment — in office, $40.23 (SOMB 2026)
+};
+
+// Submitter's Fee for Service BA for prefix HZV (field 173-179 in locum claims)
+// AHCIP Round 2 feedback: field 173-179 must be submitter's FFS BA, not the host prac's BA
+const SUBMITTER_FFS_BA = '2449310';
+
 // ICD-9 diagnosis code (6 chars, right-padded)
 const DX_URI = '465   ';   // Acute upper respiratory infection
 
@@ -879,6 +889,121 @@ function buildR2_Batch551_ResubmitRefused(batchNum) {
     content: assembleBatch(PREFIX, batchNum, [cib]) };
 }
 
+// ─── R3 BATCH 554: Test 8 R3 — CST1 Supporting Text (03.03A, seq 90) ────────
+// AHCIP R2 feedback: structure good, retest with valid HSC for Held status
+
+function buildR3_Batch554_CST1(batchNum) {
+  const cib = buildCIB1({ prefix: PREFIX, seq: 90, sourceCode: SOURCE_CODE, year: YEAR,
+    actionCode: 'A', segSeq: 1, prid: PRAC.GP_1.prid, uli: PHN.P1,
+    hsc: HSC_R3.GP_OFFICE_VISIT, serviceDate: SVC_DATE, encounter: '1',
+    dx1: DX_URI, calls: 1, facilityNum: FAC.OFFICE.num,
+    functCentre: FAC.OFFICE.fc, businessArrangement: PRAC.GP_1.ba,
+    payToCode: 'BAPY', emsaf: 'Y' });
+  const txt = buildCST1({ prefix: PREFIX, seq: 90, sourceCode: SOURCE_CODE, year: YEAR,
+    actionCode: 'A', segSeq: 2,
+    line1: 'EMSAF CLAIM: Extraordinary medical service provided after hours.',
+    line2: 'Patient required immediate intervention outside scheduled hours.',
+    line3: 'Additional compensation amount: $75.00 above schedule rate.' });
+  return { filename: batchFilename(PREFIX, batchNum),
+    content: assembleBatch(PREFIX, batchNum, [cib, txt]) };
+}
+
+// ─── R3 BATCH 555: Test 9A R3 — Medical Reciprocal SK (03.03A, seq 91) ──────
+// AHCIP R2 feedback: structure good, retest with valid HSC for ACPT outcome
+
+function buildR3_Batch555_MedReciprocal(batchNum) {
+  const cib = buildCIB1({ prefix: PREFIX, seq: 91, sourceCode: SOURCE_CODE, year: YEAR,
+    actionCode: 'A', segSeq: 1, prid: PRAC.GP_1.prid, uli: '',
+    regNum: OOP.SK.regNum, hsc: HSC_R3.GP_OFFICE_VISIT, serviceDate: SVC_DATE,
+    encounter: '1', dx1: DX_URI, calls: 1,
+    facilityNum: FAC.OFFICE.num, functCentre: FAC.OFFICE.fc,
+    businessArrangement: PRAC.GP_1.ba, payToCode: 'BAPY', recoveryCode: 'SK  ' });
+  const cpd = buildCPD1({ prefix: PREFIX, seq: 91, sourceCode: SOURCE_CODE, year: YEAR,
+    actionCode: 'A', segSeq: 2, personType: 'RECP',
+    surname: 'JOHNSON', firstName: 'MARY', birthDate: '19820620', genderCode: 'F',
+    addrLine1: '456 QUEEN STREET', city: 'REGINA',
+    postalCode: 'S4P3Y2', provinceCode: 'SK', countryCode: 'CAN ' });
+  return { filename: batchFilename(PREFIX, batchNum),
+    content: assembleBatch(PREFIX, batchNum, [cib, cpd]) };
+}
+
+// ─── R3 BATCH 556: Test 9B R3 — OOP Referral PEI (03.03A, seq 92) ───────────
+// AHCIP R2 feedback: structure good, retest with valid HSC for Held status
+
+function buildR3_Batch556_OOPReferral(batchNum) {
+  const cib = buildCIB1({ prefix: PREFIX, seq: 92, sourceCode: SOURCE_CODE, year: YEAR,
+    actionCode: 'A', segSeq: 1, prid: PRAC.GP_1.prid, uli: PHN.P1,
+    hsc: HSC_R3.GP_OFFICE_VISIT, serviceDate: SVC_DATE, encounter: '1',
+    dx1: DX_URI, calls: 1, facilityNum: FAC.OFFICE.num,
+    functCentre: FAC.OFFICE.fc, businessArrangement: PRAC.GP_1.ba,
+    payToCode: 'BAPY', referralId: '', oopReferral: 'Y' });
+  const cpd = buildCPD1({ prefix: PREFIX, seq: 92, sourceCode: SOURCE_CODE, year: YEAR,
+    actionCode: 'A', segSeq: 2, personType: 'RFRC',
+    surname: 'LEBLANC', firstName: 'PIERRE',
+    addrLine1: '789 UNIVERSITY AVENUE', city: 'CHARLOTTETOWN',
+    postalCode: 'C1A4L9', provinceCode: 'PE', countryCode: 'CAN ' });
+  return { filename: batchFilename(PREFIX, batchNum),
+    content: assembleBatch(PREFIX, batchNum, [cib, cpd]) };
+}
+
+// ─── R3 BATCH 557: Test 10 R3 — Locum (03.03A, seq 93, corrected locum BA) ──
+// AHCIP R2 feedback: field 173-179 must be submitter's FFS BA (2449310), not LOCUM_HOST.ba
+
+function buildR3_Batch557_Locum(batchNum) {
+  const cib = buildCIB1({ prefix: PREFIX, seq: 93, sourceCode: SOURCE_CODE, year: YEAR,
+    actionCode: 'A', segSeq: 1, prid: PRAC.LOCUM_PRAC.prid, uli: PHN.P1,
+    hsc: HSC_R3.GP_OFFICE_VISIT, serviceDate: SVC_DATE, encounter: '1',
+    dx1: DX_URI, calls: 1, facilityNum: FAC.OFFICE.num,
+    functCentre: FAC.OFFICE.fc, businessArrangement: PRAC.LOCUM_PRAC.ba,
+    payToCode: 'BAPY', locumBA: SUBMITTER_FFS_BA });  // field 173-179 = submitter's FFS BA
+  return { filename: batchFilename(PREFIX, batchNum),
+    content: assembleBatch(PREFIX, batchNum, [cib]) };
+}
+
+// ─── R3 BATCH 558: Test 7A R3 — Change (seq 10 from batch 541, HSC 03.03A) ──
+// AHCIP R2 feedback: retest with different HSC; claim 109 already in system
+
+function buildR3_Batch558_Change(batchNum) {
+  const cib = buildCIB1({ prefix: PREFIX, seq: 10, sourceCode: SOURCE_CODE, year: YEAR,
+    actionCode: 'C', segSeq: 1, prid: PRAC.GP_1.prid, uli: PHN.P1,
+    hsc: HSC_R3.GP_OFFICE_VISIT, serviceDate: SVC_DATE, encounter: '1',
+    dx1: DX_URI, calls: 1, facilityNum: FAC.OFFICE.num,
+    functCentre: FAC.OFFICE.fc, businessArrangement: PRAC.GP_1.ba, payToCode: 'BAPY' });
+  return { filename: batchFilename(PREFIX, batchNum),
+    content: assembleBatch(PREFIX, batchNum, [cib]) };
+}
+
+// ─── R3 BATCH 559: Test 7B R3 — Reassess+text (seq 11 from batch 541, HSC 03.03A)
+// AHCIP R2 feedback: retest with different HSC; claim 117 already in system
+
+function buildR3_Batch559_Reassess(batchNum) {
+  const cib = buildCIB1({ prefix: PREFIX, seq: 11, sourceCode: SOURCE_CODE, year: YEAR,
+    actionCode: 'R', segSeq: 1, prid: PRAC.GP_2.prid, uli: PHN.P2,
+    hsc: HSC_R3.GP_OFFICE_VISIT, serviceDate: SVC_DATE, encounter: '1',
+    dx1: DX_URI, calls: 1, facilityNum: FAC.OFFICE.num,
+    functCentre: FAC.OFFICE.fc, businessArrangement: PRAC.GP_2.ba, payToCode: 'BAPY' });
+  const txt = buildCST1({ prefix: PREFIX, seq: 11, sourceCode: SOURCE_CODE, year: YEAR,
+    actionCode: 'R', segSeq: 2,
+    line1: 'REASSESSMENT REQUEST: Additional documentation submitted.',
+    line2: 'Service medically necessary per attending physician notes.',
+    line3: 'Requesting reassessment with supporting clinical text.' });
+  return { filename: batchFilename(PREFIX, batchNum),
+    content: assembleBatch(PREFIX, batchNum, [cib, txt]) };
+}
+
+// ─── R3 BATCH 560: Test 7C R3 — Delete (seq 12 from batch 541, HSC 03.03A) ──
+// AHCIP R2 feedback: retest with different HSC; claim 125 already in system
+
+function buildR3_Batch560_Delete(batchNum) {
+  const cib = buildCIB1({ prefix: PREFIX, seq: 12, sourceCode: SOURCE_CODE, year: YEAR,
+    actionCode: 'D', segSeq: 1, prid: PRAC.GP_3.prid, uli: PHN.P3,
+    hsc: HSC_R3.GP_OFFICE_VISIT, serviceDate: SVC_DATE, encounter: '1',
+    dx1: DX_URI, calls: 1, facilityNum: FAC.ACTIVE_TX.num,
+    functCentre: FAC.ACTIVE_TX.fc, businessArrangement: PRAC.GP_3.ba, payToCode: 'BAPY' });
+  return { filename: batchFilename(PREFIX, batchNum),
+    content: assembleBatch(PREFIX, batchNum, [cib]) };
+}
+
 // ─── Proof directory ─────────────────────────────────────────────────────────
 
 const PROOF_DIR = path.join(__dirname, 'conformance-proof');
@@ -935,6 +1060,15 @@ async function main() {
     // Phase 1b — PART retry (submit now; seqs 80/81, serviceDate='00000000' trigger)
     { num: startBatch + 22, label: 'R2-1B-PART-v2',         build: function() { return buildR2_Batch552_PART_v2(startBatch + 22); } },
     { num: startBatch + 23, label: 'R2-3-RESUBMIT-PART-v2', build: function() { return buildR2_Batch553_ResubmitPART_v2(startBatch + 23); } },
+    // ── Round 3 (554–560) — HSC 03.03A (SOMB 2026); locum BA fix ──────────────
+    // All Phase 1 (no ARD dependency — submit immediately)
+    { num: startBatch + 24, label: 'R3-8-CST1',             build: function() { return buildR3_Batch554_CST1(startBatch + 24); } },
+    { num: startBatch + 25, label: 'R3-9A-MED-RECIPROCAL',  build: function() { return buildR3_Batch555_MedReciprocal(startBatch + 25); } },
+    { num: startBatch + 26, label: 'R3-9B-OOP-REFERRAL',    build: function() { return buildR3_Batch556_OOPReferral(startBatch + 26); } },
+    { num: startBatch + 27, label: 'R3-10-LOCUM',           build: function() { return buildR3_Batch557_Locum(startBatch + 27); } },
+    { num: startBatch + 28, label: 'R3-7A-CHANGE',          build: function() { return buildR3_Batch558_Change(startBatch + 28); } },
+    { num: startBatch + 29, label: 'R3-7B-REASSESS',        build: function() { return buildR3_Batch559_Reassess(startBatch + 29); } },
+    { num: startBatch + 30, label: 'R3-7C-DELETE',          build: function() { return buildR3_Batch560_Delete(startBatch + 30); } },
   ];
 
   // Filter to --batch=N if requested
