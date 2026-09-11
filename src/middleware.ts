@@ -28,7 +28,7 @@ export async function middleware(request: NextRequest) {
 
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) {
-    return NextResponse.redirect('https://app.skyhealthtech.ca/login?redirect=claims');
+    return NextResponse.redirect(new URL('/login', request.url));
   }
   return response;
 }
