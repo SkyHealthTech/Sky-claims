@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Lilac rounded square background -->
+  <rect width="100" height="100" rx="22" fill="#7c3aed"/>
+  <!-- S mark: three white parallelogram bars (Solana-style) -->
+  <path d="M18,34 L74,25 L74,36 L18,45 Z" fill="white"/>
+  <path d="M18,49 L74,40 L74,51 L18,60 Z" fill="white"/>
+  <path d="M18,64 L74,55 L74,66 L18,75 Z" fill="white"/>
+  <!-- Gold lightning bolt -->
+  <path d="M55,5 L46,21 L53,21 L49,37 L63,16 L56,16 Z" fill="#f59e0b"/>
+</svg>

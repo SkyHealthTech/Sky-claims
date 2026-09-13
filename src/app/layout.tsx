@@ -2,13 +2,13 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Sky Claims — MSP Billing',
-  description: 'BC MSP Teleplan billing, AI claim scrubbing, and remittance reconciliation.',
+  title: 'Sky Claims — Canadian Health Billing',
+  description: 'Canadian health billing — MSP, OHIP, AHCIP and all provincial plans. AI claim scrubbing, ERA matching, remittance reconciliation.',
   manifest: '/manifest.json',
-  themeColor: '#7c5cbf',
+  themeColor: '#7c3aed',
   icons: {
-    icon: '/icon-192.png',
-    apple: '/icon-192.png',
+    icon: '/favicon.svg',
+    apple: '/favicon.svg',
   },
 };
 

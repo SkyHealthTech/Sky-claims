@@ -1,5 +1,9 @@
 # ── Credentials & secrets ──────────────────────────────────────────────────────
-# NEVER commit these — they contain HIBC/Teleplan or AHCIP login credentials
+# NEVER commit these
+.env.local
+.env*.local
+.env
+.env.*
 teleplan/.env
 teleplan/.env.*
 hlink/.env
