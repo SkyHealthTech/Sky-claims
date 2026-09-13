@@ -1,25 +1,30 @@
 'use client';
 import { useState } from 'react';
-import { ShieldCheck, Search, Loader2, CheckCircle2, XCircle, AlertTriangle, Eye, CalendarDays, User } from 'lucide-react';
+import { ShieldCheck, Search, Loader2, CheckCircle2, XCircle, AlertTriangle, Eye, CalendarDays, User, Clock } from 'lucide-react';
 
 type EligResult = {
   ok: boolean; phn: string; name?: string; birthDate?: string; gender?: string;
-  eligibleOnDate: boolean; coverageEndDate?: string; coverageEndReason?: string;
+  eligibleOnDate: boolean; coverageEndDate?: string;
   subsidyPaidToDate?: number | null; subsidyNotInsured?: boolean;
-  eyeExamDate?: string; eyeExamNoPayment?: boolean;
-  clientInstruction?: string; errorMsg?: string;
+  eyeExamDate?: string; clientInstruction?: string; errorMsg?: string;
 };
 
+const HISTORY_DEMO: EligResult[] = [
+  { ok: true, phn: '9151210417', name: 'James Burnham', eligibleOnDate: true, birthDate: '19620314' },
+  { ok: true, phn: '9151065434', name: 'Christine Burrows', eligibleOnDate: true, birthDate: '19780522' },
+  { ok: false, phn: '9151242549', name: 'Austin Mercer', eligibleOnDate: false, birthDate: '19901108' },
+];
+
 export default function EligibilityPage() {
-  const [phn, setPhn]         = useState('');
-  const [dob, setDob]         = useState('');
-  const [dos, setDos]         = useState(new Date().toISOString().slice(0, 10));
+  const [phn, setPhn] = useState('');
+  const [dob, setDob] = useState('');
+  const [dos, setDos] = useState(new Date().toISOString().slice(0, 10));
   const [eyeExam, setEyeExam] = useState(true);
   const [subsidy, setSubsidy] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [result, setResult]   = useState<EligResult | null>(null);
-  const [error, setError]     = useState('');
-  const [history, setHistory] = useState<EligResult[]>([]);
+  const [result, setResult] = useState<EligResult | null>(null);
+  const [error, setError] = useState('');
+  const [history, setHistory] = useState<EligResult[]>(HISTORY_DEMO);
 
   async function check(e: React.FormEvent) {
     e.preventDefault();
@@ -37,11 +42,8 @@ export default function EligibilityPage() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) { setError(data.error ?? 'Check failed'); }
-      else {
-        setResult(data);
-        setHistory((h) => [data, ...h.slice(0, 9)]);
-      }
+      if (!res.ok) setError(data.error ?? 'Check failed');
+      else { setResult(data); setHistory((h) => [data, ...h.slice(0, 9)]); }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -50,121 +52,133 @@ export default function EligibilityPage() {
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
-      <div>
-        <h1 className="font-display text-2xl font-bold text-white tracking-tight">Eligibility Check</h1>
-        <p className="text-[13px] text-white/40 mt-1">Real-time E45 MSP coverage verification via Teleplan</p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {/* Form */}
-        <form onSubmit={check} className="card p-5 space-y-4">
-          <h2 className="font-semibold text-white/80 text-[14px] flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-sky-400" /> Patient Details
-          </h2>
-
-          <div>
-            <label className="block text-[12px] font-medium text-white/50 mb-1.5">PHN (BC Personal Health Number)</label>
-            <input
-              required value={phn} onChange={e => setPhn(e.target.value)}
-              placeholder="9151 210 417" className="input text-[14px] font-mono tracking-widest"
-              maxLength={12}
-            />
-          </div>
-          <div>
-            <label className="block text-[12px] font-medium text-white/50 mb-1.5">Date of Birth</label>
-            <input type="date" required value={dob} onChange={e => setDob(e.target.value)} className="input text-[13px]" />
-          </div>
-          <div>
-            <label className="block text-[12px] font-medium text-white/50 mb-1.5">Date of Service</label>
-            <input type="date" required value={dos} onChange={e => setDos(e.target.value)} className="input text-[13px]" />
-          </div>
-
-          <div className="flex gap-4">
-            <label className="flex items-center gap-2 text-[13px] text-white/60 cursor-pointer">
-              <input type="checkbox" checked={eyeExam} onChange={e => setEyeExam(e.target.checked)} className="accent-sky-400" />
-              Last eye exam date
-            </label>
-            <label className="flex items-center gap-2 text-[13px] text-white/60 cursor-pointer">
-              <input type="checkbox" checked={subsidy} onChange={e => setSubsidy(e.target.checked)} className="accent-sky-400" />
-              Subsidy status
-            </label>
-          </div>
-
-          {error && (
-            <div className="text-[12px] text-red-300 bg-red-500/10 border border-red-500/20 rounded-xl p-3 flex items-start gap-2">
-              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" /> {error}
+    <div style={{ maxWidth: 900 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, alignItems: 'start' }}>
+        {/* Form card */}
+        <div className="card cp">
+          <div className="ch">
+            <div>
+              <div className="ct" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <ShieldCheck size={17} style={{ color: 'var(--sky)' }} /> Patient Details
+              </div>
+              <div className="cs">E45 real-time MSP verification via Teleplan</div>
             </div>
-          )}
-          <button type="submit" disabled={loading} className="btn-primary w-full justify-center py-2.5 text-[13px]">
-            {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Checking…</> : <><Search className="w-4 h-4" /> Check Eligibility</>}
-          </button>
-        </form>
+          </div>
+          <form onSubmit={check}>
+            <div className="fg">
+              <div className="field">
+                <label>PHN (Personal Health Number)</label>
+                <input required value={phn} onChange={e => setPhn(e.target.value)}
+                  placeholder="9151 210 417" maxLength={12}
+                  style={{ fontFamily: 'var(--fm)', letterSpacing: '.12em', fontSize: '1rem' }}
+                />
+              </div>
+              <div className="field">
+                <label>Date of Birth</label>
+                <input type="date" required value={dob} onChange={e => setDob(e.target.value)} />
+              </div>
+              <div className="field">
+                <label>Date of Service</label>
+                <input type="date" required value={dos} onChange={e => setDos(e.target.value)} />
+              </div>
+              <div style={{ display: 'flex', gap: 20 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: '.84rem', color: 'var(--t2)', cursor: 'pointer', fontWeight: 500 }}>
+                  <input type="checkbox" checked={eyeExam} onChange={e => setEyeExam(e.target.checked)} style={{ accentColor: 'var(--sky)', width: 16, height: 16 }} />
+                  Last eye exam
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: '.84rem', color: 'var(--t2)', cursor: 'pointer', fontWeight: 500 }}>
+                  <input type="checkbox" checked={subsidy} onChange={e => setSubsidy(e.target.checked)} style={{ accentColor: 'var(--sky)', width: 16, height: 16 }} />
+                  Subsidy status
+                </label>
+              </div>
+              {error && (
+                <div className="alrt al-err">
+                  <AlertTriangle size={15} className="alrt-ico" /> {error}
+                </div>
+              )}
+              <button type="submit" disabled={loading} className="btn btn-p" style={{ justifyContent: 'center' }}>
+                {loading
+                  ? <><Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> Checking…</>
+                  : <><Search size={14} /> Check Eligibility</>}
+              </button>
+            </div>
+          </form>
+        </div>
 
-        {/* Result */}
-        <div className="space-y-4">
+        {/* Result + history */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {result && (
-            <div className={`card p-5 space-y-4 border ${result.eligibleOnDate ? 'border-emerald-500/25' : 'border-red-500/25'}`}>
-              <div className="flex items-center gap-3">
+            <div className="card cp" style={{ borderColor: result.eligibleOnDate ? 'var(--ok-b)' : 'var(--bad-b)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
                 {result.eligibleOnDate
-                  ? <CheckCircle2 className="w-6 h-6 text-emerald-400 shrink-0" />
-                  : <XCircle className="w-6 h-6 text-red-400 shrink-0" />}
+                  ? <CheckCircle2 size={28} style={{ color: 'var(--ok)', flexShrink: 0 }} />
+                  : <XCircle size={28} style={{ color: 'var(--bad)', flexShrink: 0 }} />}
                 <div>
-                  <div className={`font-bold text-[15px] ${result.eligibleOnDate ? 'text-emerald-400' : 'text-red-400'}`}>
+                  <div style={{ fontWeight: 700, fontSize: '1.1rem', color: result.eligibleOnDate ? 'var(--ok)' : 'var(--bad)' }}>
                     {result.eligibleOnDate ? 'Eligible' : 'Not Eligible'}
                   </div>
-                  <div className="text-[11px] text-white/40">on date of service</div>
+                  <div style={{ fontSize: '.75rem', color: 'var(--t3)' }}>on date of service</div>
                 </div>
               </div>
-
-              <div className="space-y-2.5 text-[13px]">
-                <Row icon={User} label="Name" value={result.name ?? '-'} />
-                <Row icon={CalendarDays} label="Date of Birth" value={result.birthDate ? `${result.birthDate.slice(0,4)}-${result.birthDate.slice(4,6)}-${result.birthDate.slice(6,8)}` : '-'} />
-                {result.coverageEndDate && <Row icon={AlertTriangle} label="Coverage Ends" value={result.coverageEndDate} warn />}
-                {eyeExam && result.eyeExamDate && (
-                  <Row icon={Eye} label="Last Eye Exam" value={result.eyeExamDate} />
-                )}
-                {subsidy && (
-                  <Row icon={ShieldCheck} label="Subsidy" value={result.subsidyNotInsured ? 'Not insured' : `$${result.subsidyPaidToDate ?? 0} paid to date`} />
-                )}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <InfoRow icon={User} label="Name" value={result.name ?? '—'} />
+                <InfoRow icon={CalendarDays} label="Date of Birth"
+                  value={result.birthDate ? `${result.birthDate.slice(0,4)}-${result.birthDate.slice(4,6)}-${result.birthDate.slice(6,8)}` : '—'}
+                />
+                {result.coverageEndDate && <InfoRow icon={AlertTriangle} label="Coverage Ends" value={result.coverageEndDate} warn />}
+                {eyeExam && result.eyeExamDate && <InfoRow icon={Eye} label="Last Eye Exam" value={result.eyeExamDate} />}
+                {subsidy && <InfoRow icon={ShieldCheck} label="Subsidy"
+                  value={result.subsidyNotInsured ? 'Not insured' : `$${result.subsidyPaidToDate ?? 0} paid to date`} />}
                 {result.clientInstruction && (
-                  <div className="text-[12px] text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-xl p-3">
-                    {result.clientInstruction}
-                  </div>
+                  <div className="alrt al-warn"><AlertTriangle size={14} className="alrt-ico" /> {result.clientInstruction}</div>
                 )}
               </div>
             </div>
           )}
 
-          {/* History */}
-          {history.length > 1 && (
-            <div className="card p-4">
-              <div className="text-[11px] font-semibold text-white/30 uppercase tracking-widest mb-3">Recent Checks</div>
-              <div className="space-y-1.5">
-                {history.slice(1).map((h, i) => (
-                  <div key={i} className="flex items-center gap-2 text-[12px] text-white/50">
-                    {h.eligibleOnDate
-                      ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                      : <XCircle className="w-3.5 h-3.5 text-red-400 shrink-0" />}
-                    <span className="flex-1 truncate">{h.name ?? h.phn}</span>
-                    <span className="text-white/30">{h.phn}</span>
-                  </div>
-                ))}
+          {!result && (
+            <div className="card cp" style={{ textAlign: 'center', padding: '40px 24px' }}>
+              <div className="empty-ico" style={{ display: 'inline-flex', marginBottom: 14 }}>
+                <ShieldCheck size={24} style={{ color: 'var(--t4)' }} />
               </div>
+              <div style={{ fontWeight: 600, color: 'var(--t2)', marginBottom: 4 }}>No result yet</div>
+              <div style={{ fontSize: '.8rem', color: 'var(--t4)' }}>Enter a PHN and date of birth to check coverage</div>
             </div>
           )}
+
+          {/* Recent checks */}
+          <div className="card cp">
+            <div className="ct" style={{ marginBottom: 14, display: 'flex', alignItems: 'center', gap: 7 }}>
+              <Clock size={15} style={{ color: 'var(--t4)' }} /> Recent Checks
+            </div>
+            {history.slice(0, 6).map((h, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid var(--bd)' }}>
+                {h.eligibleOnDate
+                  ? <CheckCircle2 size={14} style={{ color: 'var(--ok)', flexShrink: 0 }} />
+                  : <XCircle size={14} style={{ color: 'var(--bad)', flexShrink: 0 }} />}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 600, fontSize: '.83rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.name ?? '—'}</div>
+                  <div style={{ fontSize: '.7rem', color: 'var(--t4)', fontFamily: 'var(--fm)' }}>{h.phn}</div>
+                </div>
+                <span className={`badge ${h.eligibleOnDate ? 'b-active' : 'b-rejected'}`}>{h.eligibleOnDate ? 'Eligible' : 'Refused'}</span>
+              </div>
+            ))}
+            {history.length === 0 && (
+              <div style={{ fontSize: '.8rem', color: 'var(--t4)', padding: '8px 0' }}>No checks yet this session</div>
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-function Row({ icon: Icon, label, value, warn }: { icon: any; label: string; value: string; warn?: boolean }) {
+function InfoRow({ icon: Icon, label, value, warn }: { icon: any; label: string; value: string; warn?: boolean }) {
   return (
-    <div className="flex items-center gap-2">
-      <Icon className={`w-3.5 h-3.5 shrink-0 ${warn ? 'text-amber-400' : 'text-white/30'}`} />
-      <span className="text-white/40 w-28 shrink-0">{label}</span>
-      <span className={`font-medium ${warn ? 'text-amber-300' : 'text-white/80'}`}>{value}</span>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <Icon size={14} style={{ color: warn ? 'var(--warn)' : 'var(--t4)', flexShrink: 0 }} />
+      <span style={{ color: 'var(--t3)', width: 110, flexShrink: 0, fontSize: '.82rem' }}>{label}</span>
+      <span style={{ fontWeight: 600, color: warn ? 'var(--warn)' : 'var(--t1)', fontSize: '.84rem' }}>{value}</span>
     </div>
   );
 }

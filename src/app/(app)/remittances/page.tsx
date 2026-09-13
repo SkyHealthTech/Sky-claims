@@ -1,10 +1,6 @@
 'use client';
-import { useState } from 'react';
-import {
-  DollarSign, Download, RefreshCw, ChevronDown, ChevronUp,
-  CheckCircle2, XCircle, Clock, AlertTriangle, FileText,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+import React, { useState } from 'react';
+import { Download, RefreshCw, ChevronDown, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
 
 type RemittLine = {
   id: string; claimRef: string; patient: string; phn: string; dos: string;
@@ -18,163 +14,189 @@ type Remittance = {
 
 const MOCK: Remittance[] = [
   {
-    id: 'RA-2026-08',
-    receivedAt: '2026-08-05',
-    payPeriod: 'July 2026',
-    totalBilled: 4820.00,
-    totalPaid: 4460.00,
-    lineCount: 38,
-    refusalCount: 3,
+    id: 'RA-2026-08', receivedAt: 'Aug 5, 2026', payPeriod: 'July 2026',
+    totalBilled: 4820.00, totalPaid: 4460.00, lineCount: 38, refusalCount: 3,
     lines: [
-      { id: 'l1', claimRef: 'CLM-0041', patient: 'Margaret Thompson', phn: '9151 210 417', dos: '2026-07-14', feeItem: '00810', billed: 89.90, paid: 89.90, status: 'paid' },
-      { id: 'l2', claimRef: 'CLM-0042', patient: 'David Park', phn: '9151 220 831', dos: '2026-07-15', feeItem: '00810', billed: 89.90, paid: 89.90, status: 'paid' },
-      { id: 'l3', claimRef: 'CLM-0043', patient: 'Amara Diallo', phn: '9999 000 000', dos: '2026-07-15', feeItem: '00810', billed: 89.90, paid: 0, status: 'refused', refusalCode: 'C12', refusalReason: 'PHN not found — verify and resubmit' },
-      { id: 'l4', claimRef: 'CLM-0044', patient: 'Chen Wei', phn: '9151 198 022', dos: '2026-07-18', feeItem: '00050', billed: 32.15, paid: 28.95, status: 'adjusted', adjustmentNote: 'Fee item paid at lower rate — fee schedule update effective 2026-07-01' },
-      { id: 'l5', claimRef: 'CLM-0045', patient: 'Priya Sharma', phn: '9151 305 114', dos: '2026-07-19', feeItem: '00810', billed: 89.90, paid: 89.90, status: 'paid' },
-      { id: 'l6', claimRef: 'CLM-0046', patient: 'Robert McLean', phn: '9151 411 009', dos: '2026-07-22', feeItem: '00810', billed: 89.90, paid: 0, status: 'refused', refusalCode: 'C12', refusalReason: 'Provider not registered for this service code' },
+      { id: 'l1', claimRef: 'CLM-0041', patient: 'Margaret Thompson', phn: '9151210417', dos: '2026-07-14', feeItem: '00810', billed: 89.90, paid: 89.90, status: 'paid' },
+      { id: 'l2', claimRef: 'CLM-0042', patient: 'David Park',         phn: '9151220831', dos: '2026-07-15', feeItem: '00810', billed: 89.90, paid: 89.90, status: 'paid' },
+      { id: 'l3', claimRef: 'CLM-0043', patient: 'Amara Diallo',       phn: '9999000000', dos: '2026-07-15', feeItem: '00810', billed: 89.90, paid: 0,     status: 'refused',  refusalCode: 'C12', refusalReason: 'PHN not found — verify and resubmit' },
+      { id: 'l4', claimRef: 'CLM-0044', patient: 'Chen Wei',           phn: '9151198022', dos: '2026-07-18', feeItem: '00050', billed: 32.15, paid: 28.95, status: 'adjusted', adjustmentNote: 'Fee item paid at lower rate — fee schedule update 2026-07-01' },
+      { id: 'l5', claimRef: 'CLM-0045', patient: 'Priya Sharma',       phn: '9151305114', dos: '2026-07-19', feeItem: '00810', billed: 89.90, paid: 89.90, status: 'paid' },
+      { id: 'l6', claimRef: 'CLM-0046', patient: 'Robert McLean',      phn: '9151411009', dos: '2026-07-22', feeItem: '00810', billed: 89.90, paid: 0,     status: 'refused',  refusalCode: 'C12', refusalReason: 'Provider not registered for this service code' },
     ],
   },
   {
-    id: 'RA-2026-07',
-    receivedAt: '2026-07-03',
-    payPeriod: 'June 2026',
-    totalBilled: 5210.00,
-    totalPaid: 5160.00,
-    lineCount: 44,
-    refusalCount: 1,
+    id: 'RA-2026-07', receivedAt: 'Jul 3, 2026', payPeriod: 'June 2026',
+    totalBilled: 5210.00, totalPaid: 5160.00, lineCount: 44, refusalCount: 1,
     lines: [
-      { id: 'l10', claimRef: 'CLM-0027', patient: 'James Okafor', phn: '9151 551 228', dos: '2026-06-02', feeItem: '00810', billed: 89.90, paid: 89.90, status: 'paid' },
+      { id: 'l10', claimRef: 'CLM-0027', patient: 'James Okafor', phn: '9151551228', dos: '2026-06-02', feeItem: '00810', billed: 89.90, paid: 89.90, status: 'paid' },
     ],
   },
 ];
 
-const STATUS_MAP = {
-  paid: { label: 'Paid', cls: 'badge-ok', icon: CheckCircle2 },
-  refused: { label: 'Refused', cls: 'badge-danger', icon: XCircle },
-  adjusted: { label: 'Adjusted', cls: 'badge-warn', icon: AlertTriangle },
+const STATUS_CONFIG: Record<string, { label: string; cls: string; icon: any }> = {
+  paid:     { label: 'Paid',     cls: 'badge b-paid',    icon: CheckCircle2 },
+  refused:  { label: 'Refused',  cls: 'badge b-rejected', icon: XCircle },
+  adjusted: { label: 'Adjusted', cls: 'badge b-pending',  icon: AlertTriangle },
 };
 
 export default function RemittancesPage() {
   const [expanded, setExpanded] = useState<string | null>('RA-2026-08');
-  const [filter, setFilter] = useState<'all' | 'refused' | 'adjusted'>('all');
+  const [lineFilter, setLineFilter] = useState<'all' | 'refused' | 'adjusted'>('all');
+  const [refreshing, setRefreshing] = useState(false);
 
-  const toggle = (id: string) => setExpanded((x) => (x === id ? null : id));
+  const totalPaid   = MOCK.reduce((s, r) => s + r.totalPaid, 0);
+  const totalBilled = MOCK.reduce((s, r) => s + r.totalBilled, 0);
+  const totalFiles  = MOCK.length;
+  const totalRefusals = MOCK.reduce((s, r) => s + r.refusalCount, 0);
+
+  function handleRefresh() { setRefreshing(true); setTimeout(() => setRefreshing(false), 1400); }
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-bold text-white tracking-tight">Remittances</h1>
-          <p className="text-[13px] text-white/40 mt-1">Payment advices from MSP — reconcile refusals and adjustments</p>
-        </div>
-        <button className="btn flex items-center gap-2 text-[13px]">
-          <RefreshCw className="w-4 h-4" /> Retrieve from Teleplan
-        </button>
-      </div>
-
-      {/* Filter tabs */}
-      <div className="flex gap-1">
-        {(['all', 'refused', 'adjusted'] as const).map((f) => (
-          <button key={f} onClick={() => setFilter(f)}
-            className={cn('px-3 py-1.5 rounded-lg text-[12px] font-medium capitalize transition-colors',
-              filter === f ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/60')}>
-            {f}
-          </button>
+    <div style={{ maxWidth: 1040 }}>
+      {/* Summary stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 24 }}>
+        {[
+          { label: 'YTD Paid',     value: `$${totalPaid.toLocaleString('en-CA', { minimumFractionDigits: 2 })}`,   color: '#2563eb', bg: '#eff5ff' },
+          { label: 'YTD Billed',   value: `$${totalBilled.toLocaleString('en-CA', { minimumFractionDigits: 2 })}`, color: '#7c3aed', bg: '#f5f3ff' },
+          { label: 'ERA Files',    value: String(totalFiles),                                                         color: '#059669', bg: '#ecfdf5' },
+          { label: 'Refusals',     value: String(totalRefusals),                                                      color: '#e11d48', bg: '#fff1f3' },
+        ].map((s) => (
+          <div key={s.label} className="card" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div className="stico" style={{ background: s.bg, margin: 0 }}>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: s.color }} />
+            </div>
+            <div>
+              <div style={{ fontSize: '.7rem', color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 3 }}>{s.label}</div>
+              <div style={{ fontFamily: 'var(--ff)', fontSize: '1.5rem', fontWeight: 400, color: s.color, lineHeight: 1 }}>{s.value}</div>
+            </div>
+          </div>
         ))}
       </div>
 
-      <div className="space-y-3">
-        {MOCK.map((ra) => {
-          const isOpen = expanded === ra.id;
-          const lines = filter === 'all' ? ra.lines : ra.lines.filter((l) => l.status === filter);
-          const adjPct = ((ra.totalPaid / ra.totalBilled) * 100).toFixed(1);
+      {/* Toolbar */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <div style={{ fontSize: '.9rem', fontWeight: 600, color: 'var(--t1)' }}>ERA Files</div>
+        <button className="btn btn-s btn-sm" onClick={handleRefresh}>
+          <RefreshCw size={13} style={refreshing ? { animation: 'spin 1s linear infinite' } : {}} />
+          {refreshing ? 'Fetching…' : 'Fetch Latest'}
+        </button>
+      </div>
+
+      {/* ERA list */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {MOCK.map((r) => {
+          const isOpen = expanded === r.id;
+          const adjPct = ((r.totalPaid / r.totalBilled) * 100).toFixed(1);
+          const visibleLines = r.lines.filter(l => lineFilter === 'all' || l.status === lineFilter);
 
           return (
-            <div key={ra.id} className="card overflow-hidden">
+            <div key={r.id} className="card" style={{ overflow: 'hidden' }}>
               {/* Header row */}
-              <button onClick={() => toggle(ra.id)}
-                className="w-full flex items-center gap-4 p-4 hover:bg-white/[0.02] transition-colors text-left">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3">
-                    <FileText className="w-4 h-4 text-purple-400 shrink-0" />
-                    <span className="font-semibold text-white text-[14px]">{ra.payPeriod}</span>
-                    <span className="text-[11px] text-white/30">{ra.id}</span>
+              <div
+                onClick={() => setExpanded(isOpen ? null : r.id)}
+                style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '18px 22px', cursor: 'pointer' }}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 5 }}>
+                    <span style={{ fontFamily: 'var(--fm)', fontSize: '.82rem', fontWeight: 600, color: 'var(--sky-dk)' }}>{r.id}</span>
+                    <span style={{ fontSize: '.72rem', color: 'var(--t4)' }}>{r.payPeriod}</span>
+                    {r.refusalCount > 0 && (
+                      <span className="badge b-rejected">{r.refusalCount} refused</span>
+                    )}
                   </div>
-                  <div className="text-[11px] text-white/40 mt-0.5 ml-7">Received {ra.receivedAt}</div>
+                  <div style={{ display: 'flex', gap: 20 }}>
+                    <div>
+                      <div style={{ fontSize: '.66rem', color: 'var(--t4)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em' }}>Paid</div>
+                      <div style={{ fontFamily: 'var(--ff)', fontSize: '1.25rem', fontWeight: 400, color: 'var(--ok)', lineHeight: 1 }}>${r.totalPaid.toLocaleString('en-CA', { minimumFractionDigits: 2 })}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '.66rem', color: 'var(--t4)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em' }}>Billed</div>
+                      <div style={{ fontFamily: 'var(--ff)', fontSize: '1.25rem', fontWeight: 400, color: 'var(--t2)', lineHeight: 1 }}>${r.totalBilled.toLocaleString('en-CA', { minimumFractionDigits: 2 })}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '.66rem', color: 'var(--t4)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em' }}>Lines</div>
+                      <div style={{ fontFamily: 'var(--ff)', fontSize: '1.25rem', fontWeight: 400, color: 'var(--t2)', lineHeight: 1 }}>{r.lineCount}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '.66rem', color: 'var(--t4)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em' }}>Pay rate</div>
+                      <div style={{ fontFamily: 'var(--ff)', fontSize: '1.25rem', fontWeight: 400, color: 'var(--sky-dk)', lineHeight: 1 }}>{adjPct}%</div>
+                    </div>
+                  </div>
                 </div>
-
-                <div className="flex items-center gap-8 shrink-0">
-                  <Stat label="Claims" value={ra.lineCount.toString()} />
-                  <Stat label="Billed" value={`$${ra.totalBilled.toLocaleString()}`} />
-                  <Stat label="Paid" value={`$${ra.totalPaid.toLocaleString()}`} hi />
-                  <Stat label="Recovery" value={`${adjPct}%`} warn={parseFloat(adjPct) < 98} />
-                  {ra.refusalCount > 0 && (
-                    <span className="badge-danger text-[11px] px-2 py-0.5">{ra.refusalCount} refused</span>
-                  )}
-                  {isOpen ? <ChevronUp className="w-4 h-4 text-white/30" /> : <ChevronDown className="w-4 h-4 text-white/30" />}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontSize: '.78rem', color: 'var(--t4)' }}>Received {r.receivedAt}</span>
+                  <button className="btn btn-s btn-sm" onClick={e => e.stopPropagation()}>
+                    <Download size={13} /> Download
+                  </button>
+                  <ChevronDown size={16} style={{ color: 'var(--t4)', transition: 'transform .15s', transform: isOpen ? 'rotate(180deg)' : 'none', flexShrink: 0 }} />
                 </div>
-              </button>
+              </div>
 
-              {/* Line items */}
+              {/* Pay progress bar */}
+              <div style={{ padding: '0 22px' }}>
+                <div className="prog" style={{ marginBottom: isOpen ? 0 : 18 }}>
+                  <div className="prog-fill" style={{ width: `${adjPct}%`, background: r.refusalCount > 0 ? 'linear-gradient(90deg,#059669,#d97706)' : 'var(--grad-1)' }} />
+                </div>
+              </div>
+
+              {/* Lines detail */}
               {isOpen && (
-                <div className="border-t border-white/[0.05]">
-                  <table className="w-full text-[12px]">
-                    <thead>
-                      <tr className="text-white/30 border-b border-white/[0.05]">
-                        {['Ref', 'Patient', 'PHN', 'DOS', 'Item', 'Billed', 'Paid', 'Status'].map((h) => (
-                          <th key={h} className="text-left px-4 py-2.5 font-medium">{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {lines.map((l) => {
-                        const st = STATUS_MAP[l.status];
-                        const Icon = st.icon;
-                        return (
-                          <>
-                            <tr key={l.id} className="border-b border-white/[0.03] hover:bg-white/[0.02]">
-                              <td className="px-4 py-2.5 text-white/50 font-mono">{l.claimRef}</td>
-                              <td className="px-4 py-2.5 text-white/80 font-medium">{l.patient}</td>
-                              <td className="px-4 py-2.5 text-white/40 font-mono">{l.phn}</td>
-                              <td className="px-4 py-2.5 text-white/50">{l.dos}</td>
-                              <td className="px-4 py-2.5 text-white/50 font-mono">{l.feeItem}</td>
-                              <td className="px-4 py-2.5 text-white/60">${l.billed.toFixed(2)}</td>
-                              <td className="px-4 py-2.5 font-semibold text-white/90">${l.paid.toFixed(2)}</td>
-                              <td className="px-4 py-2.5">
-                                <span className={cn('flex items-center gap-1', st.cls)}>
-                                  <Icon className="w-3 h-3" /> {st.label}
-                                </span>
-                              </td>
-                            </tr>
-                            {(l.refusalCode || l.adjustmentNote) && (
-                              <tr key={`${l.id}-note`} className="border-b border-white/[0.03] bg-white/[0.01]">
-                                <td colSpan={8} className="px-4 pb-2.5 pt-1">
-                                  <div className={cn('text-[11px] rounded-lg px-3 py-2 flex items-start gap-2',
-                                    l.refusalCode
-                                      ? 'bg-red-500/10 text-red-300 border border-red-500/20'
-                                      : 'bg-amber-500/10 text-amber-300 border border-amber-500/20')}>
-                                    <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                                    <span>
-                                      {l.refusalCode && <strong className="font-semibold">{l.refusalCode}: </strong>}
-                                      {l.refusalReason ?? l.adjustmentNote}
-                                    </span>
-                                    {l.refusalCode && (
-                                      <button className="ml-auto text-red-300 underline shrink-0">Resubmit</button>
-                                    )}
-                                  </div>
+                <div style={{ borderTop: '1px solid var(--bd)', padding: '16px 22px' }}>
+                  <div className="fpills" style={{ marginBottom: 14 }}>
+                    {(['all', 'refused', 'adjusted'] as const).map((f) => (
+                      <button key={f} className={`fpill${lineFilter === f ? ' active' : ''}`} onClick={() => setLineFilter(f)}>
+                        {f === 'all' ? 'All lines' : f.charAt(0).toUpperCase() + f.slice(1)}
+                        <span className="fpill-count">{f === 'all' ? r.lines.length : r.lines.filter(l => l.status === f).length}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="tw">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Patient</th>
+                          <th>Claim</th>
+                          <th>DoS</th>
+                          <th>Fee Item</th>
+                          <th>Status</th>
+                          <th style={{ textAlign: 'right' }}>Billed</th>
+                          <th style={{ textAlign: 'right' }}>Paid</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {visibleLines.map((l) => {
+                          const cfg = STATUS_CONFIG[l.status];
+                          return (
+                            <React.Fragment key={l.id}>
+                              <tr>
+                                <td>
+                                  <div style={{ fontWeight: 600, fontSize: '.84rem' }}>{l.patient}</div>
+                                  <div style={{ fontSize: '.72rem', color: 'var(--t4)', fontFamily: 'var(--fm)' }}>{l.phn}</div>
                                 </td>
+                                <td><span className="mono" style={{ color: 'var(--sky-dk)' }}>{l.claimRef}</span></td>
+                                <td style={{ color: 'var(--t3)', fontSize: '.82rem' }}>{l.dos}</td>
+                                <td><span className="code-chip">{l.feeItem}</span></td>
+                                <td><span className={cfg.cls}>{cfg.label}</span></td>
+                                <td style={{ textAlign: 'right', color: 'var(--t2)' }}>${l.billed.toFixed(2)}</td>
+                                <td style={{ textAlign: 'right', fontWeight: 600, color: l.status === 'refused' ? 'var(--bad)' : 'var(--ok)' }}>${l.paid.toFixed(2)}</td>
                               </tr>
-                            )}
-                          </>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                  <div className="flex items-center justify-between px-4 py-3 border-t border-white/[0.05]">
-                    <span className="text-[11px] text-white/30">{lines.length} line{lines.length !== 1 ? 's' : ''} shown</span>
-                    <button className="btn flex items-center gap-1.5 text-[12px]">
-                      <Download className="w-3.5 h-3.5" /> Export CSV
-                    </button>
+                              {(l.refusalReason || l.adjustmentNote) && (
+                                <tr>
+                                  <td colSpan={7} style={{ padding: '4px 14px 12px', background: 'var(--n50)' }}>
+                                    <div className={`alrt${l.status === 'refused' ? ' al-err' : ' al-warn'}`} style={{ margin: 0 }}>
+                                      {l.status === 'refused'
+                                        ? <><XCircle size={13} className="alrt-ico" /> <strong>{l.refusalCode}:</strong> {l.refusalReason}</>
+                                        : <><AlertTriangle size={13} className="alrt-ico" /> {l.adjustmentNote}</>}
+                                    </div>
+                                  </td>
+                                </tr>
+                              )}
+                            </React.Fragment>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               )}
@@ -182,15 +204,6 @@ export default function RemittancesPage() {
           );
         })}
       </div>
-    </div>
-  );
-}
-
-function Stat({ label, value, hi, warn }: { label: string; value: string; hi?: boolean; warn?: boolean }) {
-  return (
-    <div className="text-right">
-      <div className={cn('text-[14px] font-semibold', hi ? 'text-emerald-400' : warn ? 'text-amber-400' : 'text-white/80')}>{value}</div>
-      <div className="text-[10px] text-white/30">{label}</div>
     </div>
   );
 }

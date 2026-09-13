@@ -1,88 +1,115 @@
 'use client';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, FileText, ShieldCheck, Receipt,
-  Settings, ExternalLink, Plus, CreditCard,
-  Users, ClipboardList, LogOut,
+  Settings, ClipboardList, Users, Plus,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { createClient } from '@/lib/supabase/client';
 
 const NAV = [
-  { href: '/',            label: 'Dashboard',   icon: LayoutDashboard },
-  { href: '/claims',      label: 'Claims',      icon: FileText },
-  { href: '/patients',    label: 'Patients',    icon: Users },
-  { href: '/eligibility', label: 'Eligibility', icon: ShieldCheck },
-  { href: '/remittances', label: 'Remittances', icon: Receipt },
-  { href: '/audit',       label: 'Audit log',   icon: ClipboardList },
+  { href: '/',            label: 'Dashboard',   icon: LayoutDashboard, count: null },
+  { href: '/claims',      label: 'Claims',       icon: FileText,        count: 14 },
+  { href: '/patients',    label: 'Patients',     icon: Users,           count: null },
+  { href: '/eligibility', label: 'Eligibility',  icon: ShieldCheck,     count: null },
+  { href: '/remittances', label: 'Remittances',  icon: Receipt,         count: null },
+  { href: '/audit',       label: 'Audit log',    icon: ClipboardList,   count: null },
 ];
 
-export function Sidebar() {
-  const pathname = usePathname();
-  const router = useRouter();
+interface SidebarProps {
+  open?: boolean;
+  onClose?: () => void;
+}
 
-  async function handleSignOut() {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push('/login');
-  }
+export function Sidebar({ open, onClose }: SidebarProps) {
+  const pathname = usePathname();
 
   return (
-    <aside className="hidden lg:flex w-60 flex-col glass border-r border-white/[0.05] px-3 py-4 sticky top-0 h-screen shrink-0">
-      {/* Logo */}
-      <div className="px-2 pb-5 flex items-center gap-2.5">
-        <div className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, #6d28d9, #7c3aed)' }}>
-          {/* Sky S mark */}
-          <svg width="22" height="22" viewBox="0 0 100 100" fill="none">
-            <path d="M14,34 L74,25 L74,36 L14,45 Z" fill="white"/>
-            <path d="M14,49 L74,40 L74,51 L14,60 Z" fill="white"/>
-            <path d="M14,64 L74,55 L74,66 L14,75 Z" fill="white"/>
-            <path d="M52,4 L44,18 L50,18 L46,32 L59,13 L53,13 Z" fill="#f59e0b"/>
-          </svg>
-        </div>
-        <div>
-          <div className="font-display text-[14px] font-bold text-white leading-none">Sky Claims</div>
-          <div className="text-[10px] text-purple-400 font-medium tracking-widest uppercase leading-none mt-0.5">Health Billing</div>
-        </div>
-      </div>
+    <>
+      {/* Mobile backdrop */}
+      <div
+        className={`backdrop lg:hidden${open ? ' on' : ''}`}
+        onClick={onClose}
+        aria-hidden="true"
+      />
 
-      {/* Submit claim button */}
-      <Link href="/claims/new" className="btn-purple w-full justify-center mb-4 text-[13px]">
-        <Plus className="w-4 h-4" /> New Claim
-      </Link>
-
-      <nav className="flex-1 space-y-0.5">
-        {NAV.map(({ href, label, icon: Icon }) => {
-          const active = href === '/' ? pathname === '/' : pathname.startsWith(href);
-          return (
-            <Link key={href} href={href} className={cn('nav-item', active && 'nav-item-active')}>
-              <Icon className="w-4 h-4" />{label}
-            </Link>
-          );
-        })}
-      </nav>
-
-      <div className="border-t border-white/[0.05] pt-3 space-y-0.5">
-        <Link href="/settings" className={cn('nav-item', pathname.startsWith('/settings') && 'nav-item-active')}>
-          <Settings className="w-4 h-4" /> Settings
-        </Link>
-        <Link href="/billing" className={cn('nav-item', pathname.startsWith('/billing') && 'nav-item-active')}>
-          <CreditCard className="w-4 h-4" /> Billing
-        </Link>
-        <a href="https://app.skyhealthtech.ca" target="_blank" rel="noopener" className="nav-item">
-          <ExternalLink className="w-4 h-4" /> Sky Chamber EHR
-        </a>
-        <button
-          onClick={handleSignOut}
-          className="nav-item w-full text-left text-red-400 hover:text-red-300 hover:bg-red-500/10"
-        >
-          <LogOut className="w-4 h-4" /> Sign out
-        </button>
-        <div className="px-3 pt-2 text-[10px] text-white/20 leading-relaxed">
-          Sky Claims · Vendor V0127
+      <aside className={`sidebar${open ? ' open' : ''}`}>
+        {/* Logo */}
+        <div className="sb-logo">
+          <div className="sb-mark">
+            <div className="sb-icon">
+              {/* Sky S mark */}
+              <svg width="22" height="22" viewBox="0 0 100 100" fill="none">
+                <path d="M14,34 L74,25 L74,36 L14,45 Z" fill="white"/>
+                <path d="M14,49 L74,40 L74,51 L14,60 Z" fill="white"/>
+                <path d="M14,64 L74,55 L74,66 L14,75 Z" fill="white"/>
+                <path d="M52,4 L44,18 L50,18 L46,32 L59,13 L53,13 Z" fill="#f59e0b"/>
+              </svg>
+            </div>
+            <div>
+              <div className="sb-name">Sky Claims</div>
+              <div className="sb-tag">Health Billing</div>
+            </div>
+          </div>
         </div>
-      </div>
-    </aside>
+
+        {/* New Claim button */}
+        <div style={{ padding: '0 12px 12px' }}>
+          <Link
+            href="/claims/new"
+            className="btn btn-p"
+            style={{ width: '100%', justifyContent: 'center' }}
+            onClick={onClose}
+          >
+            <Plus size={15} /> New Claim
+          </Link>
+        </div>
+
+        {/* Nav */}
+        <nav className="sb-nav">
+          <div className="nav-grp">Main</div>
+          {NAV.map(({ href, label, icon: Icon, count }) => {
+            const active = href === '/' ? pathname === '/' : pathname.startsWith(href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={`nav-item${active ? ' active' : ''}`}
+                onClick={onClose}
+              >
+                <Icon size={17} />
+                {label}
+                {count !== null && (
+                  <span className="nav-count">{count}</span>
+                )}
+              </Link>
+            );
+          })}
+
+          <div className="nav-grp" style={{ marginTop: 8 }}>Account</div>
+          <Link
+            href="/settings"
+            className={`nav-item${pathname.startsWith('/settings') ? ' active' : ''}`}
+            onClick={onClose}
+          >
+            <Settings size={17} /> Settings
+          </Link>
+        </nav>
+
+        {/* Footer: practice card + Teleplan chip */}
+        <div className="sb-foot">
+          <div className="prac-card">
+            <div className="prac-av">DR</div>
+            <div style={{ minWidth: 0 }}>
+              <div className="prac-name">Dr. Ekeoba</div>
+              <div className="prac-meta">BC · OD · V0127</div>
+            </div>
+          </div>
+          <div className="tp-chip">
+            <span className="tpdot" />
+            Teleplan Connected
+          </div>
+        </div>
+      </aside>
+    </>
   );
 }

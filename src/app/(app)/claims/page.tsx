@@ -1,129 +1,282 @@
 'use client';
-import { useState } from 'react';
-import { Search, Plus, Filter, AlertCircle, CheckCircle2, Clock, FileText, ChevronDown, Send } from 'lucide-react';
+import React, { useState } from 'react';
 import Link from 'next/link';
+import {
+  Search, Plus, AlertCircle, CheckCircle2, Clock, FileText,
+  ChevronDown, Send, LayoutList, Kanban, X,
+} from 'lucide-react';
 
+// ── Mock data ─────────────────────────────────────────────────────────────────
 const CLAIMS = [
-  { id: 'CLM-1042', patient: 'James Burnham',     phn: '9151210417', code: '00110', dx: '3671', amount: 88.35,  status: 'paid',      date: '2026-08-05', refusal: null },
-  { id: 'CLM-1041', patient: 'Christine Burrows',  phn: '9151065434', code: '00115', dx: '3652', amount: 107.20, status: 'paid',      date: '2026-08-05', refusal: null },
-  { id: 'CLM-1040', patient: 'Austin Mercer',      phn: '9151242549', code: '00110', dx: '3660', amount: 88.35,  status: 'refused',   date: '2026-08-04', refusal: 'C12-21: Invalid diagnosis code for service' },
-  { id: 'CLM-1039', patient: 'Linda Thorpe',       phn: '9151071072', code: '00111', dx: '3671', amount: 54.00,  status: 'submitted', date: '2026-08-04', refusal: null },
-  { id: 'CLM-1038', patient: 'Robert Chan',        phn: '9151274799', code: '00110', dx: '3655', amount: 88.35,  status: 'paid',      date: '2026-08-03', refusal: null },
-  { id: 'CLM-1037', patient: 'Sarah Nikolaev',     phn: '9151206012', code: '00113', dx: '3671', amount: 73.55,  status: 'draft',     date: '2026-08-03', refusal: null },
-  { id: 'CLM-1036', patient: 'Michael Torres',     phn: '9151259051', code: '00110', dx: '3671', amount: 88.35,  status: 'draft',     date: '2026-08-03', refusal: null },
+  { id: 'CLM-1042', patient: 'James Burnham',     initials: 'JB', phn: '9151210417', code: '00110', dx: 'H52.1', amount: 88.35,  status: 'paid',      date: 'Aug 5, 2026', refusal: null },
+  { id: 'CLM-1041', patient: 'Christine Burrows',  initials: 'CB', phn: '9151065434', code: '00115', dx: 'H40.0', amount: 107.20, status: 'paid',      date: 'Aug 5, 2026', refusal: null },
+  { id: 'CLM-1040', patient: 'Austin Mercer',      initials: 'AM', phn: '9151242549', code: '00110', dx: 'H52.4', amount: 88.35,  status: 'refused',   date: 'Aug 4, 2026', refusal: 'C12-21: Invalid diagnosis code for service rendered.' },
+  { id: 'CLM-1039', patient: 'Linda Thorpe',       initials: 'LT', phn: '9151071072', code: '00111', dx: 'H52.1', amount: 54.00,  status: 'submitted', date: 'Aug 4, 2026', refusal: null },
+  { id: 'CLM-1038', patient: 'Robert Chan',        initials: 'RC', phn: '9151274799', code: '00110', dx: 'H40.1', amount: 88.35,  status: 'paid',      date: 'Aug 3, 2026', refusal: null },
+  { id: 'CLM-1037', patient: 'Sarah Nikolaev',     initials: 'SN', phn: '9151206012', code: '00113', dx: 'H52.1', amount: 73.55,  status: 'draft',     date: 'Aug 3, 2026', refusal: null },
+  { id: 'CLM-1036', patient: 'Michael Torres',     initials: 'MT', phn: '9151259051', code: '00110', dx: 'H52.1', amount: 88.35,  status: 'draft',     date: 'Aug 3, 2026', refusal: null },
+  { id: 'CLM-1035', patient: 'Priya Sharma',       initials: 'PS', phn: '9151188234', code: '00110', dx: 'H53.2', amount: 88.35,  status: 'submitted', date: 'Aug 2, 2026', refusal: null },
 ];
 
-const FILTERS = ['all', 'draft', 'submitted', 'paid', 'refused'] as const;
-type Filter = typeof FILTERS[number];
+const FILTERS = [
+  { key: 'all',       label: 'All',       color: '#64748b' },
+  { key: 'draft',     label: 'Draft',     color: '#94a3b8' },
+  { key: 'submitted', label: 'Submitted', color: '#2563eb' },
+  { key: 'paid',      label: 'Paid',      color: '#059669' },
+  { key: 'refused',   label: 'Refused',   color: '#e11d48' },
+] as const;
+type FilterKey = typeof FILTERS[number]['key'];
 
-const STATUS_MAP: Record<string, { label: string; cls: string; icon: any }> = {
-  paid:      { label: 'Paid',      cls: 'badge-ok',     icon: CheckCircle2 },
-  submitted: { label: 'Submitted', cls: 'badge-sky',    icon: Send },
-  refused:   { label: 'Refused',   cls: 'badge-danger', icon: AlertCircle },
-  draft:     { label: 'Draft',     cls: 'badge-muted',  icon: FileText },
+const STATUS_CONFIG: Record<string, { label: string; cls: string }> = {
+  paid:      { label: 'Paid',      cls: 'badge b-paid' },
+  submitted: { label: 'Submitted', cls: 'badge b-submitted' },
+  refused:   { label: 'Refused',   cls: 'badge b-rejected' },
+  draft:     { label: 'Draft',     cls: 'badge b-draft' },
 };
 
+const AV_COLOR = ['av-1','av-2','av-3','av-4','av-5'];
+
+const KANBAN_COLS = [
+  { key: 'draft',     label: 'Draft',     color: '#94a3b8', bg: '#f8fafc' },
+  { key: 'submitted', label: 'Submitted', color: '#2563eb', bg: '#eff5ff' },
+  { key: 'paid',      label: 'Paid',      color: '#059669', bg: '#ecfdf5' },
+  { key: 'refused',   label: 'Refused',   color: '#e11d48', bg: '#fff1f3' },
+];
+
 export default function ClaimsPage() {
-  const [filter, setFilter] = useState<Filter>('all');
+  const [filter, setFilter] = useState<FilterKey>('all');
   const [search, setSearch] = useState('');
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [view, setView] = useState<'list' | 'board'>('list');
 
-  const visible = CLAIMS.filter((c) => {
+  const filtered = CLAIMS.filter((c) => {
     if (filter !== 'all' && c.status !== filter) return false;
-    if (search && !c.patient.toLowerCase().includes(search.toLowerCase()) && !c.phn.includes(search)) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      return c.patient.toLowerCase().includes(q) || c.phn.includes(q) || c.id.toLowerCase().includes(q);
+    }
     return true;
   });
 
   const drafts = CLAIMS.filter(c => c.status === 'draft');
+  const countFor = (k: string) => k === 'all' ? CLAIMS.length : CLAIMS.filter(c => c.status === k).length;
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-5">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="font-display text-2xl font-bold text-white tracking-tight">Claims</h1>
-        <div className="flex gap-2">
-          {drafts.length > 0 && (
-            <button className="btn-purple text-[13px]">
-              <Send className="w-3.5 h-3.5" /> Submit {drafts.length} Draft{drafts.length > 1 ? 's' : ''}
-            </button>
-          )}
-          <Link href="/claims/new" className="btn-primary text-[13px]">
-            <Plus className="w-3.5 h-3.5" /> New Claim
-          </Link>
-        </div>
-      </div>
-
-      {/* Filter + search bar */}
-      <div className="flex flex-wrap gap-3 items-center">
-        <div className="flex rounded-xl bg-white/[0.04] border border-white/[0.07] p-1 gap-1">
-          {FILTERS.map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`text-[12px] font-semibold px-3 py-1.5 rounded-lg capitalize transition-all ${filter === f ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/70'}`}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
-        <div className="relative flex-1 min-w-48">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30" />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search patient or PHN…" className="input pl-9 text-[13px] py-2" />
-        </div>
-      </div>
-
-      {/* Claims table */}
-      <div className="card overflow-hidden">
-        <div className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-0 text-[11px] font-semibold text-white/30 uppercase tracking-widest px-5 py-3 border-b border-white/[0.05]">
-          <span>Patient / PHN</span>
-          <span className="pr-8">Service</span>
-          <span className="pr-8">Amount</span>
-          <span className="pr-5">Status</span>
-          <span>Date</span>
-        </div>
-        {visible.length === 0 && (
-          <div className="py-12 text-center text-white/30 text-[13px]">No claims match this filter.</div>
-        )}
-        {visible.map((c) => {
-          const st = STATUS_MAP[c.status] ?? STATUS_MAP.draft;
-          const isOpen = expanded === c.id;
-          return (
-            <div key={c.id} className="border-b border-white/[0.05] last:border-0">
-              <button
-                onClick={() => setExpanded(isOpen ? null : c.id)}
-                className="w-full grid grid-cols-[1fr_auto_auto_auto_auto] gap-0 items-center px-5 py-3.5 hover:bg-white/[0.02] transition-colors text-left"
-              >
-                <div>
-                  <div className="text-[13px] font-medium text-white/80">{c.patient}</div>
-                  <div className="text-[11px] text-white/35 mt-0.5">{c.id} · PHN {c.phn}</div>
-                </div>
-                <div className="text-[12px] text-white/50 pr-8">{c.code} · Dx {c.dx}</div>
-                <div className="text-[13px] font-semibold text-white/70 pr-8">${c.amount.toFixed(2)}</div>
-                <div className="pr-5"><span className={`badge ${st.cls}`}>{st.label}</span></div>
-                <div className="flex items-center gap-1.5 text-[11px] text-white/30">
-                  {c.date}
-                  <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-                </div>
+    <>
+      {/* Claims hero */}
+      <div className="claims-hero">
+        <div className="ch-inner">
+          <div className="ch-l">
+            <div className="ch-eyebrow">MSP · OHIP · AHCIP · All provinces</div>
+            <div className="ch-title">Claims Queue</div>
+            <div className="ch-sub">Submit, track, and reconcile all your provincial health claims in one place.</div>
+          </div>
+          <div className="ch-stats">
+            <div>
+              <div className="ch-stat-lbl">MTD Submitted</div>
+              <div className="ch-stat-val">$18,420</div>
+            </div>
+            <div>
+              <div className="ch-stat-lbl">Pending</div>
+              <div className="ch-stat-val">14</div>
+            </div>
+            <div>
+              <div className="ch-stat-lbl">Refused</div>
+              <div className="ch-stat-val">3</div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 10 }}>
+            {drafts.length > 0 && (
+              <button className="btn btn-on-hero">
+                <Send size={14} /> Submit {drafts.length} Draft{drafts.length > 1 ? 's' : ''}
               </button>
-              {isOpen && (
-                <div className="px-5 pb-4 bg-white/[0.015]">
-                  {c.refusal && (
-                    <div className="flex items-start gap-2 text-[12px] text-red-300 bg-red-500/10 border border-red-500/20 rounded-xl p-3 mb-3">
-                      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                      <div><strong>Refusal:</strong> {c.refusal}</div>
+            )}
+            <Link href="/claims/new" className="btn btn-on-hero">
+              <Plus size={14} /> New Claim
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Toolbar */}
+      <div className="tbar">
+        <div className="tbar-l">
+          {/* Filter pills */}
+          <div className="fpills">
+            {FILTERS.map((f) => (
+              <button
+                key={f.key}
+                className={`fpill${filter === f.key ? ' active' : ''}`}
+                onClick={() => setFilter(f.key)}
+              >
+                <span className="fpill-dot" style={{ background: f.color }} />
+                {f.label}
+                <span className="fpill-count">{countFor(f.key)}</span>
+              </button>
+            ))}
+          </div>
+          {/* Search */}
+          <div className="sr" style={{ minWidth: 220 }}>
+            <span className="sr-ico"><Search size={14}/></span>
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search patient, PHN, ID…"
+            />
+          </div>
+        </div>
+        <div className="tbar-r">
+          {/* View toggle */}
+          <div className="vt">
+            <button className={view === 'list' ? 'active' : ''} onClick={() => setView('list')}>
+              <LayoutList size={14} /> List
+            </button>
+            <button className={view === 'board' ? 'active' : ''} onClick={() => setView('board')}>
+              <Kanban size={14} /> Board
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* List view */}
+      {view === 'list' && (
+        <div className="card" style={{ overflow: 'hidden' }}>
+          <div className="tw">
+            <table>
+              <thead>
+                <tr>
+                  <th>Patient</th>
+                  <th>Claim ID</th>
+                  <th>Code · Dx</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                  <th style={{ textAlign: 'right' }}>Amount</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.length === 0 && (
+                  <tr><td colSpan={7} style={{ textAlign: 'center', padding: '36px', color: 'var(--t4)' }}>No claims match this filter.</td></tr>
+                )}
+                {filtered.map((c, i) => {
+                  const st = STATUS_CONFIG[c.status] ?? STATUS_CONFIG.draft;
+                  const isOpen = expanded === c.id;
+                  return (
+                    <React.Fragment key={c.id}>
+                      <tr style={{ cursor: 'pointer' }} onClick={() => setExpanded(isOpen ? null : c.id)}>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                            <span className={`av ${AV_COLOR[i % AV_COLOR.length]}`}>{c.initials}</span>
+                            <div>
+                              <div style={{ fontWeight: 600 }}>{c.patient}</div>
+                              <div style={{ fontSize: '.72rem', color: 'var(--t4)', fontFamily: 'var(--fm)' }}>{c.phn}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td><span className="mono" style={{ color: 'var(--sky-dk)' }}>{c.id}</span></td>
+                        <td>
+                          <span className="code-chip" style={{ marginRight: 4 }}>{c.code}</span>
+                          <span className="icd-chip">{c.dx}</span>
+                        </td>
+                        <td><span className={st.cls}>{st.label}</span></td>
+                        <td style={{ color: 'var(--t3)', fontSize: '.82rem' }}>{c.date}</td>
+                        <td style={{ textAlign: 'right', fontWeight: 600 }}>${c.amount.toFixed(2)}</td>
+                        <td style={{ width: 28 }}>
+                          <ChevronDown size={14} style={{ color: 'var(--t4)', transition: 'transform .15s', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+                        </td>
+                      </tr>
+                      {isOpen && (
+                        <tr>
+                          <td colSpan={7} style={{ background: 'var(--n50)', padding: '14px 20px' }}>
+                            {c.refusal && (
+                              <div className="alrt al-err" style={{ marginBottom: 12 }}>
+                                <AlertCircle size={15} className="alrt-ico" />
+                                <span><strong>Refusal reason:</strong> {c.refusal}</span>
+                              </div>
+                            )}
+                            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                              {c.status === 'draft' && (
+                                <button className="btn btn-p btn-sm"><Send size={13} /> Submit Claim</button>
+                              )}
+                              {c.status === 'refused' && (
+                                <button className="btn btn-p btn-sm">Fix &amp; Resubmit</button>
+                              )}
+                              <button className="btn btn-s btn-sm">Edit</button>
+                              <button className="btn btn-d btn-sm"><X size={12} /> Delete</button>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Board / Kanban view */}
+      {view === 'board' && (
+        <div className="kb">
+          {KANBAN_COLS.map((col) => {
+            const cards = CLAIMS.filter(c => c.status === col.key);
+            const total = cards.reduce((s, c) => s + c.amount, 0);
+            return (
+              <div key={col.key} className="kcol">
+                <div className="kcol-h">
+                  <div className="kcol-t">
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: col.color, display: 'inline-block' }} />
+                    {col.label}
+                  </div>
+                  <span className="kcol-tot">{cards.length} · ${total.toFixed(0)}</span>
+                </div>
+                <div className="kcol-body">
+                  {cards.map((c, i) => (
+                    <div key={c.id} className="kcard">
+                      <div className="kcard-h">
+                        <span className="kcard-id">{c.id}</span>
+                        <span className="kcard-amt">${c.amount.toFixed(2)}</span>
+                      </div>
+                      <div className="kcard-p">
+                        <span className={`av ${AV_COLOR[i % AV_COLOR.length]}`} style={{ width: 26, height: 26, fontSize: '.65rem' }}>{c.initials}</span>
+                        <div>
+                          <div className="kcard-pn">{c.patient}</div>
+                          <div className="kcard-pm">{c.phn}</div>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 5, marginBottom: 8 }}>
+                        <span className="code-chip">{c.code}</span>
+                        <span className="icd-chip">{c.dx}</span>
+                      </div>
+                      {c.refusal && (
+                        <div style={{ fontSize: '.72rem', color: 'var(--bad)', background: 'var(--bad-lt)', border: '1px solid var(--bad-b)', borderRadius: 7, padding: '5px 8px', marginBottom: 8, lineHeight: 1.4 }}>
+                          <AlertCircle size={11} style={{ display: 'inline', marginRight: 4, verticalAlign: 'middle' }} />
+                          {c.refusal.slice(0, 48)}…
+                        </div>
+                      )}
+                      <div className="kcard-meta">
+                        <span>{c.date}</span>
+                        {c.status === 'draft' && (
+                          <button className="btn btn-p btn-xs"><Send size={11} /> Submit</button>
+                        )}
+                        {c.status === 'refused' && (
+                          <button className="btn btn-d btn-xs">Fix</button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  {cards.length === 0 && (
+                    <div className="empty" style={{ padding: '24px 12px' }}>
+                      <div style={{ fontSize: '.78rem', color: 'var(--t4)' }}>No {col.label.toLowerCase()} claims</div>
                     </div>
                   )}
-                  <div className="flex gap-2 flex-wrap">
-                    {c.status === 'draft' && <button className="btn-purple text-[12px] py-1.5 px-3"><Send className="w-3 h-3" /> Submit</button>}
-                    {c.status === 'refused' && <button className="btn-primary text-[12px] py-1.5 px-3">Fix &amp; Resubmit</button>}
-                    <button className="btn text-[12px] py-1.5 px-3">Edit</button>
-                    <button className="btn text-[12px] py-1.5 px-3 text-red-400 hover:text-red-300">Delete</button>
-                  </div>
                 </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </>
   );
 }

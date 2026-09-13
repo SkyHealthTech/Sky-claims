@@ -1,17 +1,33 @@
 import type { Config } from 'tailwindcss';
+
 const config: Config = {
   content: ['./src/**/*.{ts,tsx}'],
   theme: {
     extend: {
-      fontFamily: { display: ['Inter', 'system-ui', 'sans-serif'], sans: ['Inter', 'system-ui', 'sans-serif'] },
+      fontFamily: {
+        sans: ['var(--font-jakarta)', 'Plus Jakarta Sans', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['var(--font-jakarta)', 'Plus Jakarta Sans', 'system-ui', '-apple-system', 'sans-serif'],
+        mono: ['ui-monospace', 'Cascadia Code', 'Source Code Pro', 'Menlo', 'Consolas', 'monospace'],
+      },
       colors: {
-        sky: { 400: '#3acafe', 500: '#10adee', 600: '#048bcc', 700: '#076fa5', 800: '#0c5d87', 900: '#104e70', 950: '#0a304a' },
-        ink: { 50: 'rgb(3,7,18)', 100: 'rgb(15,23,42)', 200: 'rgb(30,41,59)', 300: 'rgb(51,65,85)', 400: 'rgb(71,85,105)', 500: 'rgb(100,116,139)', 600: 'rgb(148,163,184)', 700: 'rgb(203,213,225)', 800: 'rgb(241,245,249)', 900: 'rgb(255,255,255)', 950: 'rgb(234,239,246)' },
-        accent: { DEFAULT: '#7cf0d2', dark: '#1ed3a4' },
-        purple: { 400: '#a78bfa', 500: '#8b5cf6', 600: '#7c3aed', 700: '#6d28d9' },
+        sky: {
+          DEFAULT: '#2563eb',
+          lt: '#eff5ff',
+          dk: '#1d4ed8',
+          b: '#bfd7ff',
+        },
+        lilac: {
+          DEFAULT: '#8b5cf6',
+          dk: '#6d28d9',
+          lt: '#f5eef9',
+        },
+        ok: { DEFAULT: '#059669', lt: '#ecfdf5', b: '#a7f3d0' },
+        warn: { DEFAULT: '#d97706', lt: '#fffbeb', b: '#fde68a' },
+        bad: { DEFAULT: '#e11d48', lt: '#fff1f3', b: '#fecdd3' },
       },
     },
   },
   plugins: [],
 };
+
 export default config;

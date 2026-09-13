@@ -1,211 +1,257 @@
 'use client';
 import { useState } from 'react';
-import { Settings, Shield, User, Building2, CheckCircle2, AlertTriangle, Eye, EyeOff, Save } from 'lucide-react';
+import { Shield, User, Building2, CheckCircle2, AlertTriangle, Eye, EyeOff, Save, CreditCard, Lock } from 'lucide-react';
 
-type Tab = 'practice' | 'provider' | 'teleplan';
+type Tab = 'practice' | 'provider' | 'teleplan' | 'billing' | 'security' | 'compliance';
+
+const TABS: { id: Tab; label: string; icon: any }[] = [
+  { id: 'practice',   label: 'Practice',    icon: Building2 },
+  { id: 'provider',   label: 'Provider',    icon: User },
+  { id: 'teleplan',   label: 'Teleplan',    icon: Shield },
+  { id: 'billing',    label: 'Billing',     icon: CreditCard },
+  { id: 'security',   label: 'Security',    icon: Lock },
+  { id: 'compliance', label: 'Compliance',  icon: CheckCircle2 },
+];
 
 export default function SettingsPage() {
-  const [tab, setTab] = useState<Tab>('teleplan');
+  const [tab, setTab] = useState<Tab>('practice');
 
   return (
-    <div className="p-6 max-w-3xl mx-auto space-y-6">
-      <div>
-        <h1 className="font-display text-2xl font-bold text-white tracking-tight">Settings</h1>
-        <p className="text-[13px] text-white/40 mt-1">Configure your practice, providers, and Teleplan connection</p>
-      </div>
-
-      {/* Tab bar */}
-      <div className="flex gap-1 border-b border-white/[0.07] pb-0">
-        {([
-          { id: 'teleplan', label: 'Teleplan', icon: Shield },
-          { id: 'practice',  label: 'Practice',  icon: Building2 },
-          { id: 'provider',  label: 'Provider',  icon: User },
-        ] as { id: Tab; label: string; icon: any }[]).map(({ id, label, icon: Icon }) => (
-          <button key={id} onClick={() => setTab(id)}
-            className={`flex items-center gap-1.5 px-4 py-2 text-[13px] font-medium border-b-2 -mb-px transition-colors ${
-              tab === id
-                ? 'border-purple-500 text-white'
-                : 'border-transparent text-white/40 hover:text-white/60'
-            }`}>
-            <Icon className="w-3.5 h-3.5" /> {label}
+    <div style={{ maxWidth: 820 }}>
+      {/* Tabs */}
+      <div className="tabs">
+        {TABS.map(({ id, label, icon: Icon }) => (
+          <button key={id} className={`tab${tab === id ? ' active' : ''}`} onClick={() => setTab(id)}>
+            <Icon size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 5 }} />{label}
           </button>
         ))}
       </div>
 
-      {tab === 'teleplan' && <TeleplanTab />}
-      {tab === 'practice'  && <PracticeTab />}
-      {tab === 'provider'  && <ProviderTab />}
+      {tab === 'practice'   && <PracticeTab />}
+      {tab === 'provider'   && <ProviderTab />}
+      {tab === 'teleplan'   && <TeleplanTab />}
+      {tab === 'billing'    && <BillingTab />}
+      {tab === 'security'   && <SecurityTab />}
+      {tab === 'compliance' && <ComplianceTab />}
     </div>
-  );
-}
-
-/* ── Teleplan credentials ── */
-function TeleplanTab() {
-  const [show, setShow] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [form, setForm] = useState({
-    vendorDc: 'V0127',
-    payee: '99609',
-    baseUrl: 'https://test.teleplan.bc.ca',
-    username: '',
-    password: '',
-    env: 'test',
-  });
-
-  const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
-
-  const save = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
-  };
-
-  const connected = form.vendorDc && form.payee;
-
-  return (
-    <form onSubmit={save} className="space-y-5">
-      {/* Status banner */}
-      <div className={`flex items-center gap-3 rounded-xl border p-4 ${
-        connected ? 'border-emerald-500/25 bg-emerald-500/5' : 'border-amber-500/25 bg-amber-500/5'}`}>
-        {connected
-          ? <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-          : <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0" />}
-        <div>
-          <div className={`font-semibold text-[14px] ${connected ? 'text-emerald-300' : 'text-amber-300'}`}>
-            {connected ? `Connected · Vendor ${form.vendorDc}` : 'Credentials required'}
-          </div>
-          <div className="text-[11px] text-white/40 mt-0.5">
-            {connected
-              ? `${form.env === 'test' ? 'Test environment' : 'Production'} · Payee ${form.payee} · All 16 E45 + 13 claim conformance tests passing`
-              : 'Enter your Teleplan vendor credentials to enable claims submission'}
-          </div>
-        </div>
-        <div className="ml-auto">
-          <span className={`text-[11px] px-2 py-1 rounded-lg font-medium uppercase tracking-wider ${
-            form.env === 'test' ? 'bg-amber-500/15 text-amber-300' : 'bg-emerald-500/15 text-emerald-300'}`}>
-            {form.env}
-          </span>
-        </div>
-      </div>
-
-      {/* Environment toggle */}
-      <Section title="Environment">
-        <div className="flex gap-3">
-          {(['test', 'production'] as const).map((e) => (
-            <button key={e} type="button" onClick={() => set('env', e)}
-              className={`flex-1 py-2.5 rounded-xl text-[13px] font-medium capitalize transition-colors border ${
-                form.env === e
-                  ? 'border-purple-500/50 bg-purple-500/15 text-purple-300'
-                  : 'border-white/10 text-white/40 hover:text-white/60'}`}>
-              {e === 'test' ? 'Test (Conformance)' : 'Production'}
-            </button>
-          ))}
-        </div>
-        {form.env === 'production' && (
-          <div className="text-[12px] text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 flex items-start gap-2">
-            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-            Production mode submits real claims to MSP. Ensure HIBC vendor approval is complete before enabling.
-          </div>
-        )}
-      </Section>
-
-      {/* Vendor credentials */}
-      <Section title="Vendor Credentials">
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="Vendor / DC Number" value={form.vendorDc} onChange={(v) => set('vendorDc', v)} placeholder="V0127" />
-          <Field label="Payee Number" value={form.payee} onChange={(v) => set('payee', v)} placeholder="99609" />
-        </div>
-        <Field label="Teleplan Base URL" value={form.baseUrl} onChange={(v) => set('baseUrl', v)} placeholder="https://test.teleplan.bc.ca" />
-      </Section>
-
-      {/* Auth */}
-      <Section title="Authentication">
-        <Field label="Username" value={form.username} onChange={(v) => set('username', v)} placeholder="your-teleplan-username" />
-        <div>
-          <label className="block text-[12px] font-medium text-white/50 mb-1.5">Password</label>
-          <div className="relative">
-            <input
-              type={show ? 'text' : 'password'}
-              value={form.password}
-              onChange={(e) => set('password', e.target.value)}
-              placeholder="••••••••"
-              className="input pr-10 text-[13px]"
-            />
-            <button type="button" onClick={() => setShow((s) => !s)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60">
-              {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
-          </div>
-        </div>
-      </Section>
-
-      <button type="submit" className="btn-purple w-full justify-center py-2.5 text-[13px]">
-        {saved
-          ? <><CheckCircle2 className="w-4 h-4" /> Saved</>
-          : <><Save className="w-4 h-4" /> Save Teleplan Settings</>}
-      </button>
-    </form>
   );
 }
 
 /* ── Practice ── */
 function PracticeTab() {
+  const [saved, setSaved] = useState(false);
+  function save(e: React.FormEvent) { e.preventDefault(); setSaved(true); setTimeout(() => setSaved(false), 2500); }
   return (
-    <div className="space-y-5">
-      <Section title="Practice Information">
-        <Field label="Practice Name" value="Sky Eye Care" onChange={() => {}} />
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="Province" value="BC" onChange={() => {}} />
-          <Field label="City" value="Vancouver" onChange={() => {}} />
+    <form onSubmit={save}>
+      <div className="card cp" style={{ marginBottom: 16 }}>
+        <div className="ct" style={{ marginBottom: 16 }}>Practice Information</div>
+        <div className="fg">
+          <div className="field">
+            <label>Practice Name</label>
+            <input defaultValue="Sky Eye Care" />
+          </div>
+          <div className="fg fg2">
+            <div className="field"><label>Province</label><select defaultValue="BC"><option>BC</option><option>ON</option><option>AB</option><option>QC</option></select></div>
+            <div className="field"><label>City</label><input defaultValue="Vancouver" /></div>
+          </div>
+          <div className="field"><label>Street Address</label><input defaultValue="1234 West Georgia St" /></div>
+          <div className="fg fg2">
+            <div className="field"><label>Postal Code</label><input defaultValue="V6E 3C9" /></div>
+            <div className="field"><label>Phone</label><input defaultValue="(604) 555-0100" /></div>
+          </div>
+          <div className="field"><label>Business Number (CRA)</label><input placeholder="123456789 RT0001" /></div>
+          <div className="field"><label>Practice Email</label><input defaultValue="Dr.ekeoba@gmail.com" type="email" /></div>
         </div>
-        <Field label="Business Number (CRA)" value="" onChange={() => {}} placeholder="123456789 RT0001" />
-      </Section>
-      <button className="btn-purple w-full justify-center py-2.5 text-[13px]">
-        <Save className="w-4 h-4" /> Save Practice
+      </div>
+      <button type="submit" className="btn btn-p">
+        {saved ? <><CheckCircle2 size={14} /> Saved</> : <><Save size={14} /> Save Practice</>}
       </button>
-    </div>
+    </form>
   );
 }
 
 /* ── Provider ── */
 function ProviderTab() {
+  const [saved, setSaved] = useState(false);
+  function save(e: React.FormEvent) { e.preventDefault(); setSaved(true); setTimeout(() => setSaved(false), 2500); }
   return (
-    <div className="space-y-5">
-      <Section title="Provider Profile">
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="First Name" value="Austin" onChange={() => {}} />
-          <Field label="Last Name" value="Ekeoba" onChange={() => {}} />
+    <form onSubmit={save}>
+      <div className="card cp" style={{ marginBottom: 16 }}>
+        <div className="ct" style={{ marginBottom: 16 }}>Provider Profile</div>
+        <div className="fg">
+          <div className="fg fg2">
+            <div className="field"><label>First Name</label><input defaultValue="Austin" /></div>
+            <div className="field"><label>Last Name</label><input defaultValue="Ekeoba" /></div>
+          </div>
+          <div className="field"><label>Designation</label>
+            <select defaultValue="OD"><option value="OD">OD — Optometrist</option><option value="MD">MD — Physician</option><option value="NP">NP — Nurse Practitioner</option></select>
+          </div>
+          <div className="fg fg2">
+            <div className="field"><label>MSP Provider Number</label><input placeholder="e.g. 12345" /></div>
+            <div className="field"><label>Discipline Code</label><input placeholder="Teleplan discipline" /></div>
+          </div>
+          <div className="fg fg2">
+            <div className="field"><label>College (e.g. COPTBC)</label><input placeholder="Registration #" /></div>
+            <div className="field"><label>Specialty Code</label><input defaultValue="OD" /></div>
+          </div>
         </div>
-        <Field label="MSP Provider Number" value="" onChange={() => {}} placeholder="e.g. 12345" />
-        <Field label="College Registration #" value="" onChange={() => {}} placeholder="COPTBC number" />
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="Specialty Code" value="OD" onChange={() => {}} />
-          <Field label="Discipline Code" value="" onChange={() => {}} placeholder="Teleplan discipline" />
-        </div>
-      </Section>
-      <button className="btn-purple w-full justify-center py-2.5 text-[13px]">
-        <Save className="w-4 h-4" /> Save Provider
+      </div>
+      <button type="submit" className="btn btn-p">
+        {saved ? <><CheckCircle2 size={14} /> Saved</> : <><Save size={14} /> Save Provider</>}
       </button>
+    </form>
+  );
+}
+
+/* ── Teleplan ── */
+function TeleplanTab() {
+  const [show, setShow] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [form, setForm] = useState({ vendorDc: 'V0127', payee: '99609', baseUrl: 'https://test.teleplan.bc.ca', username: '', password: '', env: 'test' });
+  const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
+  const connected = form.vendorDc && form.payee;
+
+  function save(e: React.FormEvent) { e.preventDefault(); setSaved(true); setTimeout(() => setSaved(false), 2500); }
+
+  return (
+    <form onSubmit={save} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {/* Status banner */}
+      <div className={`alrt${connected ? ' al-ok' : ' al-warn'}`}>
+        <span className="alrt-ico">{connected ? <CheckCircle2 size={16}/> : <AlertTriangle size={16}/>}</span>
+        <span>
+          <strong>{connected ? `Connected · Vendor ${form.vendorDc}` : 'Credentials required'}</strong>
+          {' — '}
+          {connected
+            ? `${form.env === 'test' ? 'Test environment' : 'Production'} · Payee ${form.payee} · All conformance tests passing`
+            : 'Enter your Teleplan vendor credentials to enable claims submission.'}
+        </span>
+      </div>
+
+      {/* Environment */}
+      <div className="card cp">
+        <div className="ct" style={{ marginBottom: 14 }}>Environment</div>
+        <div style={{ display: 'flex', gap: 10 }}>
+          {(['test', 'production'] as const).map((e) => (
+            <button key={e} type="button"
+              onClick={() => set('env', e)}
+              className={`btn${form.env === e ? ' btn-p' : ' btn-s'}`}
+              style={{ flex: 1, justifyContent: 'center' }}>
+              {e === 'test' ? 'Test (Conformance)' : 'Production'}
+            </button>
+          ))}
+        </div>
+        {form.env === 'production' && (
+          <div className="alrt al-warn" style={{ marginTop: 12 }}>
+            <AlertTriangle size={15} className="alrt-ico" />
+            Production mode submits real claims to MSP. Ensure HIBC vendor approval is complete.
+          </div>
+        )}
+      </div>
+
+      {/* Vendor credentials */}
+      <div className="card cp">
+        <div className="ct" style={{ marginBottom: 14 }}>Vendor Credentials</div>
+        <div className="fg">
+          <div className="fg fg2">
+            <div className="field"><label>Vendor / DC Number</label><input value={form.vendorDc} onChange={e => set('vendorDc', e.target.value)} placeholder="V0127" /></div>
+            <div className="field"><label>Payee Number</label><input value={form.payee} onChange={e => set('payee', e.target.value)} placeholder="99609" /></div>
+          </div>
+          <div className="field"><label>Teleplan Base URL</label><input value={form.baseUrl} onChange={e => set('baseUrl', e.target.value)} placeholder="https://test.teleplan.bc.ca" /></div>
+        </div>
+      </div>
+
+      {/* Auth */}
+      <div className="card cp">
+        <div className="ct" style={{ marginBottom: 14 }}>Authentication</div>
+        <div className="fg">
+          <div className="field"><label>Username</label><input value={form.username} onChange={e => set('username', e.target.value)} placeholder="your-teleplan-username" /></div>
+          <div className="field">
+            <label>Password</label>
+            <div style={{ position: 'relative' }}>
+              <input type={show ? 'text' : 'password'} value={form.password} onChange={e => set('password', e.target.value)} placeholder="••••••••" style={{ paddingRight: 40 }} />
+              <button type="button" onClick={() => setShow(s => !s)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--t4)' }}>
+                {show ? <EyeOff size={16}/> : <Eye size={16}/>}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" className="btn btn-p">
+        {saved ? <><CheckCircle2 size={14}/> Saved</> : <><Save size={14}/> Save Teleplan Settings</>}
+      </button>
+    </form>
+  );
+}
+
+/* ── Billing ── */
+function BillingTab() {
+  return (
+    <div className="card cp">
+      <div className="ct" style={{ marginBottom: 6 }}>Subscription</div>
+      <div className="cs" style={{ marginBottom: 18 }}>Manage your Sky Claims plan and billing</div>
+      <div className="alrt al-ok" style={{ marginBottom: 20 }}>
+        <CheckCircle2 size={15} className="alrt-ico" />
+        <span><strong>Solo Plan</strong> — Active · $49/mo + GST · Renews Oct 12, 2026</span>
+      </div>
+      <div className="sum-box">
+        <div className="srow"><span style={{ color: 'var(--t3)' }}>Plan</span><span style={{ fontWeight: 600 }}>Sky Claims Solo</span></div>
+        <div className="srow"><span style={{ color: 'var(--t3)' }}>Billing</span><span>Monthly</span></div>
+        <div className="srow"><span style={{ color: 'var(--t3)' }}>Next charge</span><span>Oct 12, 2026 · $51.45</span></div>
+        <div className="srow"><span style={{ color: 'var(--t3)' }}>Payment</span><span style={{ fontFamily: 'var(--fm)' }}>Visa ···· 4242</span></div>
+      </div>
+      <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
+        <button className="btn btn-s btn-sm">Manage Billing</button>
+        <button className="btn btn-g btn-sm">View Invoices</button>
+      </div>
     </div>
   );
 }
 
-/* ── Helpers ── */
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+/* ── Security ── */
+function SecurityTab() {
+  const [saved, setSaved] = useState(false);
+  function save(e: React.FormEvent) { e.preventDefault(); setSaved(true); setTimeout(() => setSaved(false), 2500); }
   return (
-    <div className="card p-5 space-y-4">
-      <h3 className="text-[13px] font-semibold text-white/60">{title}</h3>
-      {children}
-    </div>
+    <form onSubmit={save}>
+      <div className="card cp" style={{ marginBottom: 16 }}>
+        <div className="ct" style={{ marginBottom: 16 }}>Change Password</div>
+        <div className="fg">
+          <div className="field"><label>Current Password</label><input type="password" placeholder="••••••••" /></div>
+          <div className="field"><label>New Password</label><input type="password" placeholder="••••••••" /></div>
+          <div className="field"><label>Confirm New Password</label><input type="password" placeholder="••••••••" /></div>
+        </div>
+      </div>
+      <button type="submit" className="btn btn-p">
+        {saved ? <><CheckCircle2 size={14}/> Saved</> : <><Lock size={14}/> Update Password</>}
+      </button>
+    </form>
   );
 }
 
-function Field({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) {
+/* ── Compliance ── */
+function ComplianceTab() {
   return (
-    <div>
-      <label className="block text-[12px] font-medium text-white/50 mb-1.5">{label}</label>
-      <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
-        className="input text-[13px]" />
+    <div className="card cp">
+      <div className="ct" style={{ marginBottom: 18 }}>Compliance &amp; Privacy</div>
+      {[
+        { ok: true,  label: 'PIPEDA / provincial privacy acts', note: 'All patient data encrypted at rest and in transit' },
+        { ok: true,  label: 'PHIPA (Ontario) / FOIPPA (BC)',     note: 'Compliant cloud storage in Canada (Toronto region)' },
+        { ok: true,  label: 'Teleplan E45 conformance',           note: 'All 16 eligibility + 13 claim tests passing' },
+        { ok: false, label: 'HIBC vendor approval',               note: 'Submit conformance bundle to HIBC to go live' },
+        { ok: true,  label: 'TLS 1.3 in transit',                 note: 'All API traffic uses TLS 1.3' },
+        { ok: true,  label: 'PHI audit logging',                   note: 'All PHI access logged with user + timestamp' },
+      ].map((item, i) => (
+        <div key={i} className="comp-row">
+          <div className="comp-ic" style={{ background: item.ok ? 'var(--ok-lt)' : 'var(--warn-lt)' }}>
+            {item.ok ? <CheckCircle2 size={13} style={{ color: 'var(--ok)' }}/> : <AlertTriangle size={13} style={{ color: 'var(--warn)' }}/>}
+          </div>
+          <div>
+            <div style={{ fontWeight: 600, fontSize: '.84rem' }}>{item.label}</div>
+            <div style={{ fontSize: '.74rem', color: 'var(--t3)', marginTop: 2 }}>{item.note}</div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
