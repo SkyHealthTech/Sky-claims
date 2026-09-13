@@ -169,7 +169,8 @@ function AuthForm({ initialMode }: { initialMode: Mode }) {
 
   async function handleGoogle() {
     setGLoad(true); setError('');
-    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: CALLBACK } });
+    const redirectTo = mode === 'signup' ? `${CALLBACK}?next=/onboarding` : CALLBACK;
+    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } });
     if (error) { setError(error.message); setGLoad(false); }
   }
 
@@ -185,7 +186,7 @@ function AuthForm({ initialMode }: { initialMode: Mode }) {
     if (password !== confirm) { setError('Passwords do not match.'); return; }
     if (password.length < 8)  { setError('Password must be at least 8 characters.'); return; }
     setLoading(true); setError('');
-    const { error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: CALLBACK } });
+    const { error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${CALLBACK}?next=/onboarding` } });
     setLoading(false);
     if (error) setError(error.message);
     else setDone(`Check your inbox at ${email} — click the confirmation link to activate your account.`);
