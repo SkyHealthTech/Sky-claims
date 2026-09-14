@@ -193,12 +193,23 @@ function describeArdReason(code) {
  *   pos 40-48  PHN/ULI     — 9-digit Alberta ULI (zeros if blank/OOP)
  *   pos 49-59  OOP RegNum  — out-of-province registration number or spaces
  *   pos 60+    Assessment data fields (dates, amounts, batch IDs)
- *   ~pos 101   PayCode     — e.g. N39B, N35FA, N35FB 47 (paid/refused indicator)
+ *   ~pos 90    Amount      — 14-digit amount field (e.g. 00003709 = $37.09)
+ *   ~pos 104   PayCode     — e.g. N39B, N35FA, N35FB 47, N28, N63, N (applied)
  *
- * PayCode meanings (AHCIP test environment observed):
- *   N39B   — Not Applied / Refused (original claim from ACPT batch — test env refusal)
- *   N35FA  — Refused (resubmission or ineligible claim in UAT)
- *   N35FB  — Refused for Change/Delete/Reassess action in UAT
+ * ResultCode (pos 24) meanings — confirmed from real AHCIP ARD files:
+ *   R   — Processed (refused or forwarded to reciprocal carrier)
+ *   A   — Applied / Paid (claim assessed and payment issued)
+ *   H   — Held (pending EMSAF/CST1 documentation or external adjudication)
+ *   ' ' — Pending (not yet processed)
+ *
+ * PayCode meanings — confirmed from AHCIP ARD files (G0010–G0012):
+ *   N39B      — Not Applied / test-env assessment refusal
+ *   N35FA     — Refused — eligibility or claim edit failure
+ *   N35FB     — Refused — change/reassess/delete not payable
+ *   N35FB 47  — Refused — HSC expired (reason 47)
+ *   N28       — Referred to interprovincial reciprocal/IFH carrier (OOP/RECP claims)
+ *   N63       — Held for EMSAF (CST1) document submission
+ *   N         — Applied at base rate (paid; DIRD/BASE processing)
  *
  * @param {string} line
  * @returns {object}
@@ -209,19 +220,43 @@ function parseAssmtRecord(line) {
   const claimNum   = line.slice(0, 15).trim();
   const versionNum = line.slice(15, 19).trim();
   const actionCode = line.slice(19, 20);
-  const resultCode = line.slice(24, 25).trim();
+  const resultCode = line.slice(24, 25).trim();  // R=processed A=applied H=held
   const phn        = line.slice(40, 49).trim();
 
-  // PayCode: scan from position 95 onward for N followed by digits and letters.
-  // e.g. N39B, N35FA, N35FB 47
-  // Sub-code (e.g. " 47") is immediately adjacent — at most 3 spaces before 1-2 digits.
-  const tail = line.slice(95);
-  const payMatch = tail.match(/N(\d{2})([A-Z]{1,2})(\s{1,3}\d{1,2})?(?=\s|$)/);
-  const payCode = payMatch ? ('N' + payMatch[1] + payMatch[2] + (payMatch[3] ? payMatch[3].trim() && ' ' + payMatch[3].trim() : '')).trim() : '';
+  // Amount: 14-digit field starting around position 76 (after dates/IDs).
+  // Scan for first non-zero numeric run of 8+ digits — represents cents (e.g. 00003709 = $37.09).
+  const amountMatch = line.slice(70, 104).match(/(\d{8,14})/);
+  const amountCents = amountMatch ? parseInt(amountMatch[1], 10) : 0;
 
-  // Determine refused/accepted
-  // In AHCIP UAT, N39B and N35Fx both indicate non-payment (test codes)
-  const refused = /^N(39|35)/.test(payCode);
+  // PayCode: starts around position 104, begins with N.
+  // Handles all observed formats:
+  //   N + 2 digits + 0-2 letters + optional sub-code (e.g. N35FB 47, N28, N63)
+  //   Bare "N" (applied at base rate, no suffix)
+  const tail = line.slice(90);
+  const payMatch = tail.match(/N(\d{2})([A-Z]{0,2})(\s{1,3}\d{1,2})?(?=\s|$)/) ||
+                   tail.match(/(N)(?=\s{2,}|$)/);
+  let payCode = '';
+  if (payMatch) {
+    if (payMatch[0] === 'N') {
+      payCode = 'N';
+    } else {
+      payCode = ('N' + payMatch[1] + (payMatch[2] || '') +
+                 (payMatch[3] ? ' ' + payMatch[3].trim() : '')).trim();
+    }
+  }
+
+  // Supplement SUBM flag (EMSAF held)
+  const submFlag = /\bSUBM\b/.test(line);
+
+  // Derive display reasonCode — prefer payCode; for ResultCode A use "Applied"
+  const reasonCode = payCode ||
+    (resultCode === 'A' ? 'Applied' : resultCode === 'H' ? 'Held' : '');
+
+  // Determine applied/held/refused/referred
+  const applied  = resultCode === 'A';
+  const held     = resultCode === 'H';
+  const referred = payCode === 'N28';
+  const refused  = !applied && !held && !referred && /^N(39|35)/.test(payCode);
 
   return {
     raw:         line,
@@ -232,20 +267,35 @@ function parseAssmtRecord(line) {
     resultCode,
     phn,
     payCode,
+    amountCents,
+    submFlag,
+    applied,
+    held,
+    referred,
     refused,
-    reasonCode:  payCode,
-    description: describeAssmtPayCode(payCode),
+    reasonCode,
+    description: describeAssmtPayCode(payCode, resultCode, amountCents, submFlag),
   };
 }
 
 /**
  * Descriptions for AHCIP ASSMT payment/refusal codes.
  */
-function describeAssmtPayCode(code) {
+function describeAssmtPayCode(code, resultCode, amountCents, submFlag) {
+  if (resultCode === 'A') {
+    const dollars = amountCents ? ' ($' + (amountCents / 100).toFixed(2) + ')' : '';
+    return 'Applied — payment issued' + dollars + '.';
+  }
+  if (resultCode === 'H') {
+    return 'Held' + (submFlag ? ' — pending EMSAF/CST1 document submission.' : '.');
+  }
   if (!code) return '';
   if (code.startsWith('N39B'))  return 'Not Applied — assessment refused (code 39B).';
   if (code.startsWith('N35FA')) return 'Refused — eligibility or claim edit failure (code 35FA).';
   if (code.startsWith('N35FB')) return 'Refused — change/reassess/delete not payable (code 35FB).';
+  if (code === 'N28')           return 'Referred to interprovincial reciprocal/IFH carrier.';
+  if (code === 'N63')           return 'Held — EMSAF document required (CST1 flag set).';
+  if (code === 'N')             return 'Applied at base rate (DIRD/BASE).';
   return 'Pay code: ' + code;
 }
 

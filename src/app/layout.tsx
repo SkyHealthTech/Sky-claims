@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Plus_Jakarta_Sans } from 'next/font/google';
+import { Plus_Jakarta_Sans, Fraunces, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 
 const jakartaSans = Plus_Jakarta_Sans({
@@ -7,6 +7,22 @@ const jakartaSans = Plus_Jakarta_Sans({
   variable: '--font-jakarta',
   weight: ['300', '400', '500', '600', '700', '800'],
   style: ['normal', 'italic'],
+  display: 'swap',
+});
+
+const fraunces = Fraunces({
+  subsets: ['latin'],
+  variable: '--font-fraunces',
+  weight: ['300', '400', '500', '600'],
+  style: ['normal', 'italic'],
+  axes: ['opsz'],
+  display: 'swap',
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  variable: '--font-mono',
+  weight: ['400', '500', '600'],
   display: 'swap',
 });
 
@@ -23,7 +39,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={jakartaSans.variable}>
+    <html lang="en" className={`${jakartaSans.variable} ${fraunces.variable} ${jetbrainsMono.variable}`}>
       <body>{children}</body>
     </html>
   );
