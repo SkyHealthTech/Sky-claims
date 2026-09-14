@@ -5,46 +5,47 @@ import {
   TrendingUp, Clock, AlertCircle, FileText,
   ShieldCheck, Receipt, ClipboardList, ChevronRight,
   RefreshCw, Plus, AlertTriangle, CheckCircle2, Info,
+  Zap, Activity,
 } from 'lucide-react';
 
 // ── Mock data ─────────────────────────────────────────────────────────────────
 const STATS = [
   {
-    label: 'MTD Revenue', value: '$18,420', sub: '↑ 12% vs last month',
-    icon: TrendingUp, accent: 'linear-gradient(135deg,#2563eb,#60a5fa)',
-    bg: '#eff5ff', iconColor: '#2563eb',
+    label: 'MTD Revenue', value: '$18,420', sub: '+12% vs last month', trend: 'up',
+    icon: TrendingUp,
+    gradient: 'linear-gradient(135deg,#7c3aed 0%,#a855f7 100%)',
+    glow: '0 8px 24px rgba(124,58,237,.25)',
     bars: [65, 48, 82, 54, 70, 90, 78, 62, 95, 88, 73, 85],
-    barColor: '#2563eb',
   },
   {
-    label: 'Pending', value: '14', sub: 'awaiting submission',
-    icon: Clock, accent: 'linear-gradient(135deg,#d97706,#fbbf24)',
-    bg: '#fffbeb', iconColor: '#d97706',
+    label: 'Pending', value: '14', sub: 'awaiting submission', trend: 'neutral',
+    icon: Clock,
+    gradient: 'linear-gradient(135deg,#d97706 0%,#f59e0b 100%)',
+    glow: '0 8px 24px rgba(217,119,6,.22)',
     bars: [30, 45, 22, 60, 38, 50, 42, 55, 35, 48, 28, 44],
-    barColor: '#d97706',
   },
   {
-    label: 'Refused (C12)', value: '3', sub: 'need attention',
-    icon: AlertCircle, accent: 'linear-gradient(135deg,#e11d48,#fb7185)',
-    bg: '#fff1f3', iconColor: '#e11d48',
+    label: 'Refused (C12)', value: '3', sub: 'need attention', trend: 'down',
+    icon: AlertCircle,
+    gradient: 'linear-gradient(135deg,#e11d48 0%,#f43f5e 100%)',
+    glow: '0 8px 24px rgba(225,29,72,.22)',
     bars: [8, 12, 5, 15, 9, 3, 11, 7, 14, 6, 10, 3],
-    barColor: '#e11d48',
   },
   {
-    label: 'Submitted Today', value: '28', sub: '$2,104 sent',
-    icon: FileText, accent: 'linear-gradient(135deg,#059669,#34d399)',
-    bg: '#ecfdf5', iconColor: '#059669',
+    label: 'Submitted Today', value: '28', sub: '$2,104 sent', trend: 'up',
+    icon: Zap,
+    gradient: 'linear-gradient(135deg,#059669 0%,#10b981 100%)',
+    glow: '0 8px 24px rgba(5,150,105,.22)',
     bars: [20, 28, 15, 32, 25, 18, 30, 22, 28, 35, 24, 28],
-    barColor: '#059669',
   },
 ];
 
 const RECENT_CLAIMS = [
-  { id: 'CLM-1042', patient: 'JB', name: 'James Burnham',     code: '00110', dx: 'H52.1', amount: 88.35,  status: 'paid',      date: 'Aug 5' },
-  { id: 'CLM-1041', patient: 'CB', name: 'Christine Burrows', code: '00115', dx: 'H40.0', amount: 107.20, status: 'paid',      date: 'Aug 5' },
-  { id: 'CLM-1040', patient: 'AM', name: 'Austin Mercer',     code: '00110', dx: 'H52.4', amount: 88.35,  status: 'refused',   date: 'Aug 4' },
-  { id: 'CLM-1039', patient: 'LT', name: 'Linda Thorpe',      code: '00111', dx: 'H52.1', amount: 54.00,  status: 'submitted', date: 'Aug 4' },
-  { id: 'CLM-1038', patient: 'RC', name: 'Robert Chan',       code: '00110', dx: 'H40.1', amount: 88.35,  status: 'paid',      date: 'Aug 3' },
+  { id: 'CLM-1042', patient: 'JB', name: 'James Burnham',     code: '00110', dx: 'H52.1', amount: 88.35,  status: 'paid',      date: 'Sep 13' },
+  { id: 'CLM-1041', patient: 'CB', name: 'Christine Burrows', code: '00115', dx: 'H40.0', amount: 107.20, status: 'paid',      date: 'Sep 13' },
+  { id: 'CLM-1040', patient: 'AM', name: 'Austin Mercer',     code: '00110', dx: 'H52.4', amount: 88.35,  status: 'refused',   date: 'Sep 12' },
+  { id: 'CLM-1039', patient: 'LT', name: 'Linda Thorpe',      code: '00111', dx: 'H52.1', amount: 54.00,  status: 'submitted', date: 'Sep 12' },
+  { id: 'CLM-1038', patient: 'RC', name: 'Robert Chan',       code: '00110', dx: 'H40.1', amount: 88.35,  status: 'paid',      date: 'Sep 11' },
 ];
 
 const STATUS_CLS: Record<string, string> = {
@@ -57,13 +58,24 @@ const STATUS_CLS: Record<string, string> = {
 const STATUS_LABEL: Record<string, string> = {
   paid: 'Paid', submitted: 'Submitted', refused: 'Refused', draft: 'Draft', pending: 'Pending',
 };
-
 const AV_COLOR = ['av-1','av-2','av-3','av-4','av-5'];
 
 const QUICK_ACTIONS = [
-  { href: '/claims/new',          icon: Plus,        label: 'New Claim',          desc: 'Submit a new MSP / provincial claim', accent: '#2563eb', bg: '#eff5ff' },
-  { href: '/eligibility',         icon: ShieldCheck, label: 'Check Eligibility',  desc: 'Real-time provincial coverage check',  accent: '#059669', bg: '#ecfdf5' },
-  { href: '/remittances',         icon: Receipt,     label: 'Retrieve Remittances', desc: 'Fetch latest ERA files from Teleplan', accent: '#7c3aed', bg: '#f5f3ff' },
+  {
+    href: '/claims/new', icon: Plus, label: 'New Claim',
+    desc: 'Submit a new MSP / provincial claim',
+    accent: '#7c3aed', bg: 'rgba(124,58,237,.1)',
+  },
+  {
+    href: '/eligibility', icon: ShieldCheck, label: 'Check Eligibility',
+    desc: 'Real-time provincial coverage check',
+    accent: '#059669', bg: 'rgba(5,150,105,.1)',
+  },
+  {
+    href: '/remittances', icon: Receipt, label: 'Retrieve Remittances',
+    desc: 'Fetch latest ERA files from Teleplan',
+    accent: '#a855f7', bg: 'rgba(168,85,247,.1)',
+  },
 ];
 
 const ALERTS = [
@@ -73,12 +85,36 @@ const ALERTS = [
 ];
 
 const AUDIT = [
-  { icon: FileText,    bg: '#eff5ff', color: '#2563eb', text: 'Claim CLM-1042 paid — $88.35',       time: '2m ago' },
-  { icon: CheckCircle2, bg: '#ecfdf5', color: '#059669', text: 'Eligibility verified — James Burnham', time: '14m ago' },
-  { icon: AlertTriangle, bg: '#fff1f3', color: '#e11d48', text: 'CLM-1040 refused — recheck Dx code', time: '1h ago' },
-  { icon: Receipt,     bg: '#f5f3ff', color: '#7c3aed', text: 'Remittance file R2408-04 downloaded', time: '3h ago' },
+  { icon: FileText,     bg: 'rgba(124,58,237,.1)',  color: '#7c3aed', text: 'Claim CLM-1042 paid — $88.35',        time: '2m ago' },
+  { icon: CheckCircle2, bg: 'rgba(5,150,105,.1)',   color: '#059669', text: 'Eligibility verified — James Burnham', time: '14m ago' },
+  { icon: AlertTriangle,bg: 'rgba(225,29,72,.1)',   color: '#e11d48', text: 'CLM-1040 refused — recheck Dx code',  time: '1h ago' },
+  { icon: Receipt,      bg: 'rgba(168,85,247,.1)',  color: '#a855f7', text: 'Remittance file R2408-04 downloaded',  time: '3h ago' },
 ];
 
+// ── Sparkline micro-chart ──────────────────────────────────────────────────────
+function Sparkline({ bars }: { bars: number[] }) {
+  const max = Math.max(...bars);
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: 32, marginTop: 10 }}>
+      {bars.map((h, i) => (
+        <div
+          key={i}
+          style={{
+            flex: 1,
+            height: `${(h / max) * 100}%`,
+            borderRadius: 3,
+            background: i === bars.length - 1
+              ? 'rgba(255,255,255,0.95)'
+              : 'rgba(255,255,255,0.35)',
+            transition: 'height .2s',
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
 export default function DashboardPage() {
   const [refreshing, setRefreshing] = useState(false);
   const now = new Date();
@@ -93,9 +129,25 @@ export default function DashboardPage() {
 
   return (
     <>
-      {/* Hero */}
+      {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <div className="hero">
-        <div className="hero-l">
+        {/* decorative orbs */}
+        <div style={{
+          position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 'inherit', pointerEvents: 'none',
+        }}>
+          <div style={{
+            position: 'absolute', width: 260, height: 260, borderRadius: '50%',
+            background: 'radial-gradient(circle,rgba(167,139,250,.18) 0%,transparent 70%)',
+            top: -80, right: 60,
+          }}/>
+          <div style={{
+            position: 'absolute', width: 180, height: 180, borderRadius: '50%',
+            background: 'radial-gradient(circle,rgba(124,58,237,.1) 0%,transparent 70%)',
+            bottom: -40, right: 180,
+          }}/>
+        </div>
+
+        <div className="hero-l" style={{ position: 'relative', zIndex: 1 }}>
           <div className="hero-date">{dateStr}</div>
           <div className="hero-t">
             {greeting}, Dr. Ekeoba
@@ -113,22 +165,35 @@ export default function DashboardPage() {
             </button>
           </div>
         </div>
-        <div className="hero-illustration" aria-hidden="true">
-          <svg viewBox="0 0 220 140" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: '100%' }}>
-            <rect x="10" y="20" width="200" height="108" rx="14" fill="white" fillOpacity=".9" stroke="#e6ecf5" strokeWidth="1"/>
-            <rect x="22" y="32" width="80" height="10" rx="4" fill="#bfd7ff"/>
-            <rect x="22" y="48" width="176" height="8" rx="3" fill="#f1f5f9"/>
-            <rect x="22" y="60" width="176" height="8" rx="3" fill="#f1f5f9"/>
-            <rect x="22" y="72" width="130" height="8" rx="3" fill="#f1f5f9"/>
-            <rect x="130" y="30" width="60" height="14" rx="7" fill="#eff5ff" stroke="#bfd7ff" strokeWidth="1"/>
-            <rect x="144" y="35" width="34" height="4" rx="2" fill="#2563eb" fillOpacity=".5"/>
-            <circle cx="180" cy="90" r="28" fill="#eff5ff"/>
-            <path d="M170 90 L176 97 L192 82" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
+
+        {/* Right illustration: stylised billing card */}
+        <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'flex-end' }}>
+          {/* metric chip */}
+          <div style={{
+            background: 'white', borderRadius: 14, padding: '10px 16px',
+            boxShadow: '0 4px 20px rgba(124,58,237,.18)', display: 'flex', flexDirection: 'column', gap: 2,
+            minWidth: 140,
+          }}>
+            <div style={{ fontSize: '.65rem', fontWeight: 600, color: 'var(--lilac)', textTransform: 'uppercase', letterSpacing: '.06em' }}>MTD Revenue</div>
+            <div style={{ fontSize: '1.45rem', fontWeight: 700, color: 'var(--lilac-deepest)', letterSpacing: '-.02em' }}>$18,420</div>
+            <div style={{ fontSize: '.7rem', color: 'var(--t3)', display: 'flex', alignItems: 'center', gap: 4 }}>
+              <TrendingUp size={11} style={{ color: '#059669' }} />
+              <span style={{ color: '#059669', fontWeight: 600 }}>+12%</span> vs last month
+            </div>
+          </div>
+          {/* connection pill */}
+          <div style={{
+            background: 'white', borderRadius: 24, padding: '6px 14px', fontSize: '.72rem',
+            fontWeight: 600, color: '#059669', display: 'flex', alignItems: 'center', gap: 6,
+            boxShadow: '0 2px 12px rgba(5,150,105,.15)',
+          }}>
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#059669', display: 'block', animation: 'pulse 2s infinite' }}/>
+            Teleplan Connected
+          </div>
         </div>
       </div>
 
-      {/* Alerts */}
+      {/* ── Alerts ───────────────────────────────────────────────────────── */}
       {ALERTS.map((a, i) => (
         <div key={i} className={`alrt al-${a.type === 'warn' ? 'warn' : a.type === 'ok' ? 'ok' : 'info'}`}>
           <span className="alrt-ico">
@@ -138,34 +203,61 @@ export default function DashboardPage() {
         </div>
       ))}
 
-      {/* Stats */}
-      <div className="stats">
+      {/* ── Stats grid ───────────────────────────────────────────────────── */}
+      <div className="stats" style={{ marginBottom: 20 }}>
         {STATS.map((s) => (
-          <div key={s.label} className="stat" style={{ '--accent': s.accent } as React.CSSProperties}>
-            <div className="stico" style={{ background: s.bg }}>
-              <s.icon size={18} style={{ color: s.iconColor }} />
+          <div
+            key={s.label}
+            className="stat"
+            style={{
+              background: s.gradient,
+              boxShadow: s.glow,
+              border: 'none',
+              '--accent': s.gradient,
+            } as React.CSSProperties}
+          >
+            {/* icon + trend */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div style={{
+                width: 36, height: 36, borderRadius: 10,
+                background: 'rgba(255,255,255,.2)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <s.icon size={18} style={{ color: 'white' }} />
+              </div>
+              <span style={{
+                fontSize: '.65rem', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase',
+                color: 'rgba(255,255,255,.85)',
+                background: 'rgba(255,255,255,.15)',
+                borderRadius: 20, padding: '3px 8px',
+              }}>
+                {s.sub}
+              </span>
             </div>
-            <div className="stlbl">{s.label}</div>
-            <div className="stval">{s.value}</div>
-            <div className="pill pl-up" style={{ fontSize: '.67rem' }}>{s.sub}</div>
-            <div className="bars">
-              {s.bars.map((h, i) => (
-                <div
-                  key={i}
-                  className="bar"
-                  style={{
-                    height: `${h}%`,
-                    background: i === s.bars.length - 1 ? s.barColor : s.barColor + '4d',
-                  }}
-                />
-              ))}
+
+            {/* value */}
+            <div style={{ marginTop: 14 }}>
+              <div style={{
+                fontSize: '2rem', fontWeight: 700, color: 'white',
+                letterSpacing: '-.03em', lineHeight: 1,
+              }}>
+                {s.value}
+              </div>
+              <div style={{
+                fontSize: '.78rem', color: 'rgba(255,255,255,.75)', marginTop: 4, fontWeight: 500,
+              }}>
+                {s.label}
+              </div>
             </div>
+
+            {/* sparkline */}
+            <Sparkline bars={s.bars} />
           </div>
         ))}
       </div>
 
-      {/* Two-col: claims + sidebar */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 16, alignItems: 'start' }}>
+      {/* ── Two-col: claims + sidebar ─────────────────────────────────────── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 16, alignItems: 'start' }}>
+
         {/* Recent Claims */}
         <div className="card cp">
           <div className="ch">
@@ -201,11 +293,15 @@ export default function DashboardPage() {
                         </div>
                       </div>
                     </td>
-                    <td><span className="mono" style={{ color: 'var(--sky-dk)' }}>{c.id}</span></td>
+                    <td>
+                      <span className="mono" style={{ color: 'var(--lilac)', fontSize: '.8rem' }}>{c.id}</span>
+                    </td>
                     <td><span className="code-chip">{c.code}</span></td>
                     <td><span className="icd-chip">{c.dx}</span></td>
                     <td><span className={STATUS_CLS[c.status] ?? 'badge b-draft'}>{STATUS_LABEL[c.status] ?? c.status}</span></td>
-                    <td style={{ textAlign: 'right', fontWeight: 600, fontFamily: 'var(--ff)' }}>${c.amount.toFixed(2)}</td>
+                    <td style={{ textAlign: 'right', fontWeight: 700, fontFamily: 'var(--ff)', color: 'var(--t1)' }}>
+                      ${c.amount.toFixed(2)}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -214,41 +310,94 @@ export default function DashboardPage() {
         </div>
 
         {/* Right column */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+
           {/* Quick Actions */}
           <div className="card cp">
-            <div className="ct" style={{ marginBottom: 14 }}>Quick Actions</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+              <Zap size={15} style={{ color: 'var(--lilac)' }} />
+              <span className="ct">Quick Actions</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {QUICK_ACTIONS.map((a) => (
-                <Link key={a.href} href={a.href} className="qa" style={{ padding: '14px' }}>
-                  <div className="qa-ic" style={{ background: a.bg }}>
-                    <a.icon size={17} style={{ color: a.accent }} />
+                <Link
+                  key={a.href}
+                  href={a.href}
+                  className="qa"
+                  style={{
+                    padding: '12px 14px',
+                    borderRadius: 12,
+                    border: '1px solid var(--bd)',
+                    background: 'var(--bg2)',
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    textDecoration: 'none',
+                    transition: 'border-color .15s, box-shadow .15s, background .15s',
+                  }}
+                  onMouseEnter={e => {
+                    (e.currentTarget as HTMLElement).style.borderColor = 'var(--lilac-b)';
+                    (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 12px rgba(124,58,237,.12)';
+                    (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,.04)';
+                  }}
+                  onMouseLeave={e => {
+                    (e.currentTarget as HTMLElement).style.borderColor = 'var(--bd)';
+                    (e.currentTarget as HTMLElement).style.boxShadow = 'none';
+                    (e.currentTarget as HTMLElement).style.background = 'var(--bg2)';
+                  }}
+                >
+                  <div style={{
+                    width: 34, height: 34, borderRadius: 9,
+                    background: a.bg,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  }}>
+                    <a.icon size={16} style={{ color: a.accent }} />
                   </div>
-                  <div>
-                    <div className="qa-t">{a.label}</div>
-                    <div className="qa-d">{a.desc}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: '.85rem', color: 'var(--t1)' }}>{a.label}</div>
+                    <div style={{ fontSize: '.71rem', color: 'var(--t4)', marginTop: 1 }}>{a.desc}</div>
                   </div>
-                  <ChevronRight size={15} style={{ marginLeft: 'auto', color: 'var(--t4)', flexShrink: 0 }} />
+                  <ChevronRight size={14} style={{ color: 'var(--t4)', flexShrink: 0 }} />
                 </Link>
               ))}
             </div>
           </div>
 
-          {/* Recent activity */}
+          {/* Recent Activity */}
           <div className="card cp">
-            <div className="ct" style={{ marginBottom: 14 }}>Activity</div>
-            {AUDIT.map((a, i) => (
-              <div key={i} className="audit-row">
-                <div className="audit-ic" style={{ background: a.bg }}>
-                  <a.icon size={14} style={{ color: a.color }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+              <Activity size={15} style={{ color: 'var(--lilac)' }} />
+              <span className="ct">Activity</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+              {AUDIT.map((a, i) => (
+                <div
+                  key={i}
+                  className="audit-row"
+                  style={{
+                    display: 'flex', alignItems: 'flex-start', gap: 11, padding: '10px 0',
+                    borderBottom: i < AUDIT.length - 1 ? '1px solid var(--bd)' : 'none',
+                  }}
+                >
+                  <div style={{
+                    width: 30, height: 30, borderRadius: 8, background: a.bg, flexShrink: 0,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 1,
+                  }}>
+                    <a.icon size={13} style={{ color: a.color }} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '.81rem', color: 'var(--t1)', fontWeight: 500, lineHeight: 1.4 }}>{a.text}</div>
+                    <div style={{ fontSize: '.69rem', color: 'var(--t4)', marginTop: 3 }}>{a.time}</div>
+                  </div>
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '.82rem', color: 'var(--t1)', fontWeight: 500, lineHeight: 1.4 }}>{a.text}</div>
-                  <div style={{ fontSize: '.7rem', color: 'var(--t4)', marginTop: 2 }}>{a.time}</div>
-                </div>
-              </div>
-            ))}
-            <Link href="/audit" style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '.78rem', color: 'var(--sky)', fontWeight: 600, marginTop: 12, textDecoration: 'none' }}>
+              ))}
+            </div>
+            <Link
+              href="/audit"
+              style={{
+                display: 'flex', alignItems: 'center', gap: 5,
+                fontSize: '.78rem', color: 'var(--lilac)', fontWeight: 600,
+                marginTop: 12, textDecoration: 'none',
+              }}
+            >
               <ClipboardList size={13} /> View full audit log
             </Link>
           </div>
