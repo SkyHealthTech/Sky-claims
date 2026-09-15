@@ -62,8 +62,17 @@ const PLANS = [
   },
 ];
 
+const PRACTICE_TYPES = [
+  { value: 'optometry',      label: 'Optometry Clinic',       hint: 'OD-led, eye exams + eyewear' },
+  { value: 'ophthalmology',  label: 'Ophthalmology Practice', hint: 'MD-led, medical + surgical eye care' },
+  { value: 'optical',        label: 'Optical / Dispensary',   hint: 'Eyewear retail, frame fitting' },
+  { value: 'gp',             label: 'GP / Primary Care',      hint: 'Family medicine, general practice' },
+  { value: 'multi',          label: 'Multi-specialty',        hint: 'OD + MD, or combined clinic' },
+];
+
 type State = {
   province: string;
+  practiceType: string;
   practiceName: string; phone: string; city: string;
   firstName: string; lastName: string; role: string; licenceNumber: string;
   // Billing credentials
@@ -72,16 +81,19 @@ type State = {
   ohipBillingNumber: string;
   // Plan
   selectedPlan: '' | 'solo' | 'clinic';
+  promoCode: string;
 };
 
 const INIT: State = {
   province: '',
+  practiceType: '',
   practiceName: '', phone: '', city: '',
   firstName: '', lastName: '', role: 'OD', licenceNumber: '',
   payeeNumber: '', practitionerNumber: '',
   pracId: '', businessArrangement: '',
   ohipBillingNumber: '',
   selectedPlan: '',
+  promoCode: '',
 };
 
 const SUPPORT_EMAIL = 'support@skyhealthtech.ca';
@@ -107,7 +119,7 @@ export default function OnboardingPage() {
 
   const canAdvance = (): boolean => {
     if (step.id === 'province') return !!state.province;
-    if (step.id === 'practice') return !!state.practiceName;
+    if (step.id === 'practice') return !!state.practiceType && !!state.practiceName;
     if (step.id === 'provider') return !!state.firstName && !!state.lastName;
     return true;
   };
@@ -125,7 +137,7 @@ export default function OnboardingPage() {
       const res = await fetch('/api/billing/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan: planId, trial: true }),
+        body: JSON.stringify({ plan: planId, trial: true, promoCode: state.promoCode.trim() || undefined }),
       });
       if (res.ok) {
         const { url } = await res.json();
@@ -139,28 +151,41 @@ export default function OnboardingPage() {
   async function finish() {
     try {
       const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: authData } = await supabase.auth.getUser();
+      const user = authData?.user;
       if (!user) return;
 
-      await (supabase as any).from('practices').update({
-        name: state.practiceName,
-        province: state.province,
-        city: state.city,
-        phone: state.phone,
-        onboarding_done: true,
-      }).eq('owner_id', user.id);
+      // Get practice via membership (admin not available client-side; rely on RLS SELECT policy)
+      const { data: membership } = await (supabase as any)
+        .from('practice_memberships')
+        .select('practice_id')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .single();
 
-      await (supabase as any).from('providers').update({
-        first_name: state.firstName,
-        last_name: state.lastName,
-        role: state.role,
-        licence_number: state.licenceNumber || null,
-        payee_number: state.payeeNumber || null,
-        practitioner_number: state.practitionerNumber || null,
-        prac_id: state.pracId || null,
-        business_arrangement: state.businessArrangement || null,
-        ohip_billing_number: state.ohipBillingNumber || null,
-      }).eq('user_id', user.id);
+      if (membership?.practice_id) {
+        await (supabase as any).from('practices').update({
+          name:          state.practiceName,
+          practice_type: state.practiceType  || undefined,
+          province:      state.province,
+          city:          state.city          || undefined,
+          phone:         state.phone         || undefined,
+          onboarding_done: true,
+        }).eq('id', membership.practice_id);
+
+        // providers.name is a single full-name field (not first_name/last_name)
+        const fullName = [state.firstName, state.lastName].filter(Boolean).join(' ');
+        await (supabase as any).from('providers').update({
+          name:                   fullName || undefined,
+          title:                  state.role || undefined,
+          licence:                state.licenceNumber || null,
+          payee_number:           state.payeeNumber || null,
+          practitioner_number:    state.practitionerNumber || null,
+          prac_id:                state.pracId || null,
+          business_arrangement:   state.businessArrangement || null,
+          ohip_billing_number:    state.ohipBillingNumber || null,
+        }).eq('user_id', user.id).eq('practice_id', membership.practice_id);
+      }
 
       setDone(true);
       setSaving(false);
@@ -221,7 +246,7 @@ export default function OnboardingPage() {
         {step.id === 'practice'  && <PracticeStep  state={state} set={set} />}
         {step.id === 'provider'  && <ProviderStep  state={state} set={set} />}
         {step.id === 'billing'   && <BillingStep   state={state} set={set} />}
-        {step.id === 'plan'      && <PlanStep      state={state} onChoose={choosePlan} stripeLoading={stripeLoading} />}
+        {step.id === 'plan'      && <PlanStep      state={state} onChoose={choosePlan} stripeLoading={stripeLoading} set={set} />}
         {step.id === 'launch'    && <LaunchStep province={state.province} />}
 
         {/* Nav */}
@@ -394,11 +419,67 @@ function ProvinceStep({ state, set }: { state: State; set: (k: keyof State, v: s
 }
 
 function PracticeStep({ state, set }: { state: State; set: (k: keyof State, v: string) => void }) {
+  const suggestions: Record<string, string[]> = {
+    optometry:     ['Westside Optometry', 'Clear Vision Optometry', 'Family Eye Care'],
+    ophthalmology: ['North Shore Ophthalmology', 'Advanced Eye Surgery Centre', 'Retina & Glaucoma Specialists'],
+    optical:       ['Eyewear Studio', 'Modern Optical', 'The Frame Gallery'],
+    gp:            ['Riverside Medical Clinic', 'Northgate Family Practice', 'Community Health Centre'],
+    multi:         ['Complete Eye & Vision Care', 'Pacific Eye Specialists', 'Summit Eye & Optical'],
+  };
+  const nameSuggestions = state.practiceType ? (suggestions[state.practiceType] ?? []) : [];
+
   return (
     <>
       <StepHeader title="Your practice" sub="Used on claim headers, receipts, and ERA reports." />
-      <div className="space-y-4">
-        <Field label="Practice Name" value={state.practiceName} onChange={(v) => set('practiceName', v)} placeholder="Eye Central Optometry" />
+      <div className="space-y-5">
+        {/* Practice type */}
+        <div>
+          <label className="block text-[12px] font-medium text-white/50 mb-2">Practice Type</label>
+          <div className="space-y-1.5">
+            {PRACTICE_TYPES.map((pt) => (
+              <button key={pt.value} onClick={() => set('practiceType', pt.value)}
+                className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] border transition-all"
+                style={{
+                  background: state.practiceType === pt.value ? 'rgba(124,92,191,0.2)' : 'rgba(255,255,255,0.03)',
+                  borderColor: state.practiceType === pt.value ? 'rgba(124,92,191,0.45)' : 'rgba(255,255,255,0.08)',
+                  color: state.practiceType === pt.value ? '#c4aee8' : 'rgba(255,255,255,0.5)',
+                }}>
+                <span className="font-medium">{pt.label}</span>
+                <span className="text-[11px] opacity-60">{pt.hint}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Practice name + suggestions */}
+        <div>
+          <label className="block text-[12px] font-medium text-white/50 mb-1.5">Practice Name</label>
+          <input
+            type="text"
+            value={state.practiceName}
+            onChange={(e) => set('practiceName', e.target.value)}
+            placeholder="Enter your practice name"
+            className="w-full px-3.5 py-2.5 rounded-xl text-white placeholder:text-white/20 text-[14px] focus:outline-none transition-all border"
+            style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.09)' }}
+            onFocus={(e) => { e.currentTarget.style.borderColor = 'rgba(124,92,191,0.5)'; }}
+            onBlur={(e)  => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.09)'; }}
+          />
+          {nameSuggestions.length > 0 && !state.practiceName && (
+            <div className="mt-2">
+              <p className="text-[11px] text-white/25 mb-1.5">Examples — click to use:</p>
+              <div className="flex flex-wrap gap-1.5">
+                {nameSuggestions.map((s) => (
+                  <button key={s} onClick={() => set('practiceName', s)}
+                    className="text-[11px] px-2.5 py-1 rounded-lg border text-white/40 hover:text-white/70 transition-all"
+                    style={{ background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.09)' }}>
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
         <div className="grid grid-cols-2 gap-3">
           <Field label="City" value={state.city} onChange={(v) => set('city', v)} placeholder="Vancouver" optional />
           <Field label="Phone" value={state.phone} onChange={(v) => set('phone', v)} placeholder="604-555-0100" type="tel" optional />
@@ -568,14 +649,14 @@ function BillingStep({ state, set }: { state: State; set: (k: keyof State, v: st
   );
 }
 
-function PlanStep({ state, onChoose, stripeLoading }:
-  { state: State; onChoose: (plan: 'solo' | 'clinic') => void; stripeLoading: boolean }) {
+function PlanStep({ state, onChoose, stripeLoading, set }:
+  { state: State; onChoose: (plan: 'solo' | 'clinic') => void; stripeLoading: boolean; set: (k: keyof State, v: string) => void }) {
   return (
     <>
       <StepHeader title="Choose your plan" sub="All plans include a 30-day free trial. No charges until your trial ends." />
 
       {/* Trial banner */}
-      <div className="flex items-start gap-3 p-4 rounded-xl mb-6 border"
+      <div className="flex items-start gap-3 p-4 rounded-xl mb-4 border"
         style={{ background: 'rgba(52,211,153,0.07)', borderColor: 'rgba(52,211,153,0.22)' }}>
         <Shield className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
         <div>
@@ -584,6 +665,22 @@ function PlanStep({ state, onChoose, stripeLoading }:
             No charges until your trial expires. Cancel or pause anytime in <strong className="text-white/60">Settings → Billing</strong>.
           </p>
         </div>
+      </div>
+
+      {/* Promo code */}
+      <div className="mb-4">
+        <label className="block text-[11px] font-medium text-white/40 mb-1.5 uppercase tracking-wider">Promo / Referral Code (optional)</label>
+        <input
+          type="text"
+          value={state.promoCode}
+          onChange={(e) => set('promoCode', e.target.value.toUpperCase())}
+          placeholder="e.g. SKYTEAM"
+          className="w-full px-3.5 py-2 rounded-xl text-white placeholder:text-white/20 text-[13px] font-mono focus:outline-none transition-all border uppercase tracking-widest"
+          style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.09)' }}
+          onFocus={(e) => { e.currentTarget.style.borderColor = 'rgba(124,92,191,0.5)'; }}
+          onBlur={(e)  => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.09)'; }}
+        />
+        <p className="text-[11px] text-white/25 mt-1">Applied automatically at checkout.</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4 mb-4">
