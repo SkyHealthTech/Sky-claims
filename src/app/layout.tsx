@@ -13,8 +13,6 @@ const jakartaSans = Plus_Jakarta_Sans({
 const fraunces = Fraunces({
   subsets: ['latin'],
   variable: '--font-fraunces',
-  weight: ['300', '400', '500', '600'],
-  style: ['normal', 'italic'],
   axes: ['opsz'],
   display: 'swap',
 });
