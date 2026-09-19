@@ -33,6 +33,7 @@ export const metadata: Metadata = {
     icon: '/favicon.svg',
     apple: '/favicon.svg',
   },
+  viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -31,7 +31,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
 
   return (
     <header className="topbar">
-      <button className="ham lg:hidden" onClick={onMenuClick} aria-label="Open menu">
+      <button className="ham" onClick={onMenuClick} aria-label="Open menu">
         <Menu size={20} />
       </button>
 
@@ -40,6 +40,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
         {sub && <div className="tb-sub">{sub}</div>}
       </div>
 
+      {/* Global search — hidden on mobile (per-page search bars cover that) */}
       <div className="tb-search">
         <span className="sr-ico">
           <Search size={15} />
