@@ -3,7 +3,7 @@ import { stripe } from '@/lib/stripe';
 import { createClient } from '@/lib/supabase/server';
 
 export async function POST(req: NextRequest) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user }, error: userError } = await supabase.auth.getUser();
   if (userError || !user) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });

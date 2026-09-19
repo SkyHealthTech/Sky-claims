@@ -19,8 +19,8 @@ const NAV = [
 // Province → billing system mapping
 const PROVINCE_SYSTEM: Record<string, { label: string; color: string }> = {
   BC: { label: 'Teleplan · MSP',  color: '#059669' },
-  ON: { label: 'eClaims · OHIP',  color: '#2563eb' },
-  AB: { label: 'Netcare · AHCIP', color: '#7c3aed' },
+  ON: { label: 'eClaims · OHIP',  color: '#8b5cf6' },
+  AB: { label: 'Netcare · AHCIP', color: '#d97706' },
   MB: { label: 'MHSAL',           color: '#0891b2' },
   SK: { label: 'SK Health',       color: '#d97706' },
   QC: { label: 'RAMQ',            color: '#dc2626' },
@@ -82,7 +82,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             background: 'var(--n50)', border: '1px solid var(--bd)',
             borderRadius: 10, padding: '7px 10px',
           }}>
-            <Globe size={13} style={{ color: 'var(--lilac)', flexShrink: 0 }} />
+            <Globe size={13} style={{ color: 'var(--sky)', flexShrink: 0 }} />
             <select
               value={province}
               onChange={(e) => setProvince(e.target.value)}

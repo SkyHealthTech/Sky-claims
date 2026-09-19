@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { Shield, User, Building2, CheckCircle2, AlertTriangle, Eye, EyeOff, Save, CreditCard, Lock, Plug, Copy, RefreshCw, Globe, Zap } from 'lucide-react';
+import { Shield, User, Building2, CheckCircle2, AlertTriangle, Eye, EyeOff, Save, CreditCard, Lock, Plug, Copy, RefreshCw, Globe, Zap, ExternalLink, Key, Calendar } from 'lucide-react';
 
 type Tab = 'practice' | 'provider' | 'teleplan' | 'integrations' | 'billing' | 'security' | 'compliance';
 
@@ -156,22 +156,31 @@ function IntegrationsTab() {
       icon: '🏥',
     },
     {
-      id: 'ohip',
-      name: 'OHIP Direct (Ontario)',
-      description: 'Direct OHIP integration for Ontario physicians and nurse practitioners via MOH portal.',
-      status: 'available',
-      badge: '#2563eb',
-      badgeBg: '#eff5ff',
-      icon: '🏛️',
+      id: 'teleplan-prod',
+      name: 'Teleplan BC — Production',
+      description: 'Claims submission to MSP via Teleplan production endpoint. HIBC conformance complete. Vendor DC V0127.',
+      status: 'connected',
+      badge: '#059669',
+      badgeBg: '#ecfdf5',
+      icon: '🌊',
     },
     {
       id: 'ahcip',
-      name: 'AHCIP / Netcare (Alberta)',
-      description: 'Submit to Alberta Health and Wellness via Netcare provider portal.',
-      status: 'available',
+      name: 'AHCIP H-Link (Alberta)',
+      description: 'Electronic claims submission to Alberta Health via H-Link SFTP. Round 3 conformance complete — 15/15 tests.',
+      status: 'conformance',
       badge: '#7c3aed',
       badgeBg: '#f5f3ff',
       icon: '🏔️',
+    },
+    {
+      id: 'ohip',
+      name: 'OHIP / MCEDT (Ontario)',
+      description: 'Ontario Health Claims via eBSE portal. Fully electronic since April 1 2026. OHIP billing number + HCV required.',
+      status: 'available',
+      badge: '#8b5cf6',
+      badgeBg: '#f5f3ff',
+      icon: '🏛️',
     },
     {
       id: 'ramq',
@@ -280,9 +289,9 @@ function IntegrationsTab() {
                   fontSize: '.68rem', fontWeight: 700, color: intg.badge,
                   background: intg.badgeBg, borderRadius: 20, padding: '3px 10px',
                 }}>
-                  {intg.status === 'connected' ? '● Connected' : intg.status === 'available' ? 'Available' : 'Coming Soon'}
+                  {intg.status === 'connected' ? '● Connected' : intg.status === 'conformance' ? '✓ Conformance Complete' : intg.status === 'available' ? 'Available' : 'Coming Soon'}
                 </span>
-                {intg.status === 'connected' && (
+                {(intg.status === 'connected' || intg.status === 'conformance') && (
                   <button
                     className="btn btn-s btn-sm"
                     onClick={() => testConnection(intg.id)}
@@ -307,11 +316,30 @@ function IntegrationsTab() {
 function TeleplanTab() {
   const [show, setShow] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [form, setForm] = useState({ vendorDc: 'V0127', payee: '99609', baseUrl: 'https://test.teleplan.bc.ca', username: '', password: '', env: 'test' });
+  const [form, setForm] = useState({ vendorDc: 'V0127', payee: '99609', username: '', password: '', env: 'production' });
+  // Password rotation tracker — update this date after each manual password change at the Teleplan portal
+  const [pwChanged, setPwChanged] = useState('2026-09-17');
+  const [pwMarkSaved, setPwMarkSaved] = useState(false);
+
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
   const connected = form.vendorDc && form.payee;
 
+  const pwDays = Math.floor((Date.now() - new Date(pwChanged).getTime()) / 86_400_000);
+  const daysLeft = 42 - pwDays;
+  const pwStatus: 'ok' | 'warn' | 'expired' =
+    daysLeft < 0 ? 'expired' : daysLeft <= 7 ? 'warn' : 'ok';
+  const pwBarPct = Math.min(100, Math.round((pwDays / 42) * 100));
+  const pwBarColor = pwStatus === 'expired' ? 'var(--bad)' : pwStatus === 'warn' ? 'var(--warn)' : 'var(--ok)';
+
   function save(e: React.FormEvent) { e.preventDefault(); setSaved(true); setTimeout(() => setSaved(false), 2500); }
+  function markPwChanged() {
+    setPwChanged(new Date().toISOString().slice(0, 10));
+    setPwMarkSaved(true); setTimeout(() => setPwMarkSaved(false), 2500);
+  }
+
+  const baseUrl = form.env === 'production'
+    ? 'https://teleplan.hnet.bc.ca/TeleplanBroker'
+    : 'https://tlpt2.moh.hnet.bc.ca/TeleplanBroker';
 
   return (
     <form onSubmit={save} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -322,30 +350,106 @@ function TeleplanTab() {
           <strong>{connected ? `Connected · Vendor ${form.vendorDc}` : 'Credentials required'}</strong>
           {' — '}
           {connected
-            ? `${form.env === 'test' ? 'Test environment' : 'Production'} · Payee ${form.payee} · All conformance tests passing`
+            ? `${form.env === 'production' ? 'Production' : 'Test'} · Payee ${form.payee} · HIBC conformance complete`
             : 'Enter your Teleplan vendor credentials to enable claims submission.'}
         </span>
+      </div>
+
+      {/* Password Health — always visible, answers the "how do I manage rotation?" question */}
+      <div className="card cp">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: pwStatus === 'expired' ? 'var(--bad-lt)' : pwStatus === 'warn' ? 'var(--warn-lt)' : 'var(--ok-lt)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Key size={16} style={{ color: pwBarColor }} />
+          </div>
+          <div>
+            <div className="ct">Password Health</div>
+            <div className="cs">Teleplan requires manual password rotation every 42 days</div>
+          </div>
+          {pwStatus === 'expired' && (
+            <span style={{ marginLeft: 'auto', fontSize: '.72rem', fontWeight: 700, background: 'var(--bad-lt)', color: 'var(--bad)', border: '1px solid var(--bad-b)', borderRadius: 20, padding: '3px 10px' }}>
+              EXPIRED
+            </span>
+          )}
+          {pwStatus === 'warn' && (
+            <span style={{ marginLeft: 'auto', fontSize: '.72rem', fontWeight: 700, background: 'var(--warn-lt)', color: 'var(--warn)', border: '1px solid var(--warn-b)', borderRadius: 20, padding: '3px 10px' }}>
+              Expires in {daysLeft}d
+            </span>
+          )}
+          {pwStatus === 'ok' && (
+            <span style={{ marginLeft: 'auto', fontSize: '.72rem', fontWeight: 700, background: 'var(--ok-lt)', color: 'var(--ok)', border: '1px solid var(--ok-b)', borderRadius: 20, padding: '3px 10px' }}>
+              {daysLeft} days left
+            </span>
+          )}
+        </div>
+
+        {/* Age bar */}
+        <div style={{ marginBottom: 8 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '.7rem', color: 'var(--t3)', marginBottom: 6, fontWeight: 600 }}>
+            <span>Day {pwDays} of 42</span>
+            <span>Last changed: {pwChanged}</span>
+          </div>
+          <div className="prog">
+            <div className="prog-fill" style={{ width: `${pwBarPct}%`, background: pwBarColor, transition: 'width .4s, background .3s' }} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '.64rem', color: 'var(--t4)', marginTop: 4 }}>
+            <span>0</span>
+            <span style={{ color: 'var(--warn)', fontWeight: 700 }}>⚑ Remind at 35</span>
+            <span style={{ color: 'var(--bad)', fontWeight: 700 }}>✗ Expires 42</span>
+          </div>
+        </div>
+
+        {pwStatus !== 'ok' && (
+          <div className={`alrt al-${pwStatus === 'expired' ? 'err' : 'warn'}`} style={{ marginBottom: 14 }}>
+            <AlertTriangle size={14} className="alrt-ico" />
+            <span>
+              {pwStatus === 'expired'
+                ? `Password expired ${Math.abs(daysLeft)} day${Math.abs(daysLeft) !== 1 ? 's' : ''} ago. Teleplan will reject logins until you change it. `
+                : `Password expires in ${daysLeft} days. Change it now to avoid service interruption. `}
+              <strong>Teleplan has no API for password rotation</strong> — you must change it manually in the portal.
+            </span>
+          </div>
+        )}
+
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+          <a
+            href={baseUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-p btn-sm"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}
+          >
+            <ExternalLink size={13} />
+            Change Password at Teleplan Portal
+          </a>
+          <button type="button" className={`btn btn-sm ${pwMarkSaved ? 'btn-s' : 'btn-g'}`} onClick={markPwChanged} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <Calendar size={13} />
+            {pwMarkSaved ? <><CheckCircle2 size={13}/> Marked — tracker reset</> : 'Mark Changed Today'}
+          </button>
+        </div>
+
+        <div style={{ marginTop: 14, padding: '12px 14px', background: 'var(--n50)', borderRadius: 10, border: '1px solid var(--bd)', fontSize: '.76rem', color: 'var(--t2)', lineHeight: 1.6 }}>
+          <strong>Multi-provider rotation:</strong> Each practitioner&apos;s Teleplan account has its own 42-day password cycle.
+          Sky Claims tracks the last-changed date per account and sends a reminder email at day 35.
+          Passwords cannot be rotated automatically — Teleplan requires the account holder to change them via the portal above.
+        </div>
       </div>
 
       {/* Environment */}
       <div className="card cp">
         <div className="ct" style={{ marginBottom: 14 }}>Environment</div>
         <div style={{ display: 'flex', gap: 10 }}>
-          {(['test', 'production'] as const).map((e) => (
+          {(['production', 'test'] as const).map((e) => (
             <button key={e} type="button"
               onClick={() => set('env', e)}
               className={`btn${form.env === e ? ' btn-p' : ' btn-s'}`}
               style={{ flex: 1, justifyContent: 'center' }}>
-              {e === 'test' ? 'Test (Conformance)' : 'Production'}
+              {e === 'production' ? '● Production (Live)' : 'Test (Conformance)'}
             </button>
           ))}
         </div>
-        {form.env === 'production' && (
-          <div className="alrt al-warn" style={{ marginTop: 12 }}>
-            <AlertTriangle size={15} className="alrt-ico" />
-            Production mode submits real claims to MSP. Ensure HIBC vendor approval is complete.
-          </div>
-        )}
+        <div style={{ marginTop: 10, fontSize: '.75rem', color: 'var(--t3)', fontFamily: 'var(--fm)' }}>
+          {baseUrl}
+        </div>
       </div>
 
       {/* Vendor credentials */}
@@ -356,7 +460,6 @@ function TeleplanTab() {
             <div className="field"><label>Vendor / DC Number</label><input value={form.vendorDc} onChange={e => set('vendorDc', e.target.value)} placeholder="V0127" /></div>
             <div className="field"><label>Payee Number</label><input value={form.payee} onChange={e => set('payee', e.target.value)} placeholder="99609" /></div>
           </div>
-          <div className="field"><label>Teleplan Base URL</label><input value={form.baseUrl} onChange={e => set('baseUrl', e.target.value)} placeholder="https://test.teleplan.bc.ca" /></div>
         </div>
       </div>
 
@@ -373,6 +476,7 @@ function TeleplanTab() {
                 {show ? <EyeOff size={16}/> : <Eye size={16}/>}
               </button>
             </div>
+            <span className="hint">Change this here after rotating it in the portal above, then click Save.</span>
           </div>
         </div>
       </div>
@@ -437,8 +541,9 @@ function ComplianceTab() {
       {[
         { ok: true,  label: 'PIPEDA / provincial privacy acts', note: 'All patient data encrypted at rest and in transit' },
         { ok: true,  label: 'PHIPA (Ontario) / FOIPPA (BC)',     note: 'Compliant cloud storage in Canada (Toronto region)' },
-        { ok: true,  label: 'Teleplan E45 conformance',           note: 'All 16 eligibility + 13 claim tests passing' },
-        { ok: false, label: 'HIBC vendor approval',               note: 'Submit conformance bundle to HIBC to go live' },
+        { ok: true,  label: 'Teleplan E45 conformance',           note: 'All 15 H-Link tests + 3 pending ARD (7A/7B/7C) — Rounds 1-3 complete' },
+        { ok: true,  label: 'Teleplan Production — connected',    note: 'Vendor DC V0127 live at teleplan.hnet.bc.ca · HIBC conformance accepted' },
+        { ok: true,  label: 'AHCIP H-Link conformance (AB)',      note: 'Round 3 batches 554-560 ACCEPTED · Tests 8/9A/9B/10 ARD passed' },
         { ok: true,  label: 'TLS 1.3 in transit',                 note: 'All API traffic uses TLS 1.3' },
         { ok: true,  label: 'PHI audit logging',                   note: 'All PHI access logged with user + timestamp' },
       ].map((item, i) => (

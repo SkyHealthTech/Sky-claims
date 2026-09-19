@@ -27,7 +27,7 @@ const EVENTS: AuditEntry[] = [
 ];
 
 const TYPE_CONFIG: Record<AuditEntry['type'], { icon: any; bg: string; color: string }> = {
-  claim:       { icon: FileText,     bg: '#eff5ff', color: '#2563eb' },
+  claim:       { icon: FileText,     bg: '#f5f3ff', color: '#8b5cf6' },
   eligibility: { icon: ShieldCheck,  bg: '#ecfdf5', color: '#059669' },
   remittance:  { icon: Receipt,      bg: '#f5f3ff', color: '#7c3aed' },
   auth:        { icon: LogIn,        bg: '#fffbeb', color: '#d97706' },
