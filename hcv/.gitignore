@@ -1,0 +1,4 @@
+# NEVER commit HCV conformance results (contain test PHNs)
+hcv-results/
+__pycache__/
+*.pyc

@@ -8,8 +8,9 @@
     "retrieve": "node retrieve.js"
   },
   "dependencies": {
+    "dotenv": "^16.0.0",
     "ssh2-sftp-client": "^9.1.0",
-    "dotenv": "^16.0.0"
+    "xlsx": "^0.18.5"
   },
   "engines": {
     "node": ">=18.0.0"

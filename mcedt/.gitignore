@@ -1,0 +1,7 @@
+# NEVER commit credentials or private key to git
+ebs_signing.key
+ebs_signing.crt
+.env
+conformance-results/
+__pycache__/
+*.pyc

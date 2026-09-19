@@ -17,7 +17,7 @@ export async function GET(request: Request) {
   const refresh_token = searchParams.get('r');
 
   if (access_token && refresh_token) {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,

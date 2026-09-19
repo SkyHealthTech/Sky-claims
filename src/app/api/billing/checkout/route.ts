@@ -3,8 +3,8 @@ import { stripe, getClaimsPriceId, normalisePlanId, type BillingCycle } from '@/
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
-function makeClient(serviceRole = false) {
-  const cookieStore = cookies();
+async function makeClient(serviceRole = false) {
+  const cookieStore = await cookies();
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     serviceRole
@@ -24,8 +24,8 @@ function makeClient(serviceRole = false) {
 }
 
 export async function POST(req: NextRequest) {
-  const supabase = makeClient();
-  const admin    = makeClient(true);
+  const supabase = await makeClient();
+  const admin    = await makeClient(true);
 
   const { data: authData, error: userError } = await supabase.auth.getUser();
   if (userError || !authData?.user) {

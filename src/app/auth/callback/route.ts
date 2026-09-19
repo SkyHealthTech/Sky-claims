@@ -20,7 +20,7 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/?error=auth_callback_failed`);
   }
 
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
 
   // Regular client — auth only
   const supabase = createServerClient(

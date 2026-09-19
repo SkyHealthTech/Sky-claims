@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, Fragment } from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useState, useActionState, Fragment } from 'react';
+import { useFormStatus } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, CheckCircle2, Save, MapPin, User, ChevronDown, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
@@ -73,7 +73,7 @@ const initialState: ClaimFormState = {};
 
 export default function NewClaimPage() {
   const router = useRouter();
-  const [state, formAction] = useFormState(saveClaim, initialState);
+  const [state, formAction] = useActionState(saveClaim, initialState);
 
   const [step, setStep] = useState(0);
   const [province, setProvince] = useState<Province>('BC');
