@@ -1,10 +1,20 @@
 'use client';
 
-import { useState, useActionState, Fragment } from 'react';
+import { useState, Fragment } from 'react';
+import { useFormState, useFormStatus } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, CheckCircle2, Save, MapPin, User, ChevronDown, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { saveClaim, type ClaimFormState } from '@/lib/actions/claims';
+
+function SubmitButton({ done }: { done?: boolean }) {
+  const { pending } = useFormStatus();
+  return (
+    <button type="submit" disabled={pending || done} className="btn btn-p">
+      {pending ? 'Saving…' : <><Save size={13}/> Save Draft</>}
+    </button>
+  );
+}
 
 // ── Province fee schedules ────────────────────────────────────────────────────
 const FEE_SCHEDULES: Record<string, { code: string; desc: string; fee: number }[]> = {
@@ -63,7 +73,7 @@ const initialState: ClaimFormState = {};
 
 export default function NewClaimPage() {
   const router = useRouter();
-  const [state, formAction, pending] = useActionState(saveClaim, initialState);
+  const [state, formAction] = useFormState(saveClaim, initialState);
 
   const [step, setStep] = useState(0);
   const [province, setProvince] = useState<Province>('BC');
@@ -350,9 +360,7 @@ export default function NewClaimPage() {
 
           <div style={{ display: 'flex', gap: 10, justifyContent: 'space-between' }}>
             <button type="button" className="btn btn-s" onClick={prev}>← Service</button>
-            <button type="submit" disabled={pending || state?.success} className="btn btn-p">
-              {pending ? 'Saving…' : <><Save size={13}/> Save Draft</>}
-            </button>
+            <SubmitButton done={state?.success} />
           </div>
         </form>
       )}
