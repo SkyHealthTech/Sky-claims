@@ -264,7 +264,7 @@ def run_test(test: dict, dry_run: bool = False) -> dict:
         el = build_validate(requests)
         r  = call_hcv(el)
         res = parse_validate_response(r.get("parsed"))
-        actual = f"{len(res)} results returned. " + (res[0].get("responseID","") if res else summarise(r))
+        actual = f"{len(res)} results returned. " + (res[0].get("responseID","") if res else _summarise_hcv([], r))
         return {"test_id": test_id, "status": "pass" if not r.get("fault") else "fail",
                 "actual": actual, "result": r}
 

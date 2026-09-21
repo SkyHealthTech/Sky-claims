@@ -151,6 +151,76 @@ export async function updateClaimStatus(
   }
 }
 
+// ── Batch claims ──────────────────────────────────────────────────────────────
+
+export type BatchPatient = {
+  health_card_no: string;
+  patient_name?: string;
+  date_of_birth?: string;
+  province: string;
+  // per-patient overrides; if null use the shared defaults
+  fee_code?: string;
+  fee_desc?: string;
+  fee_amount?: number;
+  dx_code?: string;
+  notes?: string;
+};
+
+export type BatchClaimPayload = {
+  province: string;
+  dos: string;
+  // shared defaults
+  fee_code: string;
+  fee_desc: string;
+  fee_amount: number;
+  dx_code: string;
+  patients: BatchPatient[];
+};
+
+export type BatchResult = {
+  saved: number;
+  errors: { phn: string; error: string }[];
+};
+
+export async function saveBatchClaims(payload: BatchClaimPayload): Promise<BatchResult> {
+  const ctx = await getCurrentContext();
+  const supabase = await createClient();
+
+  const result: BatchResult = { saved: 0, errors: [] };
+
+  for (const p of payload.patients) {
+    const feeCode   = p.fee_code   ?? payload.fee_code;
+    const feeDesc   = p.fee_desc   ?? payload.fee_desc;
+    const feeAmount = p.fee_amount ?? payload.fee_amount;
+    const dxCode    = (p.dx_code   ?? payload.dx_code).split(' — ')[0].trim();
+
+    const row = {
+      practice_id:    ctx.practiceId,
+      province:       p.province ?? payload.province,
+      health_card_no: p.health_card_no.replace(/\s/g, ''),
+      patient_name:   p.patient_name   || null,
+      date_of_birth:  p.date_of_birth  || null,
+      service_date:   payload.dos,
+      diagnosis_code: dxCode           || null,
+      fee_codes:      [{ code: feeCode, desc: feeDesc, fee: feeAmount }],
+      subtotal:       feeAmount,
+      claim_note:     p.notes          || null,
+      status:         'draft',
+    };
+
+    const { error } = await supabase.from('claims').insert(row);
+    if (error) {
+      result.errors.push({ phn: p.health_card_no, error: error.message });
+    } else {
+      result.saved += 1;
+    }
+  }
+
+  revalidatePath('/claims');
+  revalidatePath('/');
+  return result;
+}
+
 /** Delete a draft claim */
 export async function deleteClaim(claimId: string): Promise<{ error?: string }> {
   try {

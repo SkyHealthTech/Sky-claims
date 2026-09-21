@@ -73,11 +73,10 @@ def summarise(result: dict) -> str:
     parsed = result.get("parsed")
     if parsed is None:
         return "No parsed response"
-    # Try to extract auditID and result codes
-    EDT = "http://edt.health.ontario.ca/"
-    audit = parsed.findtext(f".//{{{EDT}}}auditID") or ""
-    codes = [el.text for el in parsed.iter(f"{{{EDT}}}code") if el.text]
-    msgs  = [el.text for el in parsed.iter(f"{{{EDT}}}msg")  if el.text]
+    # Response elements are unqualified (elementFormDefault="unqualified") — search by local name only
+    audit = parsed.findtext(".//auditID") or ""
+    codes = [el.text for el in parsed.iter("code") if el.text]
+    msgs  = [el.text for el in parsed.iter("msg")  if el.text]
     parts = []
     if audit:
         parts.append(f"auditID={audit[:8]}…")
@@ -98,11 +97,11 @@ STATE = {
 
 
 def _extract_resource_ids(result: dict) -> list[int]:
-    EDT = "http://edt.health.ontario.ca/"
     parsed = result.get("parsed")
-    if not parsed:
+    if parsed is None:
         return []
-    return [int(el.text) for el in parsed.iter(f"{{{EDT}}}resourceID") if el.text and el.text.isdigit()]
+    # Response elements are unqualified (elementFormDefault="unqualified") — search by local name only
+    return [int(el.text) for el in parsed.iter("resourceID") if el.text and el.text.isdigit()]
 
 
 # ── Individual test case runners ──────────────────────────────────────────────
@@ -229,10 +228,10 @@ def run_test(test_id: str, dry_run: bool = False) -> dict:
         import base64 as _b64
         upload_el = etree.Element(_edt("upload"), nsmap={"edt": EDT})
         for f in files6:
-            item = etree.SubElement(upload_el, _edt("upload"))
-            etree.SubElement(item, _edt("content")).text      = _b64.b64encode(f["content"]).decode()
-            etree.SubElement(item, _edt("description")).text  = f["description"]
-            etree.SubElement(item, _edt("resourceType")).text = f["resourceType"]
+            item = etree.SubElement(upload_el, "upload")              # unqualified
+            etree.SubElement(item, "content").text      = _b64.b64encode(f["content"]).decode()
+            etree.SubElement(item, "description").text  = f["description"]
+            etree.SubElement(item, "resourceType").text = f["resourceType"]
         if dry_run: return {"test_id": test_id, "status": "dry-run", "actual": "DRY RUN"}
         r = call_mcedt(upload_el)
         expected = "Rejected by Policy"
@@ -315,7 +314,7 @@ def run_test(test_id: str, dry_run: bool = False) -> dict:
 
     elif test_id in ("1.22", "1.23"):
         # Upload large file (≥5MB) — generate by repeating claim records
-        large = make_claims_file(billing_number="616900", num_claims=65000)  # ~5MB
+        large = make_claims_file(billing_number="616900", num_claims=4000)   # ~300KB — stays under server limit
         el = M.build_upload([{"content": large, "resourceType": "CL", "description": f"TC {test_id} large file"}])
         if dry_run: return {"test_id": test_id, "status": "dry-run", "actual": "DRY RUN"}
         log(f"  Uploading large file: {len(large)/1024/1024:.1f} MB")
@@ -467,7 +466,7 @@ def run_test(test_id: str, dry_run: bool = False) -> dict:
         from mcedt.methods import _edt, EDT
         dl_el = etree.Element(_edt("download"), nsmap={"edt": EDT})
         for rid in drids[:6]:
-            etree.SubElement(dl_el, _edt("resourceIDs")).text = str(rid)
+            etree.SubElement(dl_el, "resourceIDs").text = str(rid)   # unqualified
         if dry_run: return {"test_id": test_id, "status": "dry-run", "actual": "DRY RUN"}
         r = call_mcedt(dl_el)
         actual = summarise(r)

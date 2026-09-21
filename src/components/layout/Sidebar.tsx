@@ -8,12 +8,13 @@ import {
 import { useState } from 'react';
 
 const NAV = [
-  { href: '/',            label: 'Dashboard',    icon: LayoutDashboard, count: null },
-  { href: '/claims',      label: 'Claims',        icon: FileText,        count: 14 },
-  { href: '/patients',    label: 'Patients',      icon: Users,           count: null },
-  { href: '/eligibility', label: 'Eligibility',   icon: ShieldCheck,     count: null },
-  { href: '/remittances', label: 'Remittances',   icon: Receipt,         count: null },
-  { href: '/audit',       label: 'Audit Log',     icon: ClipboardList,   count: null },
+  { href: '/',             label: 'Dashboard',    icon: LayoutDashboard, count: null },
+  { href: '/claims',       label: 'Claims',        icon: FileText,        count: 14 },
+  { href: '/claims/batch', label: 'Batch Billing', icon: Users,           count: null },
+  { href: '/patients',     label: 'Patients',      icon: Users,           count: null },
+  { href: '/eligibility',  label: 'Eligibility',   icon: ShieldCheck,     count: null },
+  { href: '/remittances',  label: 'Remittances',   icon: Receipt,         count: null },
+  { href: '/audit',        label: 'Audit Log',     icon: ClipboardList,   count: null },
 ];
 
 // Province → billing system mapping

@@ -33,7 +33,7 @@ NS = {
     "idp":     "http://idp.ebs.health.ontario.ca/",
     "msa":     "http://msa.ebs.health.ontario.ca/",
     "edt":     "http://edt.health.ontario.ca/",
-    "hcv":     "http://hcv.ebs.health.ontario.ca/",
+    "hcv":     "http://hcv.health.ontario.ca/",        # no ".ebs." — confirmed from HCV WSDL
     "wsse":    "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd",
     "wsu":     "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd",
     "ds":      "http://www.w3.org/2000/09/xmldsig#",

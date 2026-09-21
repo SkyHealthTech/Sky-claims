@@ -9,7 +9,10 @@ import {
 } from 'lucide-react';
 
 type Mode = 'signin' | 'signup' | 'magic' | 'forgot';
-const CALLBACK = 'https://claims.skyhealthtech.ca/auth/callback';
+// Dynamic callback — works in dev (localhost) and production
+const CALLBACK = typeof window !== 'undefined'
+  ? `${window.location.origin}/auth/callback`
+  : 'https://claims.skyhealthtech.ca/auth/callback';
 const ACCENT   = '#7c3aed';
 
 // ── Google icon ───────────────────────────────────────────────────────────────

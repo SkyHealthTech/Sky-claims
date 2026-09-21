@@ -16,7 +16,7 @@ Up to 100 health number requests per SOAP call.
 from lxml import etree
 
 # The HCV service namespace — from example WSDL (to be confirmed against actual WSDL)
-HCV_NS = "http://hcv.ebs.health.ontario.ca/"
+HCV_NS = "http://hcv.health.ontario.ca/"   # NOTE: no ".ebs." — confirmed from WSDL schema error
 
 
 def _hcv(tag):
@@ -40,17 +40,26 @@ def build_validate(requests: list[dict]) -> etree.Element:
         nsmap={"hcv": HCV_NS}
     )
 
+    # HCV schema (confirmed from WSDL errors):
+    #   <hcv:validate>
+    #     <requests>                     ← ONE wrapper for all HNs
+    #       <hcvRequest>
+    #         <healthNumber/> <versionCode/> [<feeServiceCodes/>...]
+    #       </hcvRequest>
+    #       <hcvRequest>...</hcvRequest>  ← additional HNs go here, not in new <requests>
+    #     </requests>
+    #   </hcv:validate>
+    requests_el = etree.SubElement(validate_el, "requests")  # single wrapper
+
     for req in requests[:100]:
-        input_el = etree.SubElement(validate_el, _hcv("inputs"))
-        etree.SubElement(input_el, _hcv("healthNumber")).text = req["healthNumber"].replace(" ", "")
+        hcv_req_el = etree.SubElement(requests_el, "hcvRequest")
+        etree.SubElement(hcv_req_el, "healthNumber").text = req["healthNumber"].replace(" ", "")
         vc = req.get("versionCode", "")
-        etree.SubElement(input_el, _hcv("versionCode")).text = vc.strip()
+        etree.SubElement(hcv_req_el, "versionCode").text = vc.strip()
 
         for fsc in (req.get("feeServiceCodes") or [])[:5]:
-            etree.SubElement(input_el, _hcv("feeServiceCodes")).text = fsc
-
-        locale = req.get("locale", "en")
-        etree.SubElement(input_el, _hcv("locale")).text = locale
+            etree.SubElement(hcv_req_el, "feeServiceCodes").text = fsc
+        # locale is NOT a valid field inside hcvRequest per HCV WSDL schema
 
     return validate_el
 
@@ -70,27 +79,46 @@ def parse_validate_response(parsed_xml) -> list[dict]:
     if parsed_xml is None:
         return results
 
-    for item in parsed_xml.iter(f"{{{HCV_NS}}}results"):
+    # Decrypted HCV response structure (confirmed from actual decrypted XML):
+    #   <results>                          ← outer wrapper
+    #     <auditUID>...</auditUID>
+    #     <results>                        ← one per health number
+    #       <healthNumber/> <responseCode/> <responseID/>
+    #       <responseAction/> <responseDescription/>
+    #       <firstName/> <lastName/> <birthDate/> <gender/>
+    #       <feeService>...</feeService>   ← if fee service codes requested
+    #     </results>
+    #   </results>
+
+    # Find outer wrapper (root or first results child)
+    outer = parsed_xml if parsed_xml.tag == "results" else parsed_xml.find(".//results")
+    if outer is None:
+        return results
+
+    audit_uid = outer.findtext("auditUID") or ""
+
+    # Each inner <results> is one health number response
+    for item in outer.findall("results"):
         rec = {
-            "auditUID":         item.findtext(f"{{{HCV_NS}}}auditUID") or "",
-            "responseCode":     item.findtext(f"{{{HCV_NS}}}responseCode") or "",
-            "responseActionEn": item.findtext(f"{{{HCV_NS}}}responseActionEnglishText") or "",
-            "responseActionFr": item.findtext(f"{{{HCV_NS}}}responseActionFrenchText") or "",
-            "responseID":       item.findtext(f"{{{HCV_NS}}}responseID") or "",
-            "responseDescEn":   item.findtext(f"{{{HCV_NS}}}responseDescriptionEnglishText") or "",
-            "responseDescFr":   item.findtext(f"{{{HCV_NS}}}responseDescriptionFrenchText") or "",
-            "birthDate":        item.findtext(f"{{{HCV_NS}}}birthDate") or "",
-            "firstName":        item.findtext(f"{{{HCV_NS}}}firstName") or "",
-            "lastName":         item.findtext(f"{{{HCV_NS}}}lastName") or "",
-            "gender":           item.findtext(f"{{{HCV_NS}}}gender") or "",
+            "auditUID":         audit_uid,
+            "responseCode":     item.findtext("responseCode") or "",
+            "responseActionEn": item.findtext("responseAction") or "",
+            "responseActionFr": item.findtext("responseActionFr") or "",
+            "responseID":       item.findtext("responseID") or "",
+            "responseDescEn":   item.findtext("responseDescription") or "",
+            "responseDescFr":   item.findtext("responseDescriptionFr") or "",
+            "birthDate":        item.findtext("birthDate") or "",
+            "firstName":        item.findtext("firstName") or "",
+            "lastName":         item.findtext("lastName") or "",
+            "gender":           item.findtext("gender") or "",
             "feeServices":      [],
         }
-        for fs in item.iter(f"{{{HCV_NS}}}feeService"):
+        for fs in item.findall("feeService"):
             rec["feeServices"].append({
-                "code":          fs.findtext(f"{{{HCV_NS}}}feeServiceCode") or "",
-                "date":          fs.findtext(f"{{{HCV_NS}}}feeServiceDate") or "",
-                "responseCode":  fs.findtext(f"{{{HCV_NS}}}feeServiceResponseCode") or "",
-                "responseDescEn": fs.findtext(f"{{{HCV_NS}}}feeServiceResponseEnglishDescription") or "",
+                "code":          fs.findtext("feeServiceCode") or "",
+                "date":          fs.findtext("feeServiceDate") or "",
+                "responseCode":  fs.findtext("feeServiceResponseCode") or "",
+                "responseDescEn": fs.findtext("feeServiceResponseDescription") or "",
             })
         results.append(rec)
 
