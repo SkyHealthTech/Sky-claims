@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useActionState, useEffect, useRef, Fragment } from 'react';
+import { useState, useActionState, useEffect, useRef, Fragment, Suspense } from 'react';
 import { useFormStatus } from 'react-dom';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -284,7 +284,7 @@ function EligibilityPanel({ phn, dob, province }: { phn: string; dob: string; pr
 }
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
-export default function NewClaimPage() {
+function NewClaimPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [state, formAction] = useActionState(saveClaim, initialState);
@@ -688,5 +688,17 @@ export default function NewClaimPage() {
         </form>
       )}
     </div>
+  );
+}
+
+export default function NewClaimPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ padding: 40, textAlign: 'center', color: 'var(--ink-soft)' }}>
+        Loading…
+      </div>
+    }>
+      <NewClaimPageInner />
+    </Suspense>
   );
 }
