@@ -34,8 +34,9 @@ function LeftPanel() {
       style={{ background: 'linear-gradient(160deg, #2e1065 0%, #4c1d95 45%, #7c3aed 100%)' }}>
       <div className="relative z-10">
         <a href="https://skyhealthtech.ca" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none', marginBottom: 48 }}>
-          <div style={{ height: 40, width: 40, borderRadius: 12, background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <Receipt style={{ width: 20, height: 20, color: '#fff' }} />
+          <div style={{ height: 40, width: 40, borderRadius: 12, overflow: 'hidden', flexShrink: 0 }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/icon-claims.svg" alt="Sky Claims" width={40} height={40} style={{ display: 'block' }} />
           </div>
           <div>
             <div style={{ fontWeight: 700, fontSize: 16, color: '#fff', lineHeight: 1, letterSpacing: '-0.02em' }}>Sky Claims</div>
@@ -324,8 +325,9 @@ function LoginPageInner() {
 
           {/* Mobile logo */}
           <a href="https://skyhealthtech.ca" className="flex lg:hidden items-center gap-2.5 justify-center" style={{ textDecoration: 'none' }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: `linear-gradient(135deg, ${ACCENT}, #a78bfa)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Receipt style={{ width: 17, height: 17, color: '#fff' }} />
+            <div style={{ width: 36, height: 36, borderRadius: 10, overflow: 'hidden' }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/icon-claims.svg" alt="Sky Claims" width={36} height={36} style={{ display: 'block' }} />
             </div>
             <span style={{ fontWeight: 700, fontSize: 15, color: '#111827' }}>Sky Claims</span>
           </a>

@@ -61,13 +61,9 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         {/* Logo */}
         <div className="sb-logo">
           <div className="sb-mark">
-            <div className="sb-icon">
-              <svg width="22" height="22" viewBox="0 0 100 100" fill="none">
-                <path d="M14,34 L74,25 L74,36 L14,45 Z" fill="white"/>
-                <path d="M14,49 L74,40 L74,51 L14,60 Z" fill="white"/>
-                <path d="M14,64 L74,55 L74,66 L14,75 Z" fill="white"/>
-                <path d="M52,4 L44,18 L50,18 L46,32 L59,13 L53,13 Z" fill="#f59e0b"/>
-              </svg>
+            <div className="sb-icon" style={{ background: 'none', padding: 0 }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/icon-claims.svg" alt="Sky Claims" width={36} height={36} style={{ borderRadius: 8, display: 'block' }} />
             </div>
             <div>
               <div className="sb-name">Sky Claims</div>
