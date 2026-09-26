@@ -26,7 +26,9 @@ yarn-error.log*
 teleplan/conformance-proof/
 hlink/conformance-proof/
 mcedt/conformance-results/
+mcedt/conformance-results -/
 hcv/hcv-results/
+hcv/hcv-results -/
 
 # ── MCEDT / HCV signing key pair ───────────────────────────────────────────────
 # Generated locally; ebs_signing.crt is safe to share with MOH for response
@@ -48,6 +50,10 @@ desktop.ini
 .idea/
 *.swp
 *.swo
+
+# ── TypeScript incremental build cache ─────────────────────────────────────────
+tsconfig.tsbuildinfo
+*.tsbuildinfo
 
 # ── Logs & temporaries ─────────────────────────────────────────────────────────
 *.log

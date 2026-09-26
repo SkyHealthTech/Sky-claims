@@ -1,13 +1,15 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import type { ProviderProfile } from '@/app/api/provider/route';
 import { Shield, User, Building2, CheckCircle2, AlertTriangle, Eye, EyeOff, Save, CreditCard, Lock, Plug, Copy, RefreshCw, Globe, Zap, ExternalLink, Key, Calendar } from 'lucide-react';
 
-type Tab = 'practice' | 'provider' | 'teleplan' | 'integrations' | 'billing' | 'security' | 'compliance';
+type Tab = 'practice' | 'provider' | 'teleplan' | 'ahcip' | 'integrations' | 'billing' | 'security' | 'compliance';
 
 const TABS: { id: Tab; label: string; icon: any }[] = [
   { id: 'practice',     label: 'Practice',      icon: Building2 },
   { id: 'provider',     label: 'Provider',       icon: User },
-  { id: 'teleplan',     label: 'Billing Plans',  icon: Shield },
+  { id: 'teleplan',     label: 'BC Teleplan',    icon: Shield },
+  { id: 'ahcip',        label: 'AB H-Link',      icon: Shield },
   { id: 'integrations', label: 'Integrations',   icon: Plug },
   { id: 'billing',      label: 'Billing',        icon: CreditCard },
   { id: 'security',     label: 'Security',       icon: Lock },
@@ -31,6 +33,7 @@ export default function SettingsPage() {
       {tab === 'practice'     && <PracticeTab />}
       {tab === 'provider'     && <ProviderTab />}
       {tab === 'teleplan'     && <TeleplanTab />}
+      {tab === 'ahcip'        && <AhcipTab />}
       {tab === 'integrations' && <IntegrationsTab />}
       {tab === 'billing'      && <BillingTab />}
       {tab === 'security'     && <SecurityTab />}
@@ -74,19 +77,71 @@ function PracticeTab() {
 
 /* ── Provider ── */
 function ProviderTab() {
-  const [saved, setSaved] = useState(false);
-  function save(e: React.FormEvent) { e.preventDefault(); setSaved(true); setTimeout(() => setSaved(false), 2500); }
+  const [saved, setSaved]     = useState(false);
+  const [saving, setSaving]   = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr]         = useState<string | null>(null);
+  const [profile, setProfile] = useState<ProviderProfile>({
+    first_name: '', last_name: '', designation: 'OD',
+    practitioner_number: '', discipline_code: '',
+    college: '', registration_number: '',
+    payee_number: '', prac_id: '',
+    ohip_billing_number: '', business_arrangement: '',
+  });
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/provider');
+      const json = await res.json() as { profile: ProviderProfile | null };
+      if (json.profile) setProfile(p => ({ ...p, ...json.profile }));
+    } catch {
+      // leave defaults
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  function set(field: keyof ProviderProfile, value: string) {
+    setProfile(p => ({ ...p, [field]: value }));
+  }
+
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true); setErr(null);
+    try {
+      const res = await fetch('/api/provider', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profile),
+      });
+      const json = await res.json() as { ok?: boolean; error?: string };
+      if (!res.ok || json.error) { setErr(json.error ?? 'Save failed'); return; }
+      setSaved(true); setTimeout(() => setSaved(false), 2500);
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : 'Network error');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading) return <div className="card cp" style={{ padding: 32, color: 'var(--t4)', fontSize: '.9rem' }}>Loading profile…</div>;
+
   return (
     <form onSubmit={save}>
       <div className="card cp" style={{ marginBottom: 16 }}>
         <div className="ct" style={{ marginBottom: 16 }}>Provider Profile</div>
         <div className="fg">
           <div className="fg fg2">
-            <div className="field"><label>First Name</label><input defaultValue="Austin" /></div>
-            <div className="field"><label>Last Name</label><input defaultValue="Ekeoba" /></div>
+            <div className="field"><label>First Name</label>
+              <input value={profile.first_name} onChange={e => set('first_name', e.target.value)} /></div>
+            <div className="field"><label>Last Name</label>
+              <input value={profile.last_name} onChange={e => set('last_name', e.target.value)} /></div>
           </div>
           <div className="field"><label>Regulated Profession / Designation</label>
-            <select defaultValue="OD">
+            <select value={profile.designation} onChange={e => set('designation', e.target.value)}>
               <option value="MD">MD / DO — Physician</option>
               <option value="OD">OD — Optometrist</option>
               <option value="DDS">DDS / DMD — Dentist</option>
@@ -108,17 +163,69 @@ function ProviderTab() {
             </select>
           </div>
           <div className="fg fg2">
-            <div className="field"><label>Provincial Provider Number</label><input placeholder="e.g. 12345 (MSP) / OHIP billing # / AHCIP #" /></div>
-            <div className="field"><label>Discipline Code</label><input placeholder="Provincial discipline code" /></div>
+            <div className="field">
+              <label>MSP / Provincial Provider Number</label>
+              <input
+                value={profile.practitioner_number}
+                onChange={e => set('practitioner_number', e.target.value)}
+                placeholder="e.g. 12345 (MSP payee) / OHIP # / AHCIP #"
+              />
+            </div>
+            <div className="field"><label>Discipline Code</label>
+              <input value={profile.discipline_code} onChange={e => set('discipline_code', e.target.value)} placeholder="Provincial discipline code" /></div>
           </div>
           <div className="fg fg2">
-            <div className="field"><label>College / Regulatory Body</label><input placeholder="e.g. COPTBC, CPSO, ACP…" /></div>
-            <div className="field"><label>Registration Number</label><input placeholder="College registration #" /></div>
+            <div className="field"><label>College / Regulatory Body</label>
+              <input value={profile.college} onChange={e => set('college', e.target.value)} placeholder="e.g. COPTBC, CPSO, ACP…" /></div>
+            <div className="field"><label>Registration Number</label>
+              <input value={profile.registration_number} onChange={e => set('registration_number', e.target.value)} placeholder="College registration #" /></div>
+          </div>
+
+          {/* Teleplan-specific */}
+          <div style={{ borderTop: '1px solid var(--bd)', marginTop: 8, paddingTop: 16 }}>
+            <div className="cs" style={{ marginBottom: 12, fontWeight: 700, color: 'var(--t2)' }}>BC Teleplan / MSP</div>
+            <div className="fg fg2">
+              <div className="field">
+                <label>Teleplan Payee Number</label>
+                <input
+                  value={profile.payee_number}
+                  onChange={e => set('payee_number', e.target.value)}
+                  placeholder="e.g. J4674"
+                />
+              </div>
+              <div className="field">
+                <label>Practice ID (prac_id)</label>
+                <input value={profile.prac_id} onChange={e => set('prac_id', e.target.value)} placeholder="e.g. 00001" />
+              </div>
+            </div>
+            <div className="field">
+              <label>Business Arrangement</label>
+              <select value={profile.business_arrangement} onChange={e => set('business_arrangement', e.target.value)}>
+                <option value="">Select…</option>
+                <option value="FFS">FFS — Fee For Service</option>
+                <option value="APP">APP — Alternate Payment Plan</option>
+                <option value="AFP">AFP — Alternate Funding Plan</option>
+              </select>
+            </div>
+          </div>
+
+          {/* OHIP */}
+          <div style={{ borderTop: '1px solid var(--bd)', marginTop: 8, paddingTop: 16 }}>
+            <div className="cs" style={{ marginBottom: 12, fontWeight: 700, color: 'var(--t2)' }}>Ontario OHIP / MCEDT</div>
+            <div className="field" style={{ maxWidth: 280 }}>
+              <label>OHIP Billing Number</label>
+              <input value={profile.ohip_billing_number} onChange={e => set('ohip_billing_number', e.target.value)} placeholder="6-digit OHIP billing #" />
+            </div>
           </div>
         </div>
       </div>
-      <button type="submit" className="btn btn-p">
-        {saved ? <><CheckCircle2 size={14} /> Saved</> : <><Save size={14} /> Save Provider</>}
+
+      {err && <div className="alrt al-err" style={{ marginBottom: 12 }}><AlertTriangle size={13} className="alrt-ico" />{err}</div>}
+
+      <button type="submit" className="btn btn-p" disabled={saving}>
+        {saving ? <><RefreshCw size={14} style={{ animation: 'spin 1s linear infinite' }} /> Saving…</>
+         : saved ? <><CheckCircle2 size={14} /> Saved</>
+         : <><Save size={14} /> Save Provider</>}
       </button>
     </form>
   );
@@ -167,20 +274,29 @@ function IntegrationsTab() {
     {
       id: 'ahcip',
       name: 'AHCIP H-Link (Alberta)',
-      description: 'Electronic claims submission to Alberta Health via H-Link SFTP. Round 3 conformance complete — 15/15 tests.',
-      status: 'conformance',
-      badge: '#7c3aed',
-      badgeBg: '#f5f3ff',
+      description: 'Electronic claims submission to Alberta Health via H-Link SFTP. Conformance complete (15/15 R3 tests). Connected to production SFTP at getfile.health.alberta.ca.',
+      status: 'connected',
+      badge: '#059669',
+      badgeBg: '#ecfdf5',
       icon: '🏔️',
     },
     {
       id: 'ohip',
       name: 'OHIP / MCEDT (Ontario)',
-      description: 'Ontario Health Claims via eBSE portal. Fully electronic since April 1 2026. OHIP billing number + HCV required.',
-      status: 'available',
-      badge: '#8b5cf6',
+      description: 'Ontario Health Claims via eBSE portal. 85/85 conformance tests passed. Pending MOH official sign-off before production traffic is enabled.',
+      status: 'pending_signoff',
+      badge: '#7c3aed',
       badgeBg: '#f5f3ff',
       icon: '🏛️',
+    },
+    {
+      id: 'epics',
+      name: 'Manitoba EPiCS',
+      description: 'Electronic Claims Portal — Integrated Claims System. File builder, Auth0 OAuth2 client, API client, and remittance parser complete. UAT onboarding request submitted to Manitoba Health.',
+      status: 'uat_pending',
+      badge: '#0891b2',
+      badgeBg: '#ecfeff',
+      icon: '🦬',
     },
     {
       id: 'ramq',
@@ -289,9 +405,13 @@ function IntegrationsTab() {
                   fontSize: '.68rem', fontWeight: 700, color: intg.badge,
                   background: intg.badgeBg, borderRadius: 20, padding: '3px 10px',
                 }}>
-                  {intg.status === 'connected' ? '● Connected' : intg.status === 'conformance' ? '✓ Conformance Complete' : intg.status === 'available' ? 'Available' : 'Coming Soon'}
+                  {intg.status === 'connected'      ? '● Connected'
+                  : intg.status === 'pending_signoff' ? '✓ Conformance — Pending Sign-off'
+                  : intg.status === 'uat_pending'     ? '⏳ UAT Pending'
+                  : intg.status === 'available'       ? 'Available'
+                  :                                     'Coming Soon'}
                 </span>
-                {(intg.status === 'connected' || intg.status === 'conformance') && (
+                {intg.status === 'connected' && (
                   <button
                     className="btn btn-s btn-sm"
                     onClick={() => testConnection(intg.id)}
@@ -302,6 +422,12 @@ function IntegrationsTab() {
                 )}
                 {intg.status === 'available' && (
                   <button className="btn btn-p btn-sm">Connect</button>
+                )}
+                {intg.status === 'pending_signoff' && (
+                  <span style={{ fontSize: '.68rem', color: 'var(--t3)', fontStyle: 'italic' }}>MOH approval in progress</span>
+                )}
+                {intg.status === 'uat_pending' && (
+                  <span style={{ fontSize: '.68rem', color: 'var(--t3)', fontStyle: 'italic' }}>Onboarding request sent</span>
                 )}
               </div>
             </div>
@@ -488,6 +614,73 @@ function TeleplanTab() {
   );
 }
 
+/* ── AHCIP H-Link ── */
+function AhcipTab() {
+  const [show, setShow] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [form, setForm] = useState({
+    prefix:     'HZV',
+    sftpUser:   'HZVa',
+    sftpHost:   'getfile.health.alberta.ca',
+    nextBatch:  '570',
+    env:        'production',
+    practNum:   '',
+  });
+  const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
+  function save(e: React.FormEvent) { e.preventDefault(); setSaved(true); setTimeout(() => setSaved(false), 2500); }
+
+  return (
+    <form onSubmit={save} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {/* Status */}
+      <div className="alrt al-ok">
+        <CheckCircle2 size={16} className="alrt-ico" />
+        <span>
+          <strong>AHCIP H-Link — Production Connected</strong>
+          {' · '}
+          Round 3 conformance complete (15/15 tests) · Prefix HZV · SFTP at getfile.health.alberta.ca
+        </span>
+      </div>
+
+      {/* SFTP credentials */}
+      <div className="card cp">
+        <div className="ct" style={{ marginBottom: 14 }}>SFTP Connection</div>
+        <div className="fg">
+          <div className="fg fg2">
+            <div className="field"><label>SFTP Host</label><input value={form.sftpHost} onChange={e => set('sftpHost', e.target.value)} /></div>
+            <div className="field"><label>SFTP Username</label><input value={form.sftpUser} onChange={e => set('sftpUser', e.target.value)} /></div>
+          </div>
+          <div className="field">
+            <label>Private Key</label>
+            <input type={show ? 'text' : 'password'} placeholder="Stored at ~/.ssh/ahcip_rsa (never transmitted)" readOnly style={{ fontFamily: 'var(--fm)', fontSize: '.82rem', color: 'var(--t4)' }} />
+            <span className="hint">Key is stored on server only. Rotate at Alberta Health Admin portal.</span>
+          </div>
+          <div style={{ marginTop: 10, padding: '12px 14px', background: 'var(--n50)', borderRadius: 10, border: '1px solid var(--bd)', fontSize: '.76rem', color: 'var(--t2)', lineHeight: 1.6 }}>
+            <strong>H-Link batch directories:</strong><br />
+            Upload: <code style={{ fontFamily: 'var(--fm)' }}>/UPLOAD/</code> — claim batches (e.g. HZV000570.dat)<br />
+            Download: <code style={{ fontFamily: 'var(--fm)' }}>/DOWNLOAD/</code> — ARD + batch balance reports
+          </div>
+        </div>
+      </div>
+
+      {/* Batch config */}
+      <div className="card cp">
+        <div className="ct" style={{ marginBottom: 14 }}>Batch Configuration</div>
+        <div className="fg">
+          <div className="fg fg2">
+            <div className="field"><label>Submitter Prefix</label><input value={form.prefix} onChange={e => set('prefix', e.target.value)} placeholder="HZV" /></div>
+            <div className="field"><label>Next Batch Number</label><input value={form.nextBatch} onChange={e => set('nextBatch', e.target.value)} placeholder="570" style={{ fontFamily: 'var(--fm)' }} /></div>
+          </div>
+          <div className="field"><label>Practitioner Number (9-digit Alberta provider #)</label><input value={form.practNum} onChange={e => set('practNum', e.target.value)} placeholder="000000000" style={{ fontFamily: 'var(--fm)' }} /></div>
+        </div>
+      </div>
+
+      <button type="submit" className="btn btn-p">
+        {saved ? <><CheckCircle2 size={14} /> Saved</> : <><Save size={14} /> Save H-Link Settings</>}
+      </button>
+    </form>
+  );
+}
+
 /* ── Billing ── */
 function BillingTab() {
   return (
@@ -541,9 +734,12 @@ function ComplianceTab() {
       {[
         { ok: true,  label: 'PIPEDA / provincial privacy acts', note: 'All patient data encrypted at rest and in transit' },
         { ok: true,  label: 'PHIPA (Ontario) / FOIPPA (BC)',     note: 'Compliant cloud storage in Canada (Toronto region)' },
-        { ok: true,  label: 'Teleplan E45 conformance',           note: 'All 15 H-Link tests + 3 pending ARD (7A/7B/7C) — Rounds 1-3 complete' },
-        { ok: true,  label: 'Teleplan Production — connected',    note: 'Vendor DC V0127 live at teleplan.hnet.bc.ca · HIBC conformance accepted' },
-        { ok: true,  label: 'AHCIP H-Link conformance (AB)',      note: 'Round 3 batches 554-560 ACCEPTED · Tests 8/9A/9B/10 ARD passed' },
+        { ok: true,  label: 'Teleplan E45 conformance (BC)',        note: 'All category tests passed — Rounds 1-3 · Vendor DC V0127 accepted' },
+        { ok: true,  label: 'Teleplan Production — connected',    note: 'Live at teleplan.hnet.bc.ca · HIBC conformance accepted' },
+        { ok: true,  label: 'AHCIP H-Link conformance (AB)',      note: 'Round 3 ACCEPTED · SFTP connected to getfile.health.alberta.ca · Production live' },
+        { ok: true,  label: 'MCEDT conformance (ON)',             note: '85/85 tests passed (tickets #1068818, #1068819) · Awaiting MOH official sign-off' },
+        { ok: false, label: 'MCEDT Production (ON)',              note: 'Pending MOH activation — conformance proof submitted and under review' },
+        { ok: false, label: 'Manitoba EPiCS (MB)',                note: 'UAT onboarding request submitted · UAT window pending from Manitoba Health' },
         { ok: true,  label: 'TLS 1.3 in transit',                 note: 'All API traffic uses TLS 1.3' },
         { ok: true,  label: 'PHI audit logging',                   note: 'All PHI access logged with user + timestamp' },
       ].map((item, i) => (

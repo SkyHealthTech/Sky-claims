@@ -74,7 +74,21 @@ export async function saveClaim(
   }
 }
 
-/** Submit one or more draft claims via Teleplan (or mock) */
+// ── Province → API route mapping ──────────────────────────────────────────────
+const PROVINCE_SUBMIT_ROUTE: Record<string, string> = {
+  BC: '/api/teleplan/submit',
+  AB: '/api/ahcip/submit',
+  ON: '/api/mcedt/submit',
+  MB: '/api/epics/submit',
+};
+
+/**
+ * Submit one or more draft claims, routing each group to the correct
+ * provincial billing system (Teleplan / H-Link / MCEDT / EPiCS).
+ *
+ * Claims are grouped by province, submitted in parallel, and all
+ * successfully-submitted claims are marked 'submitted' in a single update.
+ */
 export async function submitClaims(claimIds: string[]): Promise<ClaimFormState> {
   try {
     const ctx = await getCurrentContext();
@@ -91,35 +105,87 @@ export async function submitClaims(claimIds: string[]): Promise<ClaimFormState> 
     if (fetchErr) return { error: fetchErr.message };
     if (!claims?.length) return { error: 'No draft claims found.' };
 
-    // Call the Teleplan submit API route
-    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL ?? ''}/api/teleplan/submit`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ claims }),
-    });
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? '';
 
-    const result = await res.json();
-    if (!res.ok) return { error: result.error ?? 'Submission failed.' };
+    // ── Group claims by province ─────────────────────────────────────────────
+    const byProvince = new Map<string, typeof claims>();
+    for (const claim of claims as Array<{ province: string } & Record<string, unknown>>) {
+      const prov = claim.province ?? 'BC';
+      if (!byProvince.has(prov)) byProvince.set(prov, []);
+      byProvince.get(prov)!.push(claim);
+    }
 
-    const batchRef: string = result.batchRef ?? `BATCH-${Date.now()}`;
-    const now = new Date().toISOString();
+    // ── Submit each province group in parallel ───────────────────────────────
+    type SubmitOutcome =
+      | { ok: true; province: string; batchRef: string; ids: string[] }
+      | { ok: false; province: string; error: string; ids: string[] };
 
-    // Mark claims as submitted
-    const { error: updErr } = await supabase
-      .from('claims')
-      .update({
-        status: 'submitted',
-        submitted_at: now,
-        batch_id: batchRef,
-        updated_at: now,
-      })
-      .in('id', claimIds)
-      .eq('practice_id', ctx.practiceId);
+    const outcomes = await Promise.all(
+      Array.from(byProvince.entries()).map(async ([province, provClaims]): Promise<SubmitOutcome> => {
+        const route = PROVINCE_SUBMIT_ROUTE[province] ?? PROVINCE_SUBMIT_ROUTE.BC;
+        const ids   = provClaims.map((c) => (c as { id: string }).id);
+        try {
+          const res = await fetch(`${baseUrl}${route}`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ claims: provClaims }),
+          });
+          const result = await res.json() as { batchRef?: string; error?: string };
+          if (!res.ok) {
+            return { ok: false, province, error: result.error ?? `${province} submission failed`, ids };
+          }
+          return {
+            ok: true,
+            province,
+            batchRef: result.batchRef ?? `BATCH-${province}-${Date.now()}`,
+            ids,
+          };
+        } catch (e: unknown) {
+          return {
+            ok: false,
+            province,
+            error: e instanceof Error ? e.message : `${province} network error`,
+            ids,
+          };
+        }
+      }),
+    );
 
-    if (updErr) return { error: updErr.message };
+    // ── Collect results ──────────────────────────────────────────────────────
+    const now      = new Date().toISOString();
+    const failed   = outcomes.filter((o): o is Extract<SubmitOutcome, { ok: false }> => !o.ok);
+    const succeeded = outcomes.filter((o): o is Extract<SubmitOutcome, { ok: true }> => o.ok);
+
+    // Mark all successfully-submitted claims
+    for (const outcome of succeeded) {
+      await supabase
+        .from('claims')
+        .update({
+          status:       'submitted',
+          submitted_at: now,
+          batch_id:     outcome.batchRef,
+          updated_at:   now,
+        })
+        .in('id', outcome.ids)
+        .eq('practice_id', ctx.practiceId);
+    }
 
     revalidatePath('/claims');
     revalidatePath('/');
+
+    // ── Return ───────────────────────────────────────────────────────────────
+    if (failed.length > 0 && succeeded.length === 0) {
+      // All provinces failed
+      const msgs = failed.map((f) => `${f.province}: ${f.error}`).join('; ');
+      return { error: msgs };
+    }
+
+    if (failed.length > 0) {
+      // Partial success — surface which provinces failed
+      const msgs = failed.map((f) => `${f.province}: ${f.error}`).join('; ');
+      return { success: true, error: `Partial success. Some claims were not submitted — ${msgs}` };
+    }
+
     return { success: true };
   } catch (e: unknown) {
     return { error: e instanceof Error ? e.message : 'Unknown error' };

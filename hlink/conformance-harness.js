@@ -1004,6 +1004,163 @@ function buildR3_Batch560_Delete(batchNum) {
     content: assembleBatch(PREFIX, batchNum, [cib]) };
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// ROUND 4 RETEST (batches 561–567)
+// ═══════════════════════════════════════════════════════════════════════════════
+//
+// AHCIP coordinator review (2026-09-22):
+//   - GP_1 (916220008) is opted out of AHCIP — switch to GP_2 (300340008) for all R4
+//   - Tests 9A/9B: replace opted-out GP_1 with GP_2 (registered with AHCIP)
+//   - Tests 7A/B/C: base A claims need to reach ACPT before C/R/D can be submitted.
+//     Root cause: R2 base claims (seqs 10/11/12) used 03.01A (expired 2007) → N39B.
+//     R3 C/R/D got N35FB because the base claim HSC was expired.
+//     Fix: Submit fresh base A claims (seqs 130/131/132) with 03.03A → ACPT.
+//     Then submit C/R/D on those ACPT claims (Phase 2, after ARD confirms ACPT).
+//   - Test 6: R2 batch 551 (seq 70) used GP_1 + 03.01A → N39B.
+//     Fix: New A claim (seq 100) with GP_2 + 03.03A.
+//
+// Claim number assignments (no overlap with previous seqs 1–93):
+//
+//   PHASE 1 (submit now — no ARD dependency):
+//   ─────────────────────────────────────────
+//   Batch 561  Test 6 R4   — new A claim seq 100 (HZV26SC00001002)  GP_2 03.03A
+//   Batch 562  Test 9A R4  — Med Reciprocal SK  seq 110 (HZV26SC00001101)  GP_2 03.03A
+//   Batch 563  Test 9B R4  — OOP Referral PEI   seq 120 (HZV26SC00001200)  GP_2 03.03A
+//   Batch 564  Test 7 base — base A claims seqs 130/131/132  GP_2/GP_2/GP_3  03.03A
+//              (seq 130 → HZV26SC00001309, 131 → HZV26SC00001317, 132 → HZV26SC00001325)
+//
+//   PHASE 2 (submit AFTER ARD for batch 564 arrives confirming ACPT):
+//   ──────────────────────────────────────────────────────────────────
+//   Batch 565  Test 7A R4 — Change   (C on seq 130)  GP_2 03.03A
+//   Batch 566  Test 7B R4 — Reassess (R on seq 131)  GP_2 03.03A + CST1
+//   Batch 567  Test 7C R4 — Delete   (D on seq 132)  GP_3 03.03A
+
+// ─── R4 BATCH 561: Test 6 R4 — Resubmit refused, NEW claim# seq 100 ──────────
+// Root cause: R2 batch 551 (seq 70) used GP_1 (opted out) + 03.01A (expired) → N39B
+// Fix: GP_2 (300340008, BA 7291410) + 03.03A → expect ACPT
+
+function buildR4_Batch561_Test6(batchNum) {
+  const cib = buildCIB1({ prefix: PREFIX, seq: 100, sourceCode: SOURCE_CODE, year: YEAR,
+    actionCode: 'A', segSeq: 1, prid: PRAC.GP_2.prid, uli: PHN.P1,
+    hsc: HSC_R3.GP_OFFICE_VISIT, serviceDate: SVC_DATE, encounter: '1',
+    dx1: DX_URI, calls: 1, facilityNum: FAC.OFFICE.num,
+    functCentre: FAC.OFFICE.fc, businessArrangement: PRAC.GP_2.ba, payToCode: 'BAPY' });
+  return { filename: batchFilename(PREFIX, batchNum),
+    content: assembleBatch(PREFIX, batchNum, [cib]) };
+}
+
+// ─── R4 BATCH 562: Test 9A R4 — Medical Reciprocal SK ────────────────────────
+// Root cause: R3 batch 555 used GP_1 (opted out) → RFSE N28
+// Fix: GP_2 (300340008, BA 7291410) + 03.03A
+
+function buildR4_Batch562_Test9A(batchNum) {
+  const cib = buildCIB1({ prefix: PREFIX, seq: 110, sourceCode: SOURCE_CODE, year: YEAR,
+    actionCode: 'A', segSeq: 1, prid: PRAC.GP_2.prid, uli: '',
+    regNum: OOP.SK.regNum, hsc: HSC_R3.GP_OFFICE_VISIT, serviceDate: SVC_DATE,
+    encounter: '1', dx1: DX_URI, calls: 1,
+    facilityNum: FAC.OFFICE.num, functCentre: FAC.OFFICE.fc,
+    businessArrangement: PRAC.GP_2.ba, payToCode: 'BAPY', recoveryCode: 'SK  ' });
+  const cpd = buildCPD1({ prefix: PREFIX, seq: 110, sourceCode: SOURCE_CODE, year: YEAR,
+    actionCode: 'A', segSeq: 2, personType: 'RECP',
+    surname: 'JOHNSON', firstName: 'MARY', birthDate: '19820620', genderCode: 'F',
+    addrLine1: '456 QUEEN STREET', city: 'REGINA',
+    postalCode: 'S4P3Y2', provinceCode: 'SK', countryCode: 'CAN ' });
+  return { filename: batchFilename(PREFIX, batchNum),
+    content: assembleBatch(PREFIX, batchNum, [cib, cpd]) };
+}
+
+// ─── R4 BATCH 563: Test 9B R4 — OOP Referral PEI ────────────────────────────
+// Root cause: R3 batch 556 used GP_1 (opted out) → RFSE N28
+// Fix: GP_2 (300340008, BA 7291410) + 03.03A
+
+function buildR4_Batch563_Test9B(batchNum) {
+  const cib = buildCIB1({ prefix: PREFIX, seq: 120, sourceCode: SOURCE_CODE, year: YEAR,
+    actionCode: 'A', segSeq: 1, prid: PRAC.GP_2.prid, uli: PHN.P1,
+    hsc: HSC_R3.GP_OFFICE_VISIT, serviceDate: SVC_DATE, encounter: '1',
+    dx1: DX_URI, calls: 1, facilityNum: FAC.OFFICE.num,
+    functCentre: FAC.OFFICE.fc, businessArrangement: PRAC.GP_2.ba,
+    payToCode: 'BAPY', referralId: '', oopReferral: 'Y' });
+  const cpd = buildCPD1({ prefix: PREFIX, seq: 120, sourceCode: SOURCE_CODE, year: YEAR,
+    actionCode: 'A', segSeq: 2, personType: 'RFRC',
+    surname: 'LEBLANC', firstName: 'PIERRE',
+    addrLine1: '789 UNIVERSITY AVENUE', city: 'CHARLOTTETOWN',
+    postalCode: 'C1A4L9', provinceCode: 'PE', countryCode: 'CAN ' });
+  return { filename: batchFilename(PREFIX, batchNum),
+    content: assembleBatch(PREFIX, batchNum, [cib, cpd]) };
+}
+
+// ─── R4 BATCH 564: Test 7 base A claims (Phase 1) ────────────────────────────
+// New base A claims with GP_2/GP_2/GP_3 + 03.03A for 7A Change / 7B Reassess / 7C Delete.
+// Submit now — Phase 2 batches (565/566/567) can only be submitted after ARD confirms ACPT.
+//
+// seq 130 → claim for Test 7A (Change) — GP_2 PHN.P1
+// seq 131 → claim for Test 7B (Reassess) — GP_2 PHN.P2
+// seq 132 → claim for Test 7C (Delete) — GP_3 PHN.P3 (active tx facility)
+
+function buildR4_Batch564_Test7Base(batchNum) {
+  const cib130 = buildCIB1({ prefix: PREFIX, seq: 130, sourceCode: SOURCE_CODE, year: YEAR,
+    actionCode: 'A', segSeq: 1, prid: PRAC.GP_2.prid, uli: PHN.P1,
+    hsc: HSC_R3.GP_OFFICE_VISIT, serviceDate: SVC_DATE, encounter: '1',
+    dx1: DX_URI, calls: 1, facilityNum: FAC.OFFICE.num,
+    functCentre: FAC.OFFICE.fc, businessArrangement: PRAC.GP_2.ba, payToCode: 'BAPY' });
+  const cib131 = buildCIB1({ prefix: PREFIX, seq: 131, sourceCode: SOURCE_CODE, year: YEAR,
+    actionCode: 'A', segSeq: 1, prid: PRAC.GP_2.prid, uli: PHN.P2,
+    hsc: HSC_R3.GP_OFFICE_VISIT, serviceDate: SVC_DATE, encounter: '1',
+    dx1: DX_URI, calls: 1, facilityNum: FAC.OFFICE.num,
+    functCentre: FAC.OFFICE.fc, businessArrangement: PRAC.GP_2.ba, payToCode: 'BAPY' });
+  const cib132 = buildCIB1({ prefix: PREFIX, seq: 132, sourceCode: SOURCE_CODE, year: YEAR,
+    actionCode: 'A', segSeq: 1, prid: PRAC.GP_3.prid, uli: PHN.P3,
+    hsc: HSC_R3.GP_OFFICE_VISIT, serviceDate: SVC_DATE, encounter: '1',
+    dx1: DX_URI, calls: 1, facilityNum: FAC.ACTIVE_TX.num,
+    functCentre: FAC.ACTIVE_TX.fc, businessArrangement: PRAC.GP_3.ba, payToCode: 'BAPY' });
+  return { filename: batchFilename(PREFIX, batchNum),
+    content: assembleBatch(PREFIX, batchNum, [cib130, cib131, cib132]) };
+}
+
+// ─── R4 BATCH 565: Test 7A R4 — Change (C on seq 130) ────────────────────────
+// ⚠ PHASE 2 — submit only after ARD for batch 564 confirms seq 130 = ACPT
+
+function buildR4_Batch565_Test7A_Change(batchNum) {
+  const cib = buildCIB1({ prefix: PREFIX, seq: 130, sourceCode: SOURCE_CODE, year: YEAR,
+    actionCode: 'C', segSeq: 1, prid: PRAC.GP_2.prid, uli: PHN.P1,
+    hsc: HSC_R3.GP_OFFICE_VISIT, serviceDate: SVC_DATE, encounter: '1',
+    dx1: DX_URI, calls: 1, facilityNum: FAC.OFFICE.num,
+    functCentre: FAC.OFFICE.fc, businessArrangement: PRAC.GP_2.ba, payToCode: 'BAPY' });
+  return { filename: batchFilename(PREFIX, batchNum),
+    content: assembleBatch(PREFIX, batchNum, [cib]) };
+}
+
+// ─── R4 BATCH 566: Test 7B R4 — Reassess+text (R on seq 131) ────────────────
+// ⚠ PHASE 2 — submit only after ARD for batch 564 confirms seq 131 = ACPT
+
+function buildR4_Batch566_Test7B_Reassess(batchNum) {
+  const cib = buildCIB1({ prefix: PREFIX, seq: 131, sourceCode: SOURCE_CODE, year: YEAR,
+    actionCode: 'R', segSeq: 1, prid: PRAC.GP_2.prid, uli: PHN.P2,
+    hsc: HSC_R3.GP_OFFICE_VISIT, serviceDate: SVC_DATE, encounter: '1',
+    dx1: DX_URI, calls: 1, facilityNum: FAC.OFFICE.num,
+    functCentre: FAC.OFFICE.fc, businessArrangement: PRAC.GP_2.ba, payToCode: 'BAPY' });
+  const txt = buildCST1({ prefix: PREFIX, seq: 131, sourceCode: SOURCE_CODE, year: YEAR,
+    actionCode: 'R', segSeq: 2,
+    line1: 'REASSESSMENT REQUEST: Additional documentation submitted.',
+    line2: 'Service medically necessary per attending physician notes.',
+    line3: 'Requesting reassessment with supporting clinical text.' });
+  return { filename: batchFilename(PREFIX, batchNum),
+    content: assembleBatch(PREFIX, batchNum, [cib, txt]) };
+}
+
+// ─── R4 BATCH 567: Test 7C R4 — Delete (D on seq 132) ───────────────────────
+// ⚠ PHASE 2 — submit only after ARD for batch 564 confirms seq 132 = ACPT
+
+function buildR4_Batch567_Test7C_Delete(batchNum) {
+  const cib = buildCIB1({ prefix: PREFIX, seq: 132, sourceCode: SOURCE_CODE, year: YEAR,
+    actionCode: 'D', segSeq: 1, prid: PRAC.GP_3.prid, uli: PHN.P3,
+    hsc: HSC_R3.GP_OFFICE_VISIT, serviceDate: SVC_DATE, encounter: '1',
+    dx1: DX_URI, calls: 1, facilityNum: FAC.ACTIVE_TX.num,
+    functCentre: FAC.ACTIVE_TX.fc, businessArrangement: PRAC.GP_3.ba, payToCode: 'BAPY' });
+  return { filename: batchFilename(PREFIX, batchNum),
+    content: assembleBatch(PREFIX, batchNum, [cib]) };
+}
+
 // ─── Proof directory ─────────────────────────────────────────────────────────
 
 const PROOF_DIR = path.join(__dirname, 'conformance-proof');
@@ -1069,6 +1226,16 @@ async function main() {
     { num: startBatch + 28, label: 'R3-7A-CHANGE',          build: function() { return buildR3_Batch558_Change(startBatch + 28); } },
     { num: startBatch + 29, label: 'R3-7B-REASSESS',        build: function() { return buildR3_Batch559_Reassess(startBatch + 29); } },
     { num: startBatch + 30, label: 'R3-7C-DELETE',          build: function() { return buildR3_Batch560_Delete(startBatch + 30); } },
+    // ── Round 4 (561–567) — GP_2 replaces opted-out GP_1; fresh base claims for 7A/B/C ──
+    // Phase 1 (no ARD dependency — submit now)
+    { num: startBatch + 31, label: 'R4-6-RESUBMIT',         build: function() { return buildR4_Batch561_Test6(startBatch + 31); } },
+    { num: startBatch + 32, label: 'R4-9A-MED-RECIPROCAL',  build: function() { return buildR4_Batch562_Test9A(startBatch + 32); } },
+    { num: startBatch + 33, label: 'R4-9B-OOP-REFERRAL',    build: function() { return buildR4_Batch563_Test9B(startBatch + 33); } },
+    { num: startBatch + 34, label: 'R4-7-BASE-ACLAIMS',     build: function() { return buildR4_Batch564_Test7Base(startBatch + 34); } },
+    // Phase 2 (submit AFTER ARD for batch 564 confirms seqs 130/131/132 = ACPT)
+    { num: startBatch + 35, label: 'R4-7A-CHANGE',          build: function() { return buildR4_Batch565_Test7A_Change(startBatch + 35); } },
+    { num: startBatch + 36, label: 'R4-7B-REASSESS',        build: function() { return buildR4_Batch566_Test7B_Reassess(startBatch + 36); } },
+    { num: startBatch + 37, label: 'R4-7C-DELETE',          build: function() { return buildR4_Batch567_Test7C_Delete(startBatch + 37); } },
   ];
 
   // Filter to --batch=N if requested

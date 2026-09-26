@@ -325,10 +325,8 @@ function LoginPageInner() {
 
           {/* Mobile logo */}
           <a href="https://skyhealthtech.ca" className="flex lg:hidden items-center gap-2.5 justify-center" style={{ textDecoration: 'none' }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, overflow: 'hidden' }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/icon-claims.svg" alt="Sky Claims" width={36} height={36} style={{ display: 'block' }} />
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/icon-claims.svg" alt="Sky Claims" style={{ display: 'block', width: 36, height: 'auto', maxHeight: 42, objectFit: 'contain', borderRadius: 8 }} />
             <span style={{ fontWeight: 700, fontSize: 15, color: '#111827' }}>Sky Claims</span>
           </a>
 

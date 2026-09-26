@@ -26,9 +26,13 @@ def _load_keys():
             _cert_pem = f.read()
 
 
-def call_mcedt(method_element, conformance_key=None) -> dict:
+def call_mcedt(method_element, conformance_key=None, moh_id=None) -> dict:
     """
     Send a signed MCEDT SOAP request.
+
+    Args:
+        moh_id: Override the MOH ID in the IDP header. Pass "" for blank (TC 1.14A, 2.6, etc.)
+                or a fake value like "999999" for wrong-ID negative tests. Defaults to config.MOH_ID.
 
     Returns {
         "status": "ok" | "error",
@@ -41,7 +45,7 @@ def call_mcedt(method_element, conformance_key=None) -> dict:
     """
     _load_keys()
     ck = conformance_key or config.MCEDT_KEY
-    return _call(config.MCEDT_URL, method_element, ck)
+    return _call(config.MCEDT_URL, method_element, ck, moh_id=moh_id)
 
 
 def call_hcv(method_element, conformance_key=None) -> dict:
@@ -51,12 +55,12 @@ def call_hcv(method_element, conformance_key=None) -> dict:
     return _call(config.HCV_URL, method_element, ck)
 
 
-def _call(url: str, method_element, conformance_key: str) -> dict:
+def _call(url: str, method_element, conformance_key: str, moh_id=None) -> dict:
     _load_keys()
 
     envelope_bytes = build_envelope(
         body_element    = method_element,
-        moh_id          = config.MOH_ID,
+        moh_id          = moh_id if moh_id is not None else config.MOH_ID,
         username        = config.USERNAME,
         password        = config.PASSWORD,
         conformance_key = conformance_key,
